@@ -1,0 +1,91 @@
+plotSetup:
+    targetAngle: 1  # Show in target angle.
+    upsideDown: 0  # Sensor is upside down mounted: 1 otherwise: 0.
+    xScaleSizeAuto: 0  # Automatic size of the xScale: 1 manual setup with xScaleSizeAz and xScaleSizeEl: 0.
+    xScaleSizeAz: 90 # (+-°) Size of the xScaleSizeAz when xAxisAuto = 0.
+    xScaleSizeEl: 45 # (+-°) Size of the xScaleSizeEl when xAxisAuto = 0.
+    idealPhaseDiff: 1  # Show ideal phase difference.
+    SeparateRxCh: 1 # Plot each Rx channel separately.
+    threeGraphLayout: 1 # Generate images for slides with three images in one line.
+    allOnOneSlide: 1 # Genrate all on one slide: all diagrams all sensors all RxAnt graphs by choice.
+    diffPhaseDiffScalingFactor: 1.5 # Y axis zoom factor for diffPhaseDiffDiagrams.
+    yLimitsAntTypeSeparately: 1 #Determine Y axis upper and lower margines separately for each Antenna Type: 1 for all Antenna Types together: 0.
+    imageDpi: 150 # Set plot image resolution.
+    nofSensorMeasToShow: 32  # The max number of sensor measurements to show.
+    ShowCertainPlotWindow: 0 # Show certain plot window mode: 1 otherwise: 0.
+    sortByMeasAngle: 1 # Sort data from same antenna type by measurement angle setup: 1 process data together 0.
+    sensorMusterList:
+        - PT
+        - MA
+    useSensorMuster: 0
+
+chirpConfig:
+    chirp0: 1
+    chirp1: 0
+    chirp2: 0
+    chirp3: 0
+
+graphConfig:
+    # Power level diagrams
+    level: 1  # Power level [dB].
+    avgLevel: 0  # Average power level of chirps [dB].
+
+    normLevel: 1  # Normalised power level [dB].
+    avgNormLevel: 0  # Average of normalised power levels of all chirps [dB].
+
+    # Phase difference diagrams
+    phaseDiff: 0  # Phase difference [°].
+    avgPhaseDiff: 0  # Average of the corrected phase differences of all chirps[°].
+
+    diffPhaseDiff: 1  # Difference between the corrected phase difference and the ideal one [°].
+    avgDiffPhaseDiff: 0  # Average of the difference of the corrected phase difference and the ideal one of all chirps[°].
+
+    corrPhaseDiff: 1  # Corrected phase difference by the correction factor [°].
+ 
+diagramConfig:
+    selectDiagrams: 0  # Set 0 for all diagrams. 1 for diagrams in desired range. 2 for diagrams from an arbitrary list.
+
+    #Set even or odd diagram numbers
+    oddOrEven: 0 # Set 0 for both. 1 for odd. 2 for even.
+
+    # Set from a desired range
+    lowerNumber: 0 # Present diagrams in a specific range. Chose lower number.
+    higherNumber: 3 # Present diagrams in a specific range. Chose higher number.
+
+# List of desired Diagram numbers
+diagramConfigList:
+    - 0
+
+# Level slide combination 
+twoGraphSetupList:
+
+    0:
+        primGraph: level
+        secGraph: normLevel
+    #1:
+    #    primGraph: normLevel
+    #    secGraph: avgNormLevel
+    #2:
+    #    primGraph: phaseDiff
+    #    secGraph: avgPhaseDiff
+    #3:
+    #    primGraph: diffPhaseDiff
+    #    secGraph: avgDiffPhaseDiff
+
+# Three slide config
+threeGraphSetupList:
+    - graphType: corrPhaseDiff
+    - graphType: diffPhaseDiff
+
+
+# four slide config
+fourGraphSetupList: []
+    #- graphType: level
+    #- graphType: corrPhaseDiff
+    #- graphType: diffPhaseDiff
+
+# AllgraphConfig
+allOnOneSlideGraphList:
+    - graphType: level
+    - graphType: diffPhaseDiff
+    - graphType: corrPhaseDiff

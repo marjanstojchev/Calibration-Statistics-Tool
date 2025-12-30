@@ -1,0 +1,32 @@
+plotSetup:
+    useSensorMuster: 0
+    sensorMusterList: []
+    targetAngle: 0  # Show in target angle.
+    upsideDown: 0  # Sensor is upside down mounted: 1, otherwise: 0.
+    AzDiag: 1  # Generate azimuth diagrams using azimuth angle
+    ElDiag: 1 # Generate elevation diagrams using elevation angle
+
+    xScaleSizeAuto: 0  # Automatic size of the xScale: 1, manual setup with xScaleSizeAz and xScaleSizeEl: 0.
+    xScaleSizeAz: 90 # (+-°) Size of the xScaleSizeAz, when xAxisAuto = 0.
+    xScaleSizeEl: 45 # (+-°) Size of the xScaleSizeEl, when xAxisAuto = 0.
+
+    imageDpi: 150 # Set plot image resolution
+    nofSensorMeasToShow: 32  # The max number of sensor measurements to show
+
+    plotOrigGraphs: 1 # Plot original (not normalised) graphs: 1, otherwise: 0.
+    plotNormGraphs: 0 # Plot normalised graphs: 1, otherwise: 0.
+
+    graphsPerSlide: 1 # 1 - one graph per slide, 2 - two graph per slide, 3 - three graph per slide, 4 - four graph per slide, else - invalid.
+
+# Generate graph setup
+graphConfig:
+    # Power level diagrams
+    level: 1  # Corrected transmited Power level using spectrum analyser [dBm].
+    levelPowMet: 1  # Corrected transmited Power level using powermeter [dBm].
+
+    levelMeasSpec: 1  # Measured transmited Power level using spectrum analyser [dBm].
+    levelMeasPowMet: 1 # Measured transmited Power level using spectrum analyser [dBm].
+
+    # Phase difference diagrams
+    frequency: 1  # Actual frequency [MHz].
+    time: 1  # Time [ms].

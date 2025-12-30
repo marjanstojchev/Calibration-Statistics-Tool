@@ -1,0 +1,71 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "calibration-statistics-tool"
+version = "1.0.0"
+description = "Statistics and antenna pattern analysis tool for radar systems"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.8"
+# authors = [
+#     {name = "Your Name", email = "your.email@example.com"},
+# ]
+# maintainers = [
+#     {name = "Your Name", email = "your.email@example.com"},
+# ]
+keywords = ["radar", "antenna", "statistics", "analysis"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering",
+]
+dependencies = [
+    "PySide6>=6.0.0",
+    "matplotlib>=3.5.0",
+    "numpy>=1.21.0",
+    "PyYAML>=6.0",
+    "python-pptx>=0.6.21",
+    "mplcursors>=0.5.0",
+    "natsort>=8.0.0",
+    "schedule>=1.0.0",
+    "python-docx>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
+]
+docs = [
+    "sphinx>=5.0.0",
+]
+
+[project.gui-scripts]
+calibration-tool = "main:run"
+
+[tool.setuptools]
+py-modules = ["main"]
+packages = ["shared", "ui", "system_diagrams", "tx_diagrams", "antenna_patterns"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py38"
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true

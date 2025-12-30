@@ -1,0 +1,9 @@
+{
+    "python.analysis.extraPaths": [
+        "./shared",
+        "./ui",
+        "./system_diagrams",
+        "./tx_diagrams",
+        "./antenna_patterns"
+    ]
+}
