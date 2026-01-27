@@ -1,0 +1,84 @@
+Date:;2024-01-15
+Time:;10:15:20
+CalStart:;2024-01-15-10:15:20
+CalEnd:;2024-01-15-14:25:35
+Duration[s]:;14415
+Product-Serial:;UMRR-11.00.04-12346
+RF-Serial:;12346
+Dsp-Serial:;67891
+Calibration DSP softwareinfo:;DSP_V2.1.0_Build124
+Calibration DSP software Compile Info:;2024-01-12 09:15:45
+Modular Software:;ModSoft_V1.5.3
+PtuOffset: AZ[°]:;0.1
+PtuOffset: EL[°]:;0.3
+
+E=0;
+K=0;
+
+Burn16a_BurnInMeasSpeedList[km/h]:;30;50;80;100;120;150;180
+Burn16c_BurnInMeasPtuPosAzimuthList[°]:;-90;-60;-30;0;30;60;90
+Burn16d_BurnInPtuPosElevationList[°]:;-30;-15;0;15;30
+
+Measurment Durations:
+
+##### MeasurmentLimit #####
+##### PowerOutput #####
+TxAntDiagram_Level_Max[dBm]:	-9.0	-7.5	1	Power output maximum limit for burn-in
+TxAntDiagram_Level_Min[dBm]:	-28.0	-22.0	1	Power output minimum limit for burn-in
+TxPowerLevel[dBm]:	-16.2	-13.8	1	TX power level burn-in
+##### FrequencyAccuracy #####
+CenterFreq_Deviation_Max[MHz]:	2.5	3.5	1	Center frequency deviation maximum burn-in
+CenterFreq_Deviation_Min[MHz]:	-3.5	-2.5	1	Center frequency deviation minimum burn-in
+##### PhaseAccuracy #####
+DiffPhase_Deviation_Max[°]:	8.0	12.0	1	Differential phase deviation maximum burn-in
+DiffPhase_Deviation_Min[°]:	-12.0	-8.0	1	Differential phase deviation minimum burn-in
+##### ThermalLimits #####
+Temperature_Max[°C]:	75.0	85.0	1	Maximum operating temperature
+Temperature_Min[°C]:	-40.0	-30.0	1	Minimum operating temperature
+
+##### Measurements #####
+(3a) TxAnt0 raw frequency table -  measpoints
+TxAnt[1];Freq[MHz];Level[dB];Level-Powermeter[dB];FreqSensorSetting[MHz];Time[ms];tx_pow_val;Number [1];Centerfreq [Mhz];Span [MHz];Level meas (Spec)[dB];Level meas (Powermeter)[dB];
+0;76400.0;-16.5;-16.8;76400.0;3625.5;140;1;76400.0;1000.0;-16.4;-16.7;
+0;76500.0;-15.2;-15.5;76500.0;3635.2;128;2;76500.0;1000.0;-15.1;-15.4;
+0;76600.0;-15.8;-16.1;76600.0;3645.8;130;3;76600.0;1000.0;-15.7;-16.0;
+0;76700.0;-16.1;-16.4;76700.0;3655.1;132;4;76700.0;1000.0;-16.0;-16.3;
+0;76800.0;-16.8;-17.1;76800.0;3665.7;135;5;76800.0;1000.0;-16.7;-17.0;
+
+(3a) TxAnt1 raw frequency table -  measpoints
+TxAnt[1];Freq[MHz];Level[dB];Level-Powermeter[dB];FreqSensorSetting[MHz];Time[ms];tx_pow_val;Number [1];Centerfreq [Mhz];Span [MHz];Level meas (Spec)[dB];Level meas (Powermeter)[dB];
+1;76400.0;-16.1;-16.4;76400.0;3675.3;137;1;76400.0;1000.0;-16.0;-16.3;
+1;76500.0;-14.8;-15.1;76500.0;3685.9;125;2;76500.0;1000.0;-14.7;-15.0;
+1;76600.0;-15.5;-15.8;76600.0;3695.4;127;3;76600.0;1000.0;-15.4;-15.7;
+1;76700.0;-15.9;-16.2;76700.0;3705.8;129;4;76700.0;1000.0;-15.8;-16.1;
+1;76800.0;-16.5;-16.8;76800.0;3715.2;133;5;76800.0;1000.0;-16.4;-16.7;
+
+(3a) TxAnt2 raw frequency table -  measpoints
+TxAnt[1];Freq[MHz];Level[dB];Level-Powermeter[dB];FreqSensorSetting[MHz];Time[ms];tx_pow_val;Number [1];Centerfreq [Mhz];Span [MHz];Level meas (Spec)[dB];Level meas (Powermeter)[dB];
+2;76400.0;-17.2;-17.5;76400.0;3725.6;145;1;76400.0;1000.0;-17.1;-17.4;
+2;76500.0;-16.2;-16.5;76500.0;3735.1;135;2;76500.0;1000.0;-16.1;-16.4;
+2;76600.0;-16.8;-17.1;76600.0;3745.7;137;3;76600.0;1000.0;-16.7;-17.0;
+2;76700.0;-17.1;-17.4;76700.0;3755.4;139;4;76700.0;1000.0;-17.0;-17.3;
+2;76800.0;-17.8;-18.1;76800.0;3765.8;143;5;76800.0;1000.0;-17.7;-18.0;
+
+(3b) TxAnt0 ctap raw freq select search  
+TxAnt[1];raw freq sel[1];DAC[dac] ;Freq[MHz];Level[dB];Level-Powermeter[dB];FreqSensorSetting[MHz];Time[ms];tx_pow_val;Number [1];Centerfreq [Mhz];Span [MHz];Level meas (Spec)[dB];Level meas (Powermeter)[dB];
+0;1;2048;76500.0;-15.2;-15.5;76500.0;3775.2;128;1;76500.0;1000.0;-15.1;-15.4;
+0;2;2056;76510.0;-15.4;-15.7;76510.0;3785.6;129;2;76510.0;1000.0;-15.3;-15.6;
+0;3;2064;76520.0;-15.6;-15.9;76520.0;3795.1;130;3;76520.0;1000.0;-15.5;-15.8;
+
+(3e) TxAnt0 TxPowerCorrCurve
+PowermeterLevelValuesUsed:;1
+PowermeterLevelRecalcActive:;1
+PowermeterLevelCorrMethod:;Polynomial
+TxAnt[1];Freq[MHz];Level[dB];Level-Powermeter[dB];FreqSensorSetting[MHz];Time[ms];tx_pow_val;Number [1];Centerfreq [Mhz];Span [MHz];Level meas (Spec)[dB];Level meas (Powermeter)[dB];
+0;76500.0;-15.2;-15.5;76500.0;3805.7;128;1;76500.0;1000.0;-15.1;-15.4;
+0;76600.0;-15.8;-16.1;76600.0;3815.4;130;2;76600.0;1000.0;-15.7;-16.0;
+0;76700.0;-16.1;-16.4;76700.0;3825.8;132;3;76700.0;1000.0;-16.0;-16.3;
+
+##### AbbortCriterions #####
+1;Temperature_Over_Limit;68.5;72.3;78.9;OK
+2;Voltage_Under_Limit;2.90;3.1;3.30;OK
+3;Current_Over_Limit;195.2;210.8;235.5;OK
+4;Power_Output_Low;-25.8;-20.2;-15.5;OK
+5;Frequency_Drift;1.8;2.2;3.1;OK

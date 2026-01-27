@@ -263,18 +263,12 @@ def getDiagramList(antType,parseDataList):
             diagram=parseDataList[pdIdx].fileTitle.diagram
             diagramIdxList.append(diagram)
 
-    diagramIdxList.sort()
+    # Preserve original order while removing duplicates
     outputList=[]
+    for diagram in diagramIdxList:
+        if diagram not in outputList:
+            outputList.append(diagram)
 
-    temp = diagramIdxList[0]
-    outputList.append(temp)
-    for i in range(len(diagramIdxList)):
-
-        if diagramIdxList[i]!=temp:
-           temp =diagramIdxList[i]
-           outputList.append(temp)
-
-    # diagramIdxSet=set(diagramIdxList)
     return outputList
 
 def getDateAndTimeList(parseDataList):
@@ -372,9 +366,11 @@ def getTxAntList(parseDataList):
             actualTxAnt = parseDataList[pdIdx].fileTitle.txAnt
             txAntList.append(actualTxAnt)
 
-    txAntList.sort()
-    txAntSet=set(txAntList)
-    outputList=list(txAntSet)
+    # Preserve original order while removing duplicates
+    outputList=[]
+    for txAnt in txAntList:
+        if txAnt not in outputList:
+            outputList.append(txAnt)
 
     return outputList
 
@@ -408,8 +404,16 @@ def getRefAnglePoint(parseData,isTargetAngle,upsideDown):
 
 # Get the desired diagrams list, according to the diagram configuration.
 def getDesiredDiagramsList(diagramConfig, diagramConfigList,antType, parseDataList):
+    print(f"[DEBUG] getDesiredDiagramsList called with:")
+    print(f"  - antType: {antType}")
+    print(f"  - parseDataList length: {len(parseDataList)}")
+    print(f"  - diagramConfig: {diagramConfig}")
+    print(f"  - diagramConfigList: {diagramConfigList}")
+    
     desiredDiagramList=[]
     diagramTempList=getDiagramList(antType,parseDataList)
+    print(f"  - diagramTempList from getDiagramList: {diagramTempList}")
+    
     # nofDiagrams = getNofDiagrams(antType,parseDataList)
     high = diagramConfig["higherNumber"]
     low = diagramConfig["lowerNumber"]
@@ -464,23 +468,18 @@ def getDesiredDiagramsList(diagramConfig, diagramConfigList,antType, parseDataLi
             # for i in range(low, high+1, 2):
             #     desiredDiagramList.append(i)
     else:
-        diagramConfigList.sort()
+        # Preserve original order while removing duplicates
         filteredDiagList = []
-
-        if len(diagramConfigList)!=0:
-            temp = diagramConfigList[0]
-            filteredDiagList.append(temp)
-            for i in range(len(diagramConfigList)):
-
-                if diagramConfigList[i] != temp:
-                    temp = diagramConfigList[i]
-                    filteredDiagList.append(temp)
+        for diagram in diagramConfigList:
+            if diagram not in filteredDiagList:
+                filteredDiagList.append(diagram)
 
             for diagTempIdx in range(len(diagramTempList)):
                 for filtDiagIdx in range(len(filteredDiagList)):
                     if diagramTempList[diagTempIdx] == filteredDiagList[filtDiagIdx]:
                         desiredDiagramList.append(diagramTempList[diagTempIdx])
 
+    print(f"  - Final desiredDiagramList: {desiredDiagramList}")
     return desiredDiagramList
 
 # Returns a list of all parsed PTU2 files for a certain diagram.

@@ -63,8 +63,8 @@ plotSetup = {
     'imageDpi': 220, # Set plot image resolution
     'nofSensorMeasToShow': 32,  # The max number of sensor measurements to show
     'ShowCertainPlotWindow': 0, # Show certain plot window mode: 1, otherwise: 0.
-    'sortByMeasAngle': 1, # Sort data from same antenna type by measurement angle setup: 1, process data together 0.
-    'sensorMusterList':['PT','MA'],
+    'sortByMeasAngle': 0, # Sort data from same antenna type by measurement angle setup: 1, process data together 0.
+    'sensorMusterList':['rf', 'dsp', 'PT','MA'],  # Include rf and dsp patterns for actual sensor names
     'useSensorMuster':0
 }
 plotWindowConfig = {
@@ -121,7 +121,7 @@ graphInterList = {
     'idealPhaseDiff': 0,  # Ideal phase difference [°].
 }
 diagramConfig = {
-    'selectDiagrams':2 , # Set 0 for all diagrams. 1 for diagrams in desired range. 2 for diagrams from an arbitrary list.
+    'selectDiagrams':0 , # Set 0 for all diagrams. 1 for diagrams in desired range. 2 for diagrams from an arbitrary list.
 
     #Set even or odd diagram numbers
     'oddOrEven': 0, # Set 0 for both. 1 for odd. 2 for even.
@@ -131,7 +131,7 @@ diagramConfig = {
     'higherNumber':7, # Present diagrams in a specific range. Chose higher number.
 }
 # List of desired Diagram numbers
-diagramConfigList = [0]
+diagramConfigList = [1, 2, 3, 4]
 # Level slide comb.
 twoGraphConf1 = {
     'primGraph': 'level',
@@ -324,7 +324,7 @@ def SysDiaInterTableParamCellClicked(row, col):
     antennaTypesList       = dp.getAntennaTypesList(parseDataList)
     ptu2ListPerAntennaType = dp.getPtu2ListPerAntennaType(antennaTypesList[0], parseDataList)
     dateTimeSensorList     = dp.getDateTimeSensorCombList(antennaTypesList[0], ptu2ListPerAntennaType)
-    desiredDiagList        = dp.getDiagramList(antennaTypesList[0], parseDataList)
+    desiredDiagList        = dp.getDiagramList(parseDataList)
     ylimits0    = []
     ylimits1    = []
     ylimitssec0 = []
@@ -784,26 +784,14 @@ def start_data_evaluation(parseDataList, plotSetup, chirpConfig, graphConfig, di
 
         ptu2ListPerAntennaType = dp.getPtu2ListPerAntennaType(antennaTypesList[antTypeIdx], parseDataList)
         
-        # fill tables
-        
-        # fillInPTU(ptu2ListPerAntennaType)
-
         myLogger.info('Antenna Type: '+ str(antennaTypesList[antTypeIdx])+' processing.')
-
-        # Total number of diagrams under the search path
-        totalNofDiagrams = dp.getNofDiagrams(antennaTypesList[antTypeIdx], ptu2ListPerAntennaType)
 
         # Get the desired diagrams list
         desiredDiagramList = dp.getDesiredDiagramsList(diagramConfig, diagramConfigList, antennaTypesList[antTypeIdx], ptu2ListPerAntennaType)
         if len(desiredDiagramList) == 0:
             myLogger.error('Empty diagram list.')
-        # List of sensors found
-        # sensorList=dp.getSensorList(antTypeIdx,parseDataList)
 
-        # # List of measurement date and time
-        # dateAndTimeList=dp.getDateAndTimeList(parseDataList)
-
-        #list of date-time and sensor comnbination
+        #list of date-time and sensor combination
         dateTimeSensorCombList = dp.getDateTimeSensorCombList(antennaTypesList[antTypeIdx], ptu2ListPerAntennaType)
         if len(dateTimeSensorCombList) != 0:
             myLogger.info('Num. of Sensor - Date and Time Comb. for Antenna Type ' + str(antennaTypesList[antTypeIdx]) + ': ' + str(len(dateTimeSensorCombList)) + '.')

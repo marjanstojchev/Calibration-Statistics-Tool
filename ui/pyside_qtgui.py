@@ -24,11 +24,6 @@ import enum
 import plotdata
 import numpy as np
 
-import PySide6
-dirname = os.path.dirname(PySide6.__file__)
-plugin_path = os.path.join(dirname, 'plugins', 'platforms')
-os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = plugin_path
-
 
 
 
@@ -4185,5 +4180,5 @@ mainLogTableFrameLayout.addWidget(mainLogTable,stretch=3)
 
 ##
 mainWidget.show()
-sys.exit(app.exec())
+# sys.exit(app.exec_())
 

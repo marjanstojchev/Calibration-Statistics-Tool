@@ -50,11 +50,14 @@ diagramConfig:
 
     # Set from a desired range
     lowerNumber: 0 # Present diagrams in a specific range. Chose lower number.
-    higherNumber: 3 # Present diagrams in a specific range. Chose higher number.
+    higherNumber: 4 # Present diagrams in a specific range. Chose higher number.
 
 # List of desired Diagram numbers
 diagramConfigList:
-    - 0
+    - 1
+    - 2
+    - 3
+    - 4
 
 # Level slide combination 
 twoGraphSetupList:

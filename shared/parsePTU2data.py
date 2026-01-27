@@ -2,11 +2,15 @@ import os
 from enum import Enum
 import io
 import safeparse as sp
-import logconfig as log
 
 ## Parse data module ##
 
-myLogger = log.mainLoadDataLogger.logger
+# Initialize logger safely
+try:
+    import logconfig as log
+    myLogger = log.mainLoadDataLogger.logger
+except:
+    myLogger = None
 
 # Power level [dB] and Power level variance [dB^2] per measurement point(angle) inside  one chirp
 class AntennaLevelData:
@@ -247,7 +251,10 @@ class searchParts(Enum):
 
 # Control wrapper for interpretData
 def parseFile(fileNamePath,ptu2ParseData):
-    myLogger.info('Parsing: ' + fileNamePath)
+    if myLogger:
+        myLogger.info('Parsing: ' + fileNamePath)
+    else:
+        print('Parsing: ' + fileNamePath)
     ptu2ParseData.fileNamePath = fileNamePath
     interpretData(fileNamePath,ptu2ParseData)
     if len(ptu2ParseData.errorList) == 0:
@@ -280,15 +287,14 @@ def interpretData(fileNamePath,ptu2ParseData):
 
     # Try to read the file
     try:
-        f = io.open(fileNamePath)
-
-    # Catch an exception
-    except IOError as ioErr:
-
-        # errorString='try reading: ' +fileNamePath+ ' Exception = ' + str(ioErr)
-        errorString = strMeasName + ' File does not exist! Insert a valid file path.'
-
-        ptu2ParseData.errorList.append(errorString)
+        f = io.open(fileNamePath, encoding='utf-8')
+    except (IOError, UnicodeDecodeError) as err:
+        try:
+            f = io.open(fileNamePath, encoding='windows-1252')
+        except IOError as ioErr:
+            # errorString='try reading: ' +fileNamePath+ ' Exception = ' + str(ioErr)
+            errorString = strMeasName + ' File does not exist! Insert a valid file path.'
+            ptu2ParseData.errorList.append(errorString)
     else:
         # Read the lines of the file and remove all white spaces
         with f:
@@ -297,9 +303,7 @@ def interpretData(fileNamePath,ptu2ParseData):
 
         # Traverse through every line of the content
         for line in content:
-            if 'File' in line:
-                rest = line.split(';')
-                ptu2ParseData.fileNamePath = rest[1]
+            # Note: File; lines have been removed from PTU files directly
             # Measurement setup info lookup
             if measSetupLineIndicator0 in line:
                 rest = line.strip(measSetupLineIndicator0)
@@ -334,9 +338,8 @@ def interpretData(fileNamePath,ptu2ParseData):
                 else:
                     ptu2ParseData.measSetupInfo.sensorUpsideDownFound = 0
             elif measSetupLineIndicator4 in line:
-                rest = line.strip(measSetupLineIndicator4)
-                rest = rest.strip(' ')
-                if 'Az' or 'El' in rest:
+                rest = line.replace(measSetupLineIndicator4, '').strip()
+                if ('Az' in rest) or ('El' in rest):
                     ptu2ParseData.measSetupInfo.antennaDiagramType = rest
                     ptu2ParseData.measSetupInfo.antennaDiagramTypeFound = 1
                 else:

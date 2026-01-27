@@ -117,9 +117,40 @@ dmypy.json
 output_antenna_patterns/
 output_huellkurven/
 output_merge/
+output/
+output_tx_diagrams/
 
 # Log files
 0_logFiles/
+
+# Test and debug scripts (specific files)
+test_diagram_ordering.py
+test_diagram_zero.py
+test_parsing.py
+test_protocols.py
+simple_test.py
+debug_actual_issue.py
+debug_antenna_types.py
+debug_az_el_issue.py
+debug_files.py
+debug_main_settings.py
+debug_ptu_parsing.py
+analyze_txant_diagram.py
+check_real_cause.py
+create_high_res_ptu_files.py
+fix_corrupted_ptu_files.py
+fix_ptu_files.py
+improve_antenna_patterns.py
+
+# Test data files
+minimal_test.txt
+test_ptu.txt
+
+# Measurement data (comment out if you want to track these)
+# measurement_data/
+
+# Documentation that might be auto-generated
+PTU_File_Format_Documentation.md
 
 # IDE - keep .vscode/settings.json for shared config
 .vscode/*

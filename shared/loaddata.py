@@ -115,6 +115,8 @@ class LoadData:
 
                 for dirName, subdirList, fileList in os.walk(absPath):
                     subdirList[:] = [d for d in subdirList if 'NotOk' not in d]
+                    # Sort fileList to ensure consistent order (preserves alphabetical/chronological order)
+                    fileList.sort()
                     for fileName in fileList:
                         if fileName.endswith(ptu2PathEnd):
                             if 'Diff' not in fileName and 'NotOk' not in fileName:

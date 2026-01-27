@@ -515,6 +515,8 @@ def addAndParsePtu2Files(sysDiagParsedDataDict, separatePtu2ParsedDataDict, sepa
     ptu2FilesList = []
     if qt.parseProtAddAndParsePtu2FDialog.exec_():
         ptu2FilesList = qt.parseProtAddAndParsePtu2FDialog.selectedFiles()
+        # Sort to ensure consistent display order
+        ptu2FilesList.sort()
 
     for item in ptu2FilesList:
         parseDataLog.info(item)
@@ -1332,10 +1334,10 @@ def sysDiagInputSetupChirpClick(btn):
 # 'nofSensorMeasToShow': 32,  # The max number of sensor measurements to show
 # 'ShowCertainPlotWindow': 0,
 
-qt.sysDiagInputSetupDiagConfigInputModeRadio1.setChecked(False)
+qt.sysDiagInputSetupDiagConfigInputModeRadio1.setChecked(True)
 qt.sysDiagInputSetupDiagConfigInputModeRadio2.setChecked(False)
-qt.sysDiagInputSetupDiagConfigInputModeRadio3.setChecked(True)
-antSysDiag.diagramConfig['selectDiagrams']=2
+qt.sysDiagInputSetupDiagConfigInputModeRadio3.setChecked(False)
+antSysDiag.diagramConfig['selectDiagrams']=0
 
 
 def sysDiagInputSetupDiagConfigInputModeClick():
@@ -1352,18 +1354,19 @@ def sysDiagInputSetupDiagConfigInputModeClick():
 
 #
 # desDiagListString = qt.sysDiagInputSetupDiagConfigDesListLEdit.text()
+qt.sysDiagInputSetupDiagConfigDesListLEdit.setText('1,2,3,4')
 
 qt.sysDiagInputSetupDiagConfigDesRangeLowLEdit.setText('0')
 
 if sp.checkInt(qt.sysDiagInputSetupDiagConfigDesRangeLowLEdit.text()) == True:
     antSysDiag.diagramConfig['lowerNumber'] = int(qt.sysDiagInputSetupDiagConfigDesRangeLowLEdit.text())
 antSysDiag.diagramConfig['lowerNumber'] = 0
-qt.sysDiagInputSetupDiagConfigDesRangeHighLEdit.setText('2')
+qt.sysDiagInputSetupDiagConfigDesRangeHighLEdit.setText('4')
 v = qt.sysDiagInputSetupDiagConfigDesRangeHighLEdit.text()
 
 if sp.checkInt(qt.sysDiagInputSetupDiagConfigDesRangeHighLEdit.text()) == True:
     antSysDiag.diagramConfig['higherNumber'] = int(qt.sysDiagInputSetupDiagConfigDesRangeHighLEdit.text())
-antSysDiag.diagramConfig['higherNumber'] = 2
+antSysDiag.diagramConfig['higherNumber'] = 4
 
 qt.sysDiagInputSetupDiagConfigOddEvenRadio1.setChecked(True)
 qt.sysDiagInputSetupDiagConfigOddEvenRadio2.setChecked(False)
@@ -2114,7 +2117,7 @@ def data_update_and_evaluation(parsedDataList, twoGraphSetupList, fourGraphSetup
     antSysDiag.start_data_evaluation(parsedDataList, antSysDiag.plotSetup, antSysDiag.chirpConfig, antSysDiag.graphConfig, antSysDiag.diagramConfig,
     twoGraphSetupList, fourGraphSetupList, threeGraphSetupList, allOnOneSlideGraphList, diagramConfigList, sysDiagLogger, output_pathpptx, pptxTitle, temp)
 
-qt.sysDiagStartPushBtn.clicked.connect(lambda:data_update_and_evaluation(sysDiagParsedDataDict['parsedDataList'], antSysDiag.twoGraphSetupList, antSysDiag.fourGraphSetupList, antSysDiag.threeGraphSetupList, antSysDiag.allOnOneSlideGraphList, antSysDiag.diagramConfigList, sysDiagLogger, aux.antSysDiagOutputPath, 'Antenna_diagrams.pptx', './template.pptx') )
+qt.sysDiagStartPushBtn.clicked.connect(lambda:data_update_and_evaluation(sysDiagParsedDataDict['parsedDataList'], antSysDiag.twoGraphSetupList, antSysDiag.fourGraphSetupList, antSysDiag.threeGraphSetupList, antSysDiag.allOnOneSlideGraphList, antSysDiag.diagramConfigList, sysDiagLogger, aux.antSysDiagOutputPath, 'Antenna_diagrams.pptx', './assets/template.pptx') )
 
 # fill up the table
 # qt.SysDiaInterStartBtn.clicked.connect(lambda: addAndParsePtu2Files(sysDiagParsedDataDict,separatePtu2ParsedDataDict,separatePtu2FailedDataDict))
@@ -2312,7 +2315,7 @@ def txantdiag_data_update_and_evaluation(parsedDataList, txAntDiagLogger, output
 
     txAntDiag.start_data_evaluation(parsedDataList, txAntDiag.plotSetup, txAntDiag.graphConfig, txAntDiagLogger, output_pathpptx, pptxTitle, starttemp)
 
-qt.txAntDiagStartPushBtn.clicked.connect(lambda:txantdiag_data_update_and_evaluation(txAntDiagParsedDataDict['parsedDataList'], txAntDiagLogger, aux.txAntDiagOutputPath, 'TxAnt_Diagrams.pptx', './template.pptx' ))
+qt.txAntDiagStartPushBtn.clicked.connect(lambda:txantdiag_data_update_and_evaluation(txAntDiagParsedDataDict['parsedDataList'], txAntDiagLogger, aux.txAntDiagOutputPath, 'TxAnt_Diagrams.pptx', './assets/template.pptx' ))
 
 ## Antenna Patterns
 
@@ -2445,16 +2448,12 @@ def antPatTableLEditParse(inputString):
         if char != '':
             if sp.checkInt(char) == True:
                 separatedList.append(int(char))
-    separatedList.sort()
+    
+    # Preserve original order while removing duplicates
     outputList = []
-
-    temp = separatedList[0]
-    outputList.append(temp)
-    for i in range(len(separatedList)):
-
-        if separatedList[i] != temp:
-            temp = separatedList[i]
-            outputList.append(temp)
+    for item in separatedList:
+        if item not in outputList:
+            outputList.append(item)
     return outputList
 
 
