@@ -128,6 +128,9 @@ test_diagram_ordering.py
 test_diagram_zero.py
 test_parsing.py
 test_protocols.py
+test_diagram_ordering.py
+test_diagram_zero.py
+test_parsing.py
 simple_test.py
 debug_actual_issue.py
 debug_antenna_types.py
@@ -140,6 +143,9 @@ check_real_cause.py
 create_high_res_ptu_files.py
 fix_corrupted_ptu_files.py
 fix_ptu_files.py
+fix_ptu_format.py
+fix_ptu_parsing.py
+generate_realistic_phase_data.py
 improve_antenna_patterns.py
 
 # Test data files
