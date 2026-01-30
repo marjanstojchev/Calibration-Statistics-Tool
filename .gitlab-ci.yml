@@ -15,6 +15,8 @@ variables:
   image: python:3.13                                  # Base image for Python jobs
   before_script:
     - export PYTHONPATH="$PYTHONPATH:$CI_PROJECT_DIR"  # Add project root to PYTHONPATH for local imports
+    - echo "CI_PROJECT_DIR: $CI_PROJECT_DIR"
+    - echo "PYTHONPATH: $PYTHONPATH"
     - python -m pip install --upgrade pip             # Upgrade pip first
     - pip install -e .                                # Install project with dependencies
     - pip install -r requirements.txt                 # Install dev tools (pytest, flake8, etc.)
