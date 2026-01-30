@@ -1,0 +1,58 @@
+# GitLab CI/CD Pipeline for Calibration Statistics Tool
+# This pipeline runs tests and validates the Python application
+
+stages:
+  # - lint
+  - test
+  # - build
+
+# Define variables
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"         # Where pip cache is stored
+
+# Hidden template job for Python jobs
+.default-python:
+  image: python:3.13                                  # Base image for Python jobs
+  before_script:
+    - python -m pip install --upgrade pip             # Upgrade pip first
+    - pip install -e .                                # Install project with dependencies
+    - pip install -r requirements.txt                 # Install dev tools (pytest, flake8, etc.)
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}                        # Cache key per branch
+    paths:
+      - .cache/pip                                     # Cache pip downloads
+
+# Test Stage - Run pytest
+test:
+  extends: .default-python
+  stage: test
+  script:
+    - python -m pytest --version
+    - python -m pytest
+  rules:
+    - if: $CI_COMMIT_BRANCH == "master"
+    - if: $CI_MERGE_REQUEST_ID
+
+# # Code Quality - Check imports and syntax
+# lint:
+#   extends: .default-python
+#   stage: lint
+#   script:
+#     - flake8 --max-line-length=120 --exclude=.venv,__pycache__ .
+#   allow_failure: true
+#   rules:
+#     - if: $CI_COMMIT_BRANCH == "master"
+#     - if: $CI_MERGE_REQUEST_ID
+
+# # Build Stage - Package the application
+# build:
+#   extends: .default-python
+#   stage: build
+#   script:
+#     - python -m build
+#   artifacts:
+#     paths:
+#       - dist/
+#     expire_in: 1 week
+#   rules:
+#     - if: $CI_COMMIT_BRANCH == "master"

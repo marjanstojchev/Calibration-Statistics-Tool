@@ -167,3 +167,7 @@ PTU_File_Format_Documentation.md
 # OS
 .DS_Store
 Thumbs.db
+
+# Ignore PTU measurement files
+measurement_data/ptu_files/
+measurement_data/ptu_files_backup_shapes/
