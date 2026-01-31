@@ -1,7 +1,7 @@
 import os
 import protocolsTest as protocolfilter
 import pyside_qtgui as qt
-import safeparse as sp
+from . import safeparse as sp
 import logconfig
 import protocolsTest as protocolFilter
 # loadDataLogger=logconfig.loadDataLogger

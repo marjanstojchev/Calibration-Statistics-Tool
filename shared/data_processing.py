@@ -1,6 +1,6 @@
 import calcdiagram_functions as calc
 import logconfig as log
-import safeparse as sp
+from . import safeparse as sp
 
 myLogger = log.antSysDiagLogger.logger
 

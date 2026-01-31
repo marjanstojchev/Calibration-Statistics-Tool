@@ -1,7 +1,7 @@
 import os
 from enum import Enum
 import io
-import safeparse as sp
+from . import safeparse as sp
 
 ## Parse data module ##
 
