@@ -28,7 +28,7 @@ test:
   stage: test
   script:
     - python -m pytest --version
-    - python -m pytest --junitxml=report.xml
+    - python -m pytest -v --junitxml=report.xml
   artifacts:
     reports:
       junit: report.xml
