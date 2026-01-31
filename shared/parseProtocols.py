@@ -1,4 +1,4 @@
-from . import safeparse as sp
+from shared import safeparse as sp
 from logconfig import logAdapter_PP as log
 import yaml
 import enum

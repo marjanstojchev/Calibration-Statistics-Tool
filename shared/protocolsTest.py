@@ -30,6 +30,7 @@ class ProtocolInfoClass:
 
     # eventuell noch in extra file parse/filter klasse?
     # get filtered file list, filtered by matching search pattern
+    @staticmethod
     def getfiltered_ptu2filelist(pathname, searchpattern):
         filteredfilescompletelist = []
         for root, dirs, files in os.walk(pathname):
@@ -44,6 +45,7 @@ class ProtocolInfoClass:
 
     # # eventuell noch in extra file parse/filter klasse?
     # # get filtered file list, filtered by matching search pattern
+    @staticmethod
     def getfiltered_txantdiagramfilelist(pathname, protocolIdentifier):
         filteredfilescompletelist = []
         for root, dirs, files in os.walk(pathname):
@@ -63,6 +65,7 @@ class ProtocolInfoClass:
         return filteredfilescompletelist
 
     # get all lines of this file as strings
+    @staticmethod
     def getFileLines(fileNamePath):
         errorlisttemp = []
         content = []
@@ -83,6 +86,7 @@ class ProtocolInfoClass:
         return content,errorlisttemp
 
 
+    @staticmethod
     def getPreParseInfo(filelineslist):
         strEOLNoErrorString          = 'E=0;'
         strEOLNoAbortCriterionString = 'K=0;'
@@ -144,11 +148,13 @@ class ProtocolInfoClass:
         return bFileEmpty, bErrorOccured, bAbortCriterion, bLimitExceeded, dateTime, prodSerial, rf, dsp
 
     # alle protokolldatei im uebergebenen dateipfad und allen unterverzeichnissen
+    @staticmethod
     def GetAllProtocolsList(pathname):
         return ProtocolInfoClass.getfiltered_ptu2filelist(pathname, '*proto*.txt') # dateilist gefiltert nach '*proto*.txt'
 
 
     # 'vorparsen' der protokolle: information ob fehler, abbruch kriterium oder messgrenzenueberschreitung aufgetreten ist
+    @staticmethod
     def PreParseProtcols(protocolpathlist):
         ProtocolPreParseInfosList = []
         for protocolfilepath in protocolpathlist:
@@ -194,6 +200,7 @@ class ProtocolInfoClass:
         return ProtocolPreParseInfosList, emptyprotocolslist, errorprotocolslist, abbortcritprotocolslist, LimitExceededprotocolslist
 
 
+    @staticmethod
     def FilterProtocols(ProtocolPreParseInfosList, bUseFilesWithError, bUseFilesAbbortCriterion, bUseFilesWIthLimitsExceeded):
         filteredProtocolsList    = []
         filtEmptyProtList        = []
@@ -223,6 +230,7 @@ class ProtocolInfoClass:
         # return the list
         return filteredProtocolsList, filteredOutProtocolsList
 
+    @staticmethod
     def FilterNewProtocols(acceptedProtocolsList):
         filteredNewList = []
         # Sort the list base on date and DSP number

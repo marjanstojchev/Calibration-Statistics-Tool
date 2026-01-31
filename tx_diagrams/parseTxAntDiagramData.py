@@ -1,7 +1,7 @@
 import os
 from enum import Enum
 import io
-import safeparse as sp
+from shared import safeparse as sp
 import logconfig as log
 
 myLogger=log.mainLoadDataLogger.logger

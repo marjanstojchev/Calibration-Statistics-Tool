@@ -13,7 +13,7 @@ import parsePTU2data as parsePtu2
 import parseTxAntDiagramData as parseTxAntDiag
 import logconfig
 import data_processing as dp
-import safeparse as sp
+from shared import safeparse as sp
 import load_TxAntData as ld_txantdiag
 import auxiliary as aux
 import protocolsTest as protocolFilter
