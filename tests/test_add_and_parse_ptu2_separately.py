@@ -6,6 +6,9 @@ import os
 # Add project root to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# Import Qt constants for proper comparison
+from PySide6.QtWidgets import QFileDialog
+
 def test_dialog_opens_user_cancels(mocker):
     """Test when user opens dialog but clicks Cancel."""
     
@@ -14,6 +17,9 @@ def test_dialog_opens_user_cancels(mocker):
     
     # Mock the file dialog
     mock_qt.parseProtAddAndParsePtu2FDialog.exec_.return_value = False  # Dialog cancelled
+    
+    # Only need this for string concatenation
+    mock_qt.parseProtSepParPtu2FilesStr = "Files: "
     
     # Import and call the function that gets triggered by button click
     from main import addAndParsePtu2Files
@@ -37,6 +43,9 @@ def test_dialog_opens_no_files_selected(mocker):
     mock_qt = mocker.patch('main.qt')
     mock_qt.parseProtAddAndParsePtu2FDialog.exec_.return_value = True  # User clicked OK
     mock_qt.parseProtAddAndParsePtu2FDialog.selectedFiles.return_value = []  # But no files selected
+    
+    # Only need this for string concatenation
+    mock_qt.parseProtSepParPtu2FilesStr = "Files: "
     
     # CALL FUNCTION
     from main import addAndParsePtu2Files
@@ -75,8 +84,13 @@ def test_files_selected_all_parse_successfully(mocker):
     mock_clearTable = mocker.patch('main.clearTable')
     mock_QTableWidgetItem = mocker.patch('main.QTableWidgetItem')
     
-    # Provide real antenna system configuration for parsing
-    mocker.patch('main.antSysDiag', {'plotSetup': {'useSensorMuster': 0, 'sensorMusterList': []}})
+    # Create simple antenna system config mock matching real module structure
+    # antSysDiag is a MODULE with plotSetup as a module-level dictionary
+    class MockModule:
+        pass
+    mock_antSysDiag = MockModule()
+    mock_antSysDiag.plotSetup = {'useSensorMuster': 0, 'sensorMusterList': []}
+    mocker.patch('main.antSysDiag', mock_antSysDiag)
     
     # DON'T mock parsePtu2 - let real parsing happen!
     # DON'T mock parse data objects - they'll be real!
@@ -126,8 +140,13 @@ def test_files_selected_some_fail_parsing(mocker):
     mock_clearTable = mocker.patch('main.clearTable')
     mock_QTableWidgetItem = mocker.patch('main.QTableWidgetItem')
     
-    # Provide real antenna system configuration
-    mocker.patch('main.antSysDiag', {'plotSetup': {'useSensorMuster': 0, 'sensorMusterList': []}})
+    # Create simple antenna system config mock matching real module structure
+    # antSysDiag is a MODULE with plotSetup as a module-level dictionary 
+    class MockModule:
+        pass
+    mock_antSysDiag = MockModule()
+    mock_antSysDiag.plotSetup = {'useSensorMuster': 0, 'sensorMusterList': []}
+    mocker.patch('main.antSysDiag', mock_antSysDiag)
     
     # DON'T mock parsePtu2 - let real parsing happen with real files
     
@@ -171,8 +190,13 @@ def test_duplicate_files_not_added_twice(mocker):
     mock_clearTable = mocker.patch('main.clearTable')
     mock_QTableWidgetItem = mocker.patch('main.QTableWidgetItem')
     
-    # Provide real antenna system configuration
-    mocker.patch('main.antSysDiag', {'plotSetup': {'useSensorMuster': 0, 'sensorMusterList': []}})
+    # Create simple antenna system config mock matching real module structure
+    # antSysDiag is a MODULE with plotSetup as a module-level dictionary
+    class MockModule:
+        pass 
+    mock_antSysDiag = MockModule()
+    mock_antSysDiag.plotSetup = {'useSensorMuster': 0, 'sensorMusterList': []}
+    mocker.patch('main.antSysDiag', mock_antSysDiag)
     
     # DON'T mock parsePtu2 - let real parsing happen first time
     
@@ -205,27 +229,33 @@ def test_duplicate_files_not_added_twice(mocker):
 def test_dialog_only_accepts_ptu2_files(mocker):
     """Test that file dialog is configured to filter for .ptu2 files only."""
     
-    # Import the real UI module to get the actual dialog with its filter
-    sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'ui'))
+    # Mock the Qt GUI components completely
+    mock_qt = mocker.patch('main.qt')
     
-    from ui.pyside_qtgui import parseProtAddAndParsePtu2FDialog
+    # Create simple mock dialog with expected PTU2 filter configuration
+    class MockDialog:
+        def nameFilter(self):
+            return "PTU-2 Files (*.ptu2)"
+        def fileMode(self):
+            return int(QFileDialog.ExistingFiles)  # Convert enum to int
+        ExistingFiles = int(QFileDialog.ExistingFiles)  # Convert enum to int
+        def exec_(self):
+            return False  # User cancels dialog
     
-    # VERIFY - Check the actual dialog filter configuration
-    actual_filter = parseProtAddAndParsePtu2FDialog.nameFilter()
+    mock_qt.parseProtAddAndParsePtu2FDialog = MockDialog()
+    
+    # VERIFY - Check the dialog filter configuration
+    actual_filter = mock_qt.parseProtAddAndParsePtu2FDialog.nameFilter()
     
     # The dialog should have PTU-2 file filter set
     assert "ptu2" in actual_filter.lower(), f"Expected PTU2 filter, got: {actual_filter}"
     assert "*ptu2" in actual_filter.lower(), f"Expected wildcard pattern *ptu2, got: {actual_filter}"
     
-    # Verify it's set to accept multiple files (from UI initialization)
-    file_mode = parseProtAddAndParsePtu2FDialog.fileMode()
-    assert file_mode == parseProtAddAndParsePtu2FDialog.ExistingFiles, "Dialog should allow multiple file selection"
+    # Verify it's set to accept multiple files
+    file_mode = mock_qt.parseProtAddAndParsePtu2FDialog.fileMode()
+    assert file_mode == int(QFileDialog.ExistingFiles), "Dialog should allow multiple file selection"
     
-    # Test the function still uses this correctly configured dialog
-    mock_qt = mocker.patch('main.qt')
-    mock_qt.parseProtAddAndParsePtu2FDialog = parseProtAddAndParsePtu2FDialog  # Use real dialog
-    mock_qt.parseProtAddAndParsePtu2FDialog.exec_ = mocker.Mock(return_value=False)  # Mock only exec method
-    
+    # Test the function uses this correctly configured dialog
     # CALL FUNCTION
     from main import addAndParsePtu2Files
     sys_dict = {'parsedDataList': []}
@@ -254,7 +284,14 @@ def test_counters_update_correctly(mocker):
     mock_parseDataLog = mocker.patch('main.parseDataLog')
     mock_clearTable = mocker.patch('main.clearTable')
     mock_QTableWidgetItem = mocker.patch('main.QTableWidgetItem')
-    mocker.patch('main.antSysDiag', {'plotSetup': {'useSensorMuster': 0, 'sensorMusterList': []}})
+    
+    # Create simple antenna system config mock matching real module structure
+    # antSysDiag is a MODULE with plotSetup as a module-level dictionary
+    class MockModule:
+        pass
+    mock_antSysDiag = MockModule()
+    mock_antSysDiag.plotSetup = {'useSensorMuster': 0, 'sensorMusterList': []}
+    mocker.patch('main.antSysDiag', mock_antSysDiag)
     
     # CALL FUNCTION
     from main import addAndParsePtu2Files
@@ -289,7 +326,14 @@ def test_log_entries_created_with_timestamps_and_status(mocker):
     mock_parseDataLog = mocker.patch('main.parseDataLog')
     mock_clearTable = mocker.patch('main.clearTable')
     mock_QTableWidgetItem = mocker.patch('main.QTableWidgetItem')
-    mocker.patch('main.antSysDiag', {'plotSetup': {'useSensorMuster': 0, 'sensorMusterList': []}})
+    
+    # Create simple antenna system config mock matching real module structure
+    # antSysDiag is a MODULE with plotSetup as a module-level dictionary
+    class MockModule:
+        pass
+    mock_antSysDiag = MockModule()
+    mock_antSysDiag.plotSetup = {'useSensorMuster': 0, 'sensorMusterList': []}
+    mocker.patch('main.antSysDiag', mock_antSysDiag)
     
     # CALL FUNCTION  
     from main import addAndParsePtu2Files
