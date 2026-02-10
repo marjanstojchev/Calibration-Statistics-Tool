@@ -9,12 +9,13 @@ stages:
 # Define variables
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"         # Where pip cache is stored
+  QT_QPA_PLATFORM: "offscreen"                        # Run Qt in headless mode for CI
 
 # Hidden template job for Python jobs
 .default-python:
   image: python:3.13                                  # Base image for Python jobs
   before_script:
-    - apt-get update && apt-get install -y libgl1-mesa-dev # Install libGL for PySide6
+    - apt-get update && apt-get install -y libgl1-mesa-dev libxkbcommon0 libxcb-xinerama0 libxcb-cursor0 libxrender1 libxrandr2 # Install Qt/PySide6 dependencies
     - python -m pip install --upgrade pip             # Upgrade pip first
     - pip install -e .                                # Install project with dependencies
     - pip install -r requirements.txt                 # Install dev tools (pytest, flake8, etc.)
