@@ -34,8 +34,7 @@ test:
       junit: report.xml
     expire_in: 30 days
   rules:
-    - if: $CI_COMMIT_BRANCH == "master"
-    - if: $CI_MERGE_REQUEST_ID
+    - if: $CI_COMMIT_BRANCH
 
 # # Code Quality - Check imports and syntax
 # lint:
