@@ -247,24 +247,27 @@ def test_duplicate_files_not_added_twice(mocker):
 
 
 def test_dialog_only_accepts_ptu2_files(mocker):
-    """Test that file dialog is configured to filter for .ptu2 files only."""
+    """Test that file dialog is configured to filter for PTU2 .txt files."""
     
     # Mock the Qt GUI components completely
     mock_qt = mocker.patch('main.qt')
     
     # No need for MockDialog, use qt.parseProtAddAndParsePtu2FDialog directly
-    mock_qt.parseProtAddAndParsePtu2FDialog.nameFilter.return_value = "PTU-2 Files (*.ptu2)"
+    mock_qt.parseProtAddAndParsePtu2FDialog.nameFilter.return_value = "PTU-2 Files (*_ptu2.txt)"
     mock_qt.parseProtAddAndParsePtu2FDialog.fileMode.return_value = QFileDialog.ExistingFiles
     mock_qt.parseProtAddAndParsePtu2FDialog.exec_.return_value = False  # User cancels dialog
 
+    # Mock clearTable to avoid MagicMock in range() operations
+    mocker.patch('main.clearTable')
+    
     # VERIFY - Check the dialog filter configuration
     actual_filter = mock_qt.parseProtAddAndParsePtu2FDialog.nameFilter()
     
-    # The dialog should have PTU-2 file filter set
+    # The dialog should have PTU-2 file filter set for .txt files
     assert "ptu2" in actual_filter.lower(), f"Expected PTU2 filter, got: {actual_filter}"
-    assert "*ptu2" in actual_filter.lower(), f"Expected wildcard pattern *ptu2, got: {actual_filter}"
+    assert ".txt" in actual_filter.lower(), f"Expected .txt extension, got: {actual_filter}"
     file_mode = mock_qt.parseProtAddAndParsePtu2FDialog.fileMode()
-    assert file_mode == 4, "Dialog should allow multiple file selection"
+    assert file_mode == QFileDialog.ExistingFiles, "Dialog should allow multiple file selection"
 
     # Call the function and check dialog configuration after
     from main import addAndParsePtu2Files
@@ -276,7 +279,8 @@ def test_dialog_only_accepts_ptu2_files(mocker):
     actual_filter_after = mock_qt.parseProtAddAndParsePtu2FDialog.nameFilter()
     file_mode_after = mock_qt.parseProtAddAndParsePtu2FDialog.fileMode()
     assert "ptu2" in actual_filter_after.lower(), f"Expected PTU2 filter after call, got: {actual_filter_after}"
-    assert file_mode_after == 4, "Dialog should allow multiple file selection after function call"
+    assert ".txt" in actual_filter_after.lower(), f"Expected .txt extension after call, got: {actual_filter_after}"
+    assert file_mode_after == QFileDialog.ExistingFiles, "Dialog should allow multiple file selection after function call"
 
 
 def test_counters_update_correctly(mocker):
@@ -290,6 +294,9 @@ def test_counters_update_correctly(mocker):
     good_file = 'C:\\Calibration Statistics Tool\\measurement_data\\ptu_files\\2024-01-15_08-15-30_Tuner1_rf12345_dsp67890_Seq1_TxAnt0_Diagram0_Az_ptu2.txt'
     bad_file = 'C:\\Calibration Statistics Tool\\tests\\bad_ptu2_test_file.txt'
     mock_qt.parseProtAddAndParsePtu2FDialog.selectedFiles.return_value = [good_file, bad_file]
+    
+    # Mock the string used for concatenation
+    mock_qt.parseProtSepParPtu2FilesStr = "Files: "
     
     # Mock UI components
     mock_parseDataLog = mocker.patch('main.parseDataLog')
