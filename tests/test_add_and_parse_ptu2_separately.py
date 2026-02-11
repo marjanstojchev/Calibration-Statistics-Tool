@@ -253,9 +253,9 @@ def test_dialog_only_accepts_ptu2_files(mocker):
     mock_qt = mocker.patch('main.qt')
     
     # No need for MockDialog, use qt.parseProtAddAndParsePtu2FDialog directly
-mock_qt.parseProtAddAndParsePtu2FDialog.nameFilter.return_value = "PTU-2 Files (*.ptu2)"
-mock_qt.parseProtAddAndParsePtu2FDialog.fileMode.return_value = QFileDialog.ExistingFiles
-mock_qt.parseProtAddAndParsePtu2FDialog.exec_.return_value = False  # User cancels dialog
+    mock_qt.parseProtAddAndParsePtu2FDialog.nameFilter.return_value = "PTU-2 Files (*.ptu2)"
+    mock_qt.parseProtAddAndParsePtu2FDialog.fileMode.return_value = QFileDialog.ExistingFiles
+    mock_qt.parseProtAddAndParsePtu2FDialog.exec_.return_value = False  # User cancels dialog
 
     # VERIFY - Check the dialog filter configuration
     actual_filter = mock_qt.parseProtAddAndParsePtu2FDialog.nameFilter()
