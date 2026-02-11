@@ -90,12 +90,13 @@ def test_files_selected_all_parse_successfully(mocker):
     mock_qt = mocker.patch('main.qt')
     mock_qt.parseProtAddAndParsePtu2FDialog.exec_.return_value = True  # User clicked OK
     
-    # Use REAL PTU files with different characteristics
+    # Use REAL PTU files with different characteristics - use absolute paths
+    test_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     real_ptu_files = [
-        'C:\\Calibration Statistics Tool\\measurement_data\\ptu_files\\2024-01-15_08-15-30_Tuner1_rf12345_dsp67890_Seq1_TxAnt0_Diagram0_Az_ptu2.txt',
-        'C:\\Calibration Statistics Tool\\measurement_data\\ptu_files\\2024-01-15_09-25-45_Tuner1_rf12345_dsp67890_Seq1_TxAnt1_Diagram2_Az_ptu2.txt',
-        'C:\\Calibration Statistics Tool\\measurement_data\\ptu_files\\2024-01-15_12-30-45_Tuner1_rf12345_dsp67890_Seq1_TxAnt0_Diagram1_El_ptu2.txt',
-        'C:\\Calibration Statistics Tool\\measurement_data\\ptu_files\\2024-01-15_14-45-10_Tuner1_rf12345_dsp67890_Seq1_TxAnt1_Diagram3_El_ptu2.txt'
+        os.path.join(test_dir, 'measurement_data', 'ptu_files', '2024-01-15_08-15-30_Tuner1_rf12345_dsp67890_Seq1_TxAnt0_Diagram0_Az_ptu2.txt'),
+        os.path.join(test_dir, 'measurement_data', 'ptu_files', '2024-01-15_09-25-45_Tuner1_rf12345_dsp67890_Seq1_TxAnt1_Diagram2_Az_ptu2.txt'),
+        os.path.join(test_dir, 'measurement_data', 'ptu_files', '2024-01-15_12-30-45_Tuner1_rf12345_dsp67890_Seq1_TxAnt0_Diagram1_El_ptu2.txt'),
+        os.path.join(test_dir, 'measurement_data', 'ptu_files', '2024-01-15_14-45-10_Tuner1_rf12345_dsp67890_Seq1_TxAnt1_Diagram3_El_ptu2.txt')
     ]
     mock_qt.parseProtAddAndParsePtu2FDialog.selectedFiles.return_value = real_ptu_files
     
@@ -149,9 +150,10 @@ def test_files_selected_some_fail_parsing(mocker):
     mock_qt = mocker.patch('main.qt')
     mock_qt.parseProtAddAndParsePtu2FDialog.exec_.return_value = True
     
-    # Use one REAL good file and one REAL bad file
-    good_file = 'C:\\Calibration Statistics Tool\\measurement_data\\ptu_files\\2024-01-15_08-15-30_Tuner1_rf12345_dsp67890_Seq1_TxAnt0_Diagram0_Az_ptu2.txt'
-    bad_file = 'C:\\Calibration Statistics Tool\\tests\\bad_ptu2_test_file.txt'
+    # Use one REAL good file and one REAL bad file - use absolute paths
+    test_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    good_file = os.path.join(test_dir, 'measurement_data', 'ptu_files', '2024-01-15_08-15-30_Tuner1_rf12345_dsp67890_Seq1_TxAnt0_Diagram0_Az_ptu2.txt')
+    bad_file = os.path.join(test_dir, 'tests', 'bad_ptu2_test_file.txt')
     
     mock_qt.parseProtAddAndParsePtu2FDialog.selectedFiles.return_value = [good_file, bad_file]
     
@@ -201,8 +203,9 @@ def test_duplicate_files_not_added_twice(mocker):
     mock_qt = mocker.patch('main.qt')
     mock_qt.parseProtAddAndParsePtu2FDialog.exec_.return_value = True
     
-    # Use a real PTU file that will be selected as "duplicate"
-    duplicate_file_path = 'C:\\Calibration Statistics Tool\\measurement_data\\ptu_files\\2024-01-15_08-15-30_Tuner1_rf12345_dsp67890_Seq1_TxAnt0_Diagram0_Az_ptu2.txt'
+    # Use a real PTU file that will be selected as "duplicate" - use absolute path
+    test_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    duplicate_file_path = os.path.join(test_dir, 'measurement_data', 'ptu_files', '2024-01-15_08-15-30_Tuner1_rf12345_dsp67890_Seq1_TxAnt0_Diagram0_Az_ptu2.txt')
     mock_qt.parseProtAddAndParsePtu2FDialog.selectedFiles.return_value = [duplicate_file_path]
     
     # Mock UI and logging components  
@@ -290,9 +293,10 @@ def test_counters_update_correctly(mocker):
     mock_qt = mocker.patch('main.qt')
     mock_qt.parseProtAddAndParsePtu2FDialog.exec_.return_value = True
     
-    # Use mix of good and bad files
-    good_file = 'C:\\Calibration Statistics Tool\\measurement_data\\ptu_files\\2024-01-15_08-15-30_Tuner1_rf12345_dsp67890_Seq1_TxAnt0_Diagram0_Az_ptu2.txt'
-    bad_file = 'C:\\Calibration Statistics Tool\\tests\\bad_ptu2_test_file.txt'
+    # Use mix of good and bad files - use absolute paths
+    test_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    good_file = os.path.join(test_dir, 'measurement_data', 'ptu_files', '2024-01-15_08-15-30_Tuner1_rf12345_dsp67890_Seq1_TxAnt0_Diagram0_Az_ptu2.txt')
+    bad_file = os.path.join(test_dir, 'tests', 'bad_ptu2_test_file.txt')
     mock_qt.parseProtAddAndParsePtu2FDialog.selectedFiles.return_value = [good_file, bad_file]
     
     # Mock the string used for concatenation
@@ -334,9 +338,11 @@ def test_log_entries_created_with_timestamps_and_status(mocker):
     mock_qt = mocker.patch('main.qt')
     mock_qt.parseProtAddAndParsePtu2FDialog.exec_.return_value = True
     
+    # Use absolute paths
+    test_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     test_files = [
-        'C:\\Calibration Statistics Tool\\measurement_data\\ptu_files\\2024-01-15_08-15-30_Tuner1_rf12345_dsp67890_Seq1_TxAnt0_Diagram0_Az_ptu2.txt',
-        'C:\\Calibration Statistics Tool\\measurement_data\\ptu_files\\2024-01-15_09-25-45_Tuner1_rf12345_dsp67890_Seq1_TxAnt1_Diagram2_Az_ptu2.txt'
+        os.path.join(test_dir, 'measurement_data', 'ptu_files', '2024-01-15_08-15-30_Tuner1_rf12345_dsp67890_Seq1_TxAnt0_Diagram0_Az_ptu2.txt'),
+        os.path.join(test_dir, 'measurement_data', 'ptu_files', '2024-01-15_09-25-45_Tuner1_rf12345_dsp67890_Seq1_TxAnt1_Diagram2_Az_ptu2.txt')
     ]
     mock_qt.parseProtAddAndParsePtu2FDialog.selectedFiles.return_value = test_files
     

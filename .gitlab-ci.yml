@@ -24,8 +24,8 @@ variables:
     paths:
       - .cache/pip                                     # Cache pip downloads
 
-# Test Stage - Run pytest
-test:
+# Test Stage - Run pytest on Linux
+test:linux:
   extends: .default-python
   stage: test
   script:
@@ -37,6 +37,26 @@ test:
     expire_in: 30 days
   rules:
     - if: $CI_COMMIT_BRANCH
+
+# Test Stage - Run pytest on Windows
+test:windows:
+  stage: test
+  tags:
+    - windows                                         # Requires Windows runner
+  before_script:
+    - python -m pip install --upgrade pip
+    - pip install -e .
+    - pip install -r requirements.txt
+  script:
+    - python -m pytest --version
+    - python -m pytest -v --junitxml=report.xml
+  artifacts:
+    reports:
+      junit: report.xml
+    expire_in: 30 days
+  rules:
+    - if: $CI_COMMIT_BRANCH
+  allow_failure: true                                 # Don't block pipeline if Windows runner unavailable
 
 # # Code Quality - Check imports and syntax
 # lint:
