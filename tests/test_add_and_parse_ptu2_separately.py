@@ -6,17 +6,27 @@ import os
 # Add project root to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# Import Qt constants for proper comparison
+from PySide6.QtWidgets import QFileDialog
+
 def test_dialog_opens_user_cancels(mocker):
     """Test when user opens dialog but clicks Cancel."""
     
     # Use pytest mocker instead of unittest.mock
     mock_qt = mocker.patch('main.qt')
     
-    # Mock the file dialog with proper return types
+    # Mock the file dialog
     mock_qt.parseProtAddAndParsePtu2FDialog.exec_.return_value = False  # Dialog cancelled
     
-    # Only need this for string concatenation - must be actual string
+    # Only need this for string concatenation
     mock_qt.parseProtSepParPtu2FilesStr = "Files: "
+    
+    # Create simple antenna system config mock matching real module structure
+    class MockModule:
+        pass
+    mock_antSysDiag = MockModule()
+    mock_antSysDiag.plotSetup = {'useSensorMuster': 0, 'sensorMusterList': []}
+    mocker.patch('main.antSysDiag', mock_antSysDiag)
     
     # Mock clearTable separately to avoid MagicMock in range() operations
     mocker.patch('main.clearTable')
@@ -44,8 +54,15 @@ def test_dialog_opens_no_files_selected(mocker):
     mock_qt.parseProtAddAndParsePtu2FDialog.exec_.return_value = True  # User clicked OK
     mock_qt.parseProtAddAndParsePtu2FDialog.selectedFiles.return_value = []  # But no files selected
     
-    # Only need this for string concatenation - must be actual string
+    # Only need this for string concatenation
     mock_qt.parseProtSepParPtu2FilesStr = "Files: "
+    
+    # Create simple antenna system config mock matching real module structure
+    class MockModule:
+        pass
+    mock_antSysDiag = MockModule()
+    mock_antSysDiag.plotSetup = {'useSensorMuster': 0, 'sensorMusterList': []}
+    mocker.patch('main.antSysDiag', mock_antSysDiag)
     
     # Mock clearTable separately to avoid MagicMock in range() operations
     mocker.patch('main.clearTable')
@@ -94,9 +111,6 @@ def test_files_selected_all_parse_successfully(mocker):
     mock_antSysDiag = MockModule()
     mock_antSysDiag.plotSetup = {'useSensorMuster': 0, 'sensorMusterList': []}
     mocker.patch('main.antSysDiag', mock_antSysDiag)
-    
-    # Ensure UI string operations work - must be actual string
-    mock_qt.parseProtSepParPtu2FilesStr = "Files: "
     
     # DON'T mock parsePtu2 - let real parsing happen!
     # DON'T mock parse data objects - they'll be real!
@@ -154,9 +168,6 @@ def test_files_selected_some_fail_parsing(mocker):
     mock_antSysDiag.plotSetup = {'useSensorMuster': 0, 'sensorMusterList': []}
     mocker.patch('main.antSysDiag', mock_antSysDiag)
     
-    # Ensure UI string operations work - must be actual string
-    mock_qt.parseProtSepParPtu2FilesStr = "Files: "
-    
     # DON'T mock parsePtu2 - let real parsing happen with real files
     
     # CALL FUNCTION
@@ -207,9 +218,6 @@ def test_duplicate_files_not_added_twice(mocker):
     mock_antSysDiag.plotSetup = {'useSensorMuster': 0, 'sensorMusterList': []}
     mocker.patch('main.antSysDiag', mock_antSysDiag)
     
-    # Ensure UI string operations work - must be actual string
-    mock_qt.parseProtSepParPtu2FilesStr = "Files: "
-    
     # DON'T mock parsePtu2 - let real parsing happen first time
     
     # FIRST CALL - Add file initially
@@ -248,6 +256,9 @@ def test_dialog_only_accepts_ptu2_files(mocker):
     class MockDialog:
         def nameFilter(self):
             return "PTU-2 Files (*.ptu2)"
+        def fileMode(self):
+            return int(QFileDialog.ExistingFiles)  # Convert enum to int
+        ExistingFiles = int(QFileDialog.ExistingFiles)  # Convert enum to int
         def exec_(self):
             return False  # User cancels dialog
     
@@ -259,6 +270,10 @@ def test_dialog_only_accepts_ptu2_files(mocker):
     # The dialog should have PTU-2 file filter set
     assert "ptu2" in actual_filter.lower(), f"Expected PTU2 filter, got: {actual_filter}"
     assert "*ptu2" in actual_filter.lower(), f"Expected wildcard pattern *ptu2, got: {actual_filter}"
+    
+    # Verify it's set to accept multiple files
+    file_mode = mock_qt.parseProtAddAndParsePtu2FDialog.fileMode()
+    assert file_mode == int(QFileDialog.ExistingFiles), "Dialog should allow multiple file selection"
     
     # Test the function uses this correctly configured dialog
     # CALL FUNCTION
@@ -297,9 +312,6 @@ def test_counters_update_correctly(mocker):
     mock_antSysDiag = MockModule()
     mock_antSysDiag.plotSetup = {'useSensorMuster': 0, 'sensorMusterList': []}
     mocker.patch('main.antSysDiag', mock_antSysDiag)
-    
-    # Ensure UI string operations work - must be actual string
-    mock_qt.parseProtSepParPtu2FilesStr = "Files: "
     
     # CALL FUNCTION
     from main import addAndParsePtu2Files
@@ -342,9 +354,6 @@ def test_log_entries_created_with_timestamps_and_status(mocker):
     mock_antSysDiag = MockModule()
     mock_antSysDiag.plotSetup = {'useSensorMuster': 0, 'sensorMusterList': []}
     mocker.patch('main.antSysDiag', mock_antSysDiag)
-    
-    # Ensure UI string operations work - must be actual string
-    mock_qt.parseProtSepParPtu2FilesStr = "Files: "
     
     # CALL FUNCTION  
     from main import addAndParsePtu2Files
