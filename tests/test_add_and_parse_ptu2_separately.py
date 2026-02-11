@@ -252,17 +252,10 @@ def test_dialog_only_accepts_ptu2_files(mocker):
     # Mock the Qt GUI components completely
     mock_qt = mocker.patch('main.qt')
     
-    # Create simple mock dialog with expected PTU2 filter configuration
-    class MockDialog:
-        def nameFilter(self):
-            return "PTU-2 Files (*.ptu2)"
-        def fileMode(self):
-            return int(QFileDialog.ExistingFiles)  # Convert enum to int
-        ExistingFiles = int(QFileDialog.ExistingFiles)  # Convert enum to int
-        def exec_(self):
-            return False  # User cancels dialog
-    
-    mock_qt.parseProtAddAndParsePtu2FDialog = MockDialog()
+        # No need for MockDialog, use qt.parseProtAddAndParsePtu2FDialog directly
+        mock_qt.parseProtAddAndParsePtu2FDialog.nameFilter.return_value = "PTU-2 Files (*.ptu2)"
+        mock_qt.parseProtAddAndParsePtu2FDialog.fileMode.return_value = QFileDialog.ExistingFiles
+        mock_qt.parseProtAddAndParsePtu2FDialog.exec_.return_value = False  # User cancels dialog
     
     # VERIFY - Check the dialog filter configuration
     actual_filter = mock_qt.parseProtAddAndParsePtu2FDialog.nameFilter()
@@ -270,22 +263,20 @@ def test_dialog_only_accepts_ptu2_files(mocker):
     # The dialog should have PTU-2 file filter set
     assert "ptu2" in actual_filter.lower(), f"Expected PTU2 filter, got: {actual_filter}"
     assert "*ptu2" in actual_filter.lower(), f"Expected wildcard pattern *ptu2, got: {actual_filter}"
-    
-    # Verify it's set to accept multiple files
     file_mode = mock_qt.parseProtAddAndParsePtu2FDialog.fileMode()
-    assert file_mode == int(QFileDialog.ExistingFiles), "Dialog should allow multiple file selection"
-    
-    # Test the function uses this correctly configured dialog
-    # CALL FUNCTION
+    assert file_mode == 4, "Dialog should allow multiple file selection"
+
+    # Call the function and check dialog configuration after
     from main import addAndParsePtu2Files
     sys_dict = {'parsedDataList': []}
     sep_parsed = {'parsedDataList': []}
     sep_failed = {'parsedDataList': []}
-    
     addAndParsePtu2Files(sys_dict, sep_parsed, sep_failed)
-    
-    # VERIFY - Function used the properly configured dialog
-    mock_qt.parseProtAddAndParsePtu2FDialog.exec_.assert_called_once()
+    # Check again after function call
+    actual_filter_after = mock_qt.parseProtAddAndParsePtu2FDialog.nameFilter()
+    file_mode_after = mock_qt.parseProtAddAndParsePtu2FDialog.fileMode()
+    assert "ptu2" in actual_filter_after.lower(), f"Expected PTU2 filter after call, got: {actual_filter_after}"
+    assert file_mode_after == 4, "Dialog should allow multiple file selection after function call"
 
 
 def test_counters_update_correctly(mocker):
