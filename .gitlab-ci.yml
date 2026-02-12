@@ -4,29 +4,38 @@
 stages:
   # - lint
   - test
-  # - build
+  - build
 
 # Define variables
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"         # Where pip cache is stored
   QT_QPA_PLATFORM: "offscreen"                        # Run Qt in headless mode for CI
 
-# Hidden template job for Python jobs
-.default-python:
-  image: python:3.13                                  # Base image for Python jobs
-  before_script:
-    - apt-get update && apt-get install -y libgl1-mesa-dev libxkbcommon0 libxcb-xinerama0 libxcb-cursor0 libxrender1 libxrandr2 libdbus-1-3 xvfb # Install Qt/PySide6 dependencies
-    - python -m pip install --upgrade pip             # Upgrade pip first
-    - pip install -e .                                # Install project with dependencies
-    - pip install -r requirements.txt                 # Install dev tools (pytest, flake8, etc.)
+# Shared cache configuration
+.pip-cache:
   cache:
     key: ${CI_COMMIT_REF_SLUG}                        # Cache key per branch
     paths:
       - .cache/pip                                     # Cache pip downloads
 
+# Shared Python installation steps
+.pip-installs:
+  before_script:
+    - python -m pip install --upgrade pip             # Upgrade pip
+    - pip install -e .                                # Install project with dependencies
+    - pip install -r requirements.txt                 # Install dev tools (pytest, flake8, etc.)
+
+# Linux Python setup (apt-get dependencies + pip installs)
+.linux-python:
+  extends: .pip-cache
+  image: python:3.13
+  before_script:
+    - apt-get update && apt-get install -y libgl1-mesa-dev libxkbcommon0 libxcb-xinerama0 libxcb-cursor0 libxrender1 libxrandr2 libdbus-1-3 xvfb # Install Qt/PySide6 dependencies
+    - !reference [.pip-installs, before_script]       # Then run shared pip installs
+
 # Test Stage - Run pytest on Linux
 test:linux:
-  extends: .default-python
+  extends: .linux-python
   stage: test
   script:
     - python -m pytest --version
@@ -40,13 +49,12 @@ test:linux:
 
 # Test Stage - Run pytest on Windows
 test:windows:
+  extends: .pip-cache
   stage: test
+  before_script:
+    - !reference [.pip-installs, before_script]       # Use shared pip installs
   tags:
     - windows                                         # Requires Windows runner
-  before_script:
-    - python -m pip install --upgrade pip
-    - pip install -e .
-    - pip install -r requirements.txt
   script:
     - python -m pytest --version
     - python -m pytest -v --junitxml=report.xml
@@ -58,26 +66,16 @@ test:windows:
     - if: $CI_COMMIT_BRANCH
   allow_failure: true                                 # Don't block pipeline if Windows runner unavailable
 
-# # Code Quality - Check imports and syntax
-# lint:
-#   extends: .default-python
-#   stage: lint
-#   script:
-#     - flake8 --max-line-length=120 --exclude=.venv,__pycache__ .
-#   allow_failure: true
-#   rules:
-#     - if: $CI_COMMIT_BRANCH == "master"
-#     - if: $CI_MERGE_REQUEST_ID
-
-# # Build Stage - Package the application
-# build:
-#   extends: .default-python
-#   stage: build
-#   script:
-#     - python -m build
-#   artifacts:
-#     paths:
-#       - dist/
-#     expire_in: 1 week
-#   rules:
-#     - if: $CI_COMMIT_BRANCH == "master"
+# Build Stage - Package the application
+build:
+  extends: .linux-python
+  stage: build
+  script:
+    - python -m pip install --upgrade build
+    - python -m build
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_BRANCH                           # Build on all branches (for testing)
