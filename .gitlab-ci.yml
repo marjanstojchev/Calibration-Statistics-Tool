@@ -5,6 +5,7 @@ stages:
   # - lint
   - test
   - build
+  - deploy
 
 # Define variables
 variables:
@@ -79,3 +80,40 @@ build:
     expire_in: 1 week
   rules:
     - if: $CI_COMMIT_BRANCH                           # Build on all branches (for testing)
+
+# Deploy Stage - Publish package to PyPI
+deploy:pypi:
+  extends: .linux-python
+  stage: deploy
+  dependencies:
+    - build                                           # Download artifacts from build job
+  script:
+    - python -m pip install --upgrade twine           # Install twine for uploading to PyPI
+    - python -m twine check dist/*                    # Validate distribution files
+    - python -m twine upload dist/* --non-interactive # Upload to PyPI using credentials
+  rules:
+    - if: $CI_COMMIT_TAG                              # Only deploy on git tags (e.g., v1.0.0)
+  environment:
+    name: production
+    url: https://pypi.org/project/calibration-statistics-tool/
+
+# Deploy Stage - Build and Push Docker image
+deploy:docker:
+  image: docker:latest
+  stage: deploy
+  services:
+    - docker:dind
+  variables:
+    DOCKER_DRIVER: overlay2
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
+  script:
+    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG .
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG
+  rules:
+    - if: $CI_COMMIT_TAG
+  dependencies:
+    - build
+  environment:
+    name: docker-production
+    url: $CI_REGISTRY_IMAGE
