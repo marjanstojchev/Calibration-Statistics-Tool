@@ -80,6 +80,7 @@ build:
     expire_in: 1 week
   rules:
     - if: $CI_COMMIT_BRANCH                           # Build on all branches (for testing)
+    - if: $CI_COMMIT_TAG                              # Also build on tags (for deployment)
 
 # Deploy Stage - Publish package to PyPI
 deploy:pypi:
@@ -118,21 +119,3 @@ deploy:docker:
     name: docker-production
     url: $CI_REGISTRY_IMAGE
 
-# Deploy Stage - Build and Push Windows Docker image
-deploy:docker:windows:
-  stage: deploy
-  tags:
-    - windows                                         # Requires Windows runner with Docker support
-  before_script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-  script:
-    - docker build -f Dockerfile.windows -t ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}-windows .
-    - docker push ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}-windows
-  rules:
-    - if: $CI_COMMIT_TAG
-  dependencies:
-    - build
-  environment:
-    name: docker-production-windows
-    url: $CI_REGISTRY_IMAGE
-  allow_failure: true                                 # Don't block if Windows Docker runner unavailable
