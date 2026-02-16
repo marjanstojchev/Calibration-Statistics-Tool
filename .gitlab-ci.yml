@@ -91,7 +91,7 @@ deploy:pypi:
   script:
     - python -m pip install --upgrade twine           # Install twine for uploading to PyPI
     - python -m twine check dist/*                    # Validate distribution files
-    - python -m twine upload dist/* --non-interactive # Upload to PyPI using credentials
+    - python -m twine upload --disable-trusted-publishing dist/* --non-interactive # Upload to PyPI using credentials
   rules:
     - if: $CI_COMMIT_TAG                              # Only deploy on git tags (e.g., v1.0.0)
   environment:
