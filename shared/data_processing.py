@@ -5,23 +5,23 @@ from shared import safeparse as sp
 myLogger = log.antSysDiagLogger.logger
 
 class ImportedProtcolsData():
-    def _init_(self):
+    def __init__(self):
         self.protocolDataList=[]
 
 class ProtocolData():
-    def _init_(self):
+    def __init__(self):
         self.protocolPath=''
         self.ptu2DataList=[]
         self.txAntDiagDataList=[]
 
 class PTU2Data():
-    def _init_(self):
+    def __init__(self):
         self.filesList=[]
         self.protocolPath=''
 
 
 class TxAntDiagData():
-    def _init_(self):
+    def __init__(self):
         self.filesList=[]
         self.protocolPath=''
 
