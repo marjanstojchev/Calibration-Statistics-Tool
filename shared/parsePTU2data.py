@@ -180,11 +180,11 @@ class FileTitle:
                     self.dspFound = 1
             if self.seqNumFound == 0:
                 if 'Seq' in part:
-                    # self.seqNumFound = 1
                     part = part.strip('Seq')
                     if 'TxAnt' not in part:
                         if (sp.checkInt(part)):
                             self.seqNum = int(part)
+                            self.seqNumFound = 1
                     else:
                         a = part.replace('TxAnt','.')
 
@@ -306,7 +306,7 @@ def interpretData(fileNamePath,ptu2ParseData):
             # Note: File; lines have been removed from PTU files directly
             # Measurement setup info lookup
             if measSetupLineIndicator0 in line:
-                rest = line.strip(measSetupLineIndicator0)
+                rest = line[len(measSetupLineIndicator0):]
                 rest = rest.replace(',', '.')
                 if sp.checkDecimal(rest):
                     ptu2ParseData.measSetupInfo.phyDoppGenDist = float(rest)
@@ -345,7 +345,7 @@ def interpretData(fileNamePath,ptu2ParseData):
                 else:
                     ptu2ParseData.measSetupInfo.antennaDiagramTypeFound = 0
             elif measSetupLineIndicator5 in line:
-                rest = line.strip(measSetupLineIndicator5)
+                rest = line[len(measSetupLineIndicator5):]
                 rest = rest.replace(',', '.')
                 if sp.checkInt(rest):
                     ptu2ParseData.measSetupInfo.oppositeToPanAngle = int(rest)
