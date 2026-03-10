@@ -6,12 +6,10 @@ def getAvgAntLevel(rxAnt,ptu2ParseData):
     nofActiveChirps=0
     avgData=np.zeros(getNofAngVals(ptu2ParseData))
     for chirp in range(ptu2ParseData.MAX_CHIRP):
-        currData = getAntLevel(rxAnt, chirp, ptu2ParseData)
         if ptu2ParseData.chirpInfoList[chirp].active==1:
             nofActiveChirps+=1
-            for i in range(getNofAngVals(ptu2ParseData)):
-                currData[i] = 10 ** (currData[i] / 10) #To Watt
-            avgData=avgData + currData
+            currData = getAntLevel(rxAnt, chirp, ptu2ParseData)
+            avgData += 10 ** (currData / 10)  # accumulate in Watts
     avgData=avgData/nofActiveChirps
     avgData=10 * np.log10(avgData)
     return avgData
@@ -20,12 +18,10 @@ def getAvgNormAntLevel(rxAnt,ptu2ParseData):
     nofActiveChirps=0
     avgData=np.zeros(getNofAngVals(ptu2ParseData))
     for chirp in range(ptu2ParseData.MAX_CHIRP):
-        currData = getNormAntLevel(rxAnt, chirp, ptu2ParseData)
         if ptu2ParseData.chirpInfoList[chirp].active==1:
             nofActiveChirps+=1
-            for i in range(getNofAngVals(ptu2ParseData)):
-                currData[i] = 10 ** (currData[i] / 10) #To Watt
-            avgData=avgData + currData
+            currData = getNormAntLevel(rxAnt, chirp, ptu2ParseData)
+            avgData += 10 ** (currData / 10)  # accumulate in Watts
     avgData=avgData/nofActiveChirps
     avgData=10 * np.log10(avgData)
     return avgData
@@ -36,10 +32,7 @@ def getAvgNormAntLevel(rxAnt,ptu2ParseData):
 #     return ptu2ParseData
 
 def getPtuAngVals(ptu2ParseData):
-    angle = np.zeros(len(ptu2ParseData.ptuPosDataList))
-    for i in range(len(ptu2ParseData.ptuPosDataList)):
-        angle[i] = ptu2ParseData.ptuPosDataList[i].d_PTU_Angle
-    return angle
+    return np.array([pos.d_PTU_Angle for pos in ptu2ParseData.ptuPosDataList], dtype=np.float64)
 
 def getTarAngVals(ptu2ParseData,upsideDown):
     if upsideDown==0:
@@ -49,10 +42,8 @@ def getTarAngVals(ptu2ParseData,upsideDown):
     return angle
 
 def getAntLevel(rxAnt,chirp,ptu2ParseData):
-    level=np.zeros(getNofAngVals(ptu2ParseData))
-    for i in range(getNofAngVals(ptu2ParseData)):
-        level[i]=ptu2ParseData.ptuPosDataList[i].chirpMeasDataList[chirp].antennaLevelDataList[rxAnt].dLevel
-    return level
+    return np.array([pos.chirpMeasDataList[chirp].antennaLevelDataList[rxAnt].dLevel
+                     for pos in ptu2ParseData.ptuPosDataList], dtype=np.float64)
 
 def getNormAntLevel(rxAnt,chirp,ptu2ParseData):
     normLevel=getAntLevel(rxAnt,chirp,ptu2ParseData)
@@ -63,10 +54,8 @@ def getNofAngVals(ptu2ParseData):
      return len(ptu2ParseData.ptuPosDataList)
 
 def getPhaseDiff(phaseDiffIdx, chirp, ptu2ParseData):
-    phaseDiff=np.zeros(getNofAngVals(ptu2ParseData))
-    for i in range(getNofAngVals(ptu2ParseData)):
-        phaseDiff[i]=ptu2ParseData.ptuPosDataList[i].chirpMeasDataList[chirp].diffPhaseDataList[phaseDiffIdx].dDiffPhase
-    return phaseDiff
+    return np.array([pos.chirpMeasDataList[chirp].diffPhaseDataList[phaseDiffIdx].dDiffPhase
+                     for pos in ptu2ParseData.ptuPosDataList], dtype=np.float64)
 
 def getAvgPhaseDiff(phaseDiffIdx, ptu2ParseData):
     nofActiveChirps=0
@@ -312,11 +301,6 @@ def getPhaseDiffOffCorrCont(phaseDiffIdx, chirp, ptu2ParseData):
     # return phaseDiffCorr
 
 def getPhaseInRange(graphArray):
-    arrayLength=len(graphArray)
-    # phaseInRange=np.zeros(arrayLength)
-    for i in range(arrayLength):
-        if graphArray[i]> 180:
-            graphArray[i]=graphArray[i]-360
-        if graphArray[i] <(-180):
-           graphArray[i]=graphArray[i]+360
+    graphArray = np.where(graphArray >  180, graphArray - 360, graphArray)
+    graphArray = np.where(graphArray < -180, graphArray + 360, graphArray)
     return graphArray
