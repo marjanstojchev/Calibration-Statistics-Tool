@@ -109,7 +109,7 @@ def simple_ptu2_data():
 
     data.bDataValid = True
     data.fileNamePath = 'test_fixture_file.txt'
-
+    data.buildArrays()
     return data
 
 
@@ -144,4 +144,5 @@ def single_active_chirp_ptu2_data():
         data.ptuPosDataList.append(pos)
 
     data.bDataValid = True
+    data.buildArrays()
     return data

@@ -1,6 +1,7 @@
 import os
 from enum import Enum
 import io
+import numpy as np
 from shared import safeparse as sp
 
 ## Parse data module ##
@@ -98,6 +99,38 @@ class PTU2ParseData:
         self.ptuPosDataList = [] # Messdaten an der jeweiligen ptu position
         self.fileTitle      = FileTitle()
         self.measSetupInfo  = MeasSetupInfo()
+        # Flattened NumPy arrays — built by buildArrays() after parsing
+        # shape: (nof_angles,)                         → PTU angle per position
+        self.angles_array  = None
+        # shape: (nof_angles, MAX_CHIRP, nof_antennas) → antenna level [dB]
+        self.levels_array  = None
+        # shape: (nof_angles, MAX_CHIRP, nof_diff)     → phase difference [°]
+        self.phases_array  = None
+
+    # Build flat NumPy arrays from ptuPosDataList for fast slicing in calcdiagram_functions
+    def buildArrays(self):
+        nof_angles   = len(self.ptuPosDataList)
+        nof_antennas = self.antennaInfo.nofAntennas
+        nof_diff     = self.antennaInfo.getNofAntennaDiffValues()
+        self.angles_array = np.array(
+            [pos.d_PTU_Angle for pos in self.ptuPosDataList],
+            dtype=np.float64
+        )
+        self.levels_array = np.array(
+            [[[pos.chirpMeasDataList[chirp].antennaLevelDataList[ant].dLevel
+               for ant in range(nof_antennas)]
+              for chirp in range(self.MAX_CHIRP)]
+             for pos in self.ptuPosDataList],
+            dtype=np.float64
+        )  # shape: (nof_angles, MAX_CHIRP, nof_antennas)
+        self.phases_array = np.array(
+            [[[pos.chirpMeasDataList[chirp].diffPhaseDataList[diff].dDiffPhase
+               for diff in range(nof_diff)]
+              for chirp in range(self.MAX_CHIRP)]
+             for pos in self.ptuPosDataList],
+            dtype=np.float64
+        )  # shape: (nof_angles, MAX_CHIRP, nof_diff)
+
     # Call parse data from the PTU2ParseData object (parseData wrapper)
     def parseFile(self, fileNamePath, useSensorMuster, sensorMusterList):
         self.errorList = []
@@ -259,6 +292,7 @@ def parseFile(fileNamePath,ptu2ParseData):
     interpretData(fileNamePath,ptu2ParseData)
     if len(ptu2ParseData.errorList) == 0:
         ptu2ParseData.bDataValid = True
+        ptu2ParseData.buildArrays()
     else:
         ptu2ParseData.bDataValid = False
     return ptu2ParseData

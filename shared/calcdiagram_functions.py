@@ -32,6 +32,8 @@ def getAvgNormAntLevel(rxAnt,ptu2ParseData):
 #     return ptu2ParseData
 
 def getPtuAngVals(ptu2ParseData):
+    if ptu2ParseData.angles_array is not None:
+        return ptu2ParseData.angles_array
     return np.array([pos.d_PTU_Angle for pos in ptu2ParseData.ptuPosDataList], dtype=np.float64)
 
 def getTarAngVals(ptu2ParseData,upsideDown):
@@ -42,6 +44,8 @@ def getTarAngVals(ptu2ParseData,upsideDown):
     return angle
 
 def getAntLevel(rxAnt,chirp,ptu2ParseData):
+    if ptu2ParseData.levels_array is not None:
+        return ptu2ParseData.levels_array[:, chirp, rxAnt].copy()
     return np.array([pos.chirpMeasDataList[chirp].antennaLevelDataList[rxAnt].dLevel
                      for pos in ptu2ParseData.ptuPosDataList], dtype=np.float64)
 
@@ -54,6 +58,8 @@ def getNofAngVals(ptu2ParseData):
      return len(ptu2ParseData.ptuPosDataList)
 
 def getPhaseDiff(phaseDiffIdx, chirp, ptu2ParseData):
+    if ptu2ParseData.phases_array is not None:
+        return ptu2ParseData.phases_array[:, chirp, phaseDiffIdx].copy()
     return np.array([pos.chirpMeasDataList[chirp].diffPhaseDataList[phaseDiffIdx].dDiffPhase
                      for pos in ptu2ParseData.ptuPosDataList], dtype=np.float64)
 
