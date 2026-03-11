@@ -407,15 +407,15 @@ def fillInProtocolData(protocolFilesList, acceptedProtocolPathDict, filteredProt
     #
 
 
-    parseProtSelProtTableHeader.setSectionResizeMode(0, qt.QHeaderView.Interactive)
+    parseProtSelProtTableHeader.setSectionResizeMode(0, qt.QHeaderView.ResizeMode.Interactive)
     qt.parseProtSelProtTable.setColumnWidth(0, 400)
 
-    parseProtSelProtTableHeader.setSectionResizeMode(1, qt.QHeaderView.Interactive)
+    parseProtSelProtTableHeader.setSectionResizeMode(1, qt.QHeaderView.ResizeMode.Interactive)
     qt.parseProtSelProtTable.setColumnWidth(1, 110)
 
-    parseProtSelProtTableHeader.setSectionResizeMode(2, qt.QHeaderView.Interactive)
+    parseProtSelProtTableHeader.setSectionResizeMode(2, qt.QHeaderView.ResizeMode.Interactive)
 
-    parseProtSelProtTableHeader.setSectionResizeMode(3, qt.QHeaderView.Stretch)
+    parseProtSelProtTableHeader.setSectionResizeMode(3, qt.QHeaderView.ResizeMode.Stretch)
 
 
 
@@ -756,6 +756,20 @@ def loadCalLimitsGroupsFile():
     qt.parseProtProtDataLimGroupsCalLabel.setToolTip(filePath)
 
 
+def setup_progress_bar(protToBeParsedDict: dict, protocolPathDict: dict) -> tuple[str, int]:
+    """Setup the progress bar for protocol parsing."""
+    qt.parseProtProgresBar.reset()
+    protToBeParsedListLen = len(protToBeParsedDict['protocolPathTypeDictList'])
+    progBarLabelStr = ''
+    if len(protToBeParsedDict['protocolPathTypeDictList']) != 0:
+        qt.parseProtProgresBar.setRange(0, len(protToBeParsedDict['protocolPathTypeDictList']))
+        progBarLabelStr = f'Protocols to be parsed: {len(protToBeParsedDict["protocolPathTypeDictList"])} / {len(protocolPathDict["protocolPathTypeDictList"])}. '
+        qt.parseProtProgresLabel.setText(progBarLabelStr)
+        qt.parseProtProgresBar.setValue(0)
+        qt.parseProtProgresBar.setFormat(f'{qt.parseProtProgresBar.value()} / {protToBeParsedListLen}')
+    return progBarLabelStr, protToBeParsedListLen
+
+
 def parseData(protocolPathDict, protToBeParsedDict, parsedProtDict, sysDiagFilePathDict, txDiagfilePathDict, sysDiagParsedDataDict, txAntDiagParsedDataDict):
 
     qt.parseProtTableTabWidget.setCurrentIndex(1)
@@ -795,15 +809,7 @@ def parseData(protocolPathDict, protToBeParsedDict, parsedProtDict, sysDiagFileP
     txAntDiagParsedDataList = []
 
     ##ProgressBar range update
-    qt.parseProtProgresBar.reset()
-    protToBeParsedListLen = len(protToBeParsedDict['protocolPathTypeDictList'])
-    # qt.parseProtProgresLabel.setText('No Protocols Loaded.')
-    if len(protToBeParsedDict['protocolPathTypeDictList']) != 0:
-        qt.parseProtProgresBar.setRange(0, len(protToBeParsedDict['protocolPathTypeDictList']))
-        progBarLabelStr='Protocols to be parsed: '+str(len(protToBeParsedDict['protocolPathTypeDictList']))+' / '+str(len(protocolPathDict['protocolPathTypeDictList']))+'. '
-        qt.parseProtProgresLabel.setText(progBarLabelStr)
-        qt.parseProtProgresBar.setValue(0)
-        qt.parseProtProgresBar.setFormat(str(qt.parseProtProgresBar.value()) + ' / ' + str(protToBeParsedListLen))
+    progBarLabelStr, protToBeParsedListLen = setup_progress_bar(protToBeParsedDict, protocolPathDict)
 
 
     tenPercent = int(protToBeParsedListLen/10)
@@ -911,15 +917,15 @@ def parseData(protocolPathDict, protToBeParsedDict, parsedProtDict, sysDiagFileP
     # parseProtAccProtTableHeader.setStretchLastSection(True)
     #
 
-    parseProtAccProtTableHeader.setSectionResizeMode(0, qt.QHeaderView.Interactive)
+    parseProtAccProtTableHeader.setSectionResizeMode(0, qt.QHeaderView.ResizeMode.Interactive)
     qt.parseProtAccProtTable.setColumnWidth(0, 400)
 
-    parseProtAccProtTableHeader.setSectionResizeMode(1, qt.QHeaderView.Interactive)
+    parseProtAccProtTableHeader.setSectionResizeMode(1, qt.QHeaderView.ResizeMode.Interactive)
     qt.parseProtAccProtTable.setColumnWidth(1, 110)
 
-    parseProtAccProtTableHeader.setSectionResizeMode(2, qt.QHeaderView.Interactive)
+    parseProtAccProtTableHeader.setSectionResizeMode(2, qt.QHeaderView.ResizeMode.Interactive)
 
-    parseProtAccProtTableHeader.setSectionResizeMode(3, qt.QHeaderView.Stretch)
+    parseProtAccProtTableHeader.setSectionResizeMode(3, qt.QHeaderView.ResizeMode.Stretch)
 
     refRoxIdx = qt.parseProtAccProtTable.rowCount()
 
@@ -984,17 +990,17 @@ def importDbProtocolsList(burnInProtocolPathDict, burnInParsedProtDict, burnInPr
 
 def importBurnInProtocolsList(burnInProtocolPathDict, burnInParsedProtDict, burnInProtToBeParsedDict, allCertProtocolPathDict):
     # cert module removed - using simplified version without cert.importData
-    burnInProtocolsPath = qt.certImportDataBurnInFolderLEdit.text()
+    # burnInProtocolsPath = qt.certImportDataBurnInFolderLEdit.text()  # Removed: widget no longer exists
 
     burnInProtocolFilesList = []
-    try:
-        for root, dirs, files in os.walk(burnInProtocolsPath):
-            for file in files:
-                if file.endswith('Protocol.txt'):
-                    path = os.path.join(root,file)
-                    burnInProtocolFilesList.append(path)
-    except Exception as e:
-        parseDataLog.error('Importing BurnIn Protoocols from directory: '+str(e)+'.')
+    # try:
+    #     for root, dirs, files in os.walk(burnInProtocolsPath):
+    #         for file in files:
+    #             if file.endswith('Protocol.txt'):
+    #                 path = os.path.join(root,file)
+    #                 burnInProtocolFilesList.append(path)
+    # except Exception as e:
+    #     parseDataLog.error('Importing BurnIn Protoocols from directory: '+str(e)+'.')
 
     fillInCertProtocolData(burnInProtocolFilesList, burnInProtocolPathDict, burnInParsedProtDict, burnInProtToBeParsedDict, allCertProtocolPathDict, 'BurnIn')
 
@@ -1004,14 +1010,14 @@ def importCalProtocolsList(calProtocolPathDict, calParsedProtDict, calProtToBePa
     # calProtocolsPath = qt.certImportDataCalFolderLEdit.text()  # Removed: widget no longer exists
 
     calProtocolFilesList = []
-    try:
-        for root, dirs, files in os.walk(calProtocolsPath):
-            for file in files:
-                if file.endswith('Protocol.txt'):
-                    path = os.path.join(root,file)
-                    calProtocolFilesList.append(path)
-    except Exception as e:
-        parseDataLog.error('Importing Calibration Protoocols from directory: '+str(e)+'.')
+    # try:
+    #     for root, dirs, files in os.walk(calProtocolsPath):
+    #         for file in files:
+    #             if file.endswith('Protocol.txt'):
+    #                 path = os.path.join(root,file)
+    #                 calProtocolFilesList.append(path)
+    # except Exception as e:
+    #     parseDataLog.error('Importing Calibration Protoocols from directory: '+str(e)+'.')
 
     fillInCertProtocolData(calProtocolFilesList, calProtocolPathDict, calParsedProtDict, calProtToBeParsedDict, allCertProtocolPathDict, 'Calibration')
 
@@ -1030,9 +1036,10 @@ def fillInCertProtocolData(protocolFilesList, protocolPathDict, parsedProtDict, 
     # qt.parseProtProgresBar.reset()
 
     relRowIdx = 0
+    refRowIdx = 0
     if len(allCertProtocolPathDict['protocolPathList']) == 0:
         # qt.parseProtSelCertProtTable.setRowCount(0)  # Removed: widget no longer exists
-        refRoxIdx = 0
+        refRowIdx = 0
 
     # protNotPresent=0
     protNonRepList = []
@@ -1153,7 +1160,7 @@ def clearTable(tableWidget):
     # tableWidget.clearContents()
     tableWidget.setRowCount(qt.PARSE_PROT_TABLE_ROWS)
     tableWidgetHeader = tableWidget.horizontalHeader()
-    tableWidgetHeader.setSectionResizeMode(qt.QHeaderView.Stretch)
+    tableWidgetHeader.setSectionResizeMode(qt.QHeaderView.ResizeMode.Stretch)
 
 
 def getprotcols(allProtocolsPathNamesList, searchPtu2Files, searchTxAntDiagFiles):
@@ -2693,7 +2700,7 @@ qt.parseProtMergePPTXBtn.clicked.connect(lambda:data_update_and_evaluation(sysDi
 
 #####  ####  ###  ##  #
 
-def run():
+def run() -> None:
     """Entry point for installed package."""
     sys.exit(qt.app.exec())
 

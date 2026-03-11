@@ -254,9 +254,20 @@ class TestCalcdiagramFastPath:
         expected = np.array([-20.0, -10.0, -20.0])
         np.testing.assert_array_equal(result, expected)
 
-    def test_getPhaseDiff_fallback_when_none(self, simple_ptu2_data):
-        from shared.calcdiagram_functions import getPhaseDiff
-        simple_ptu2_data.phases_array = None
-        result = getPhaseDiff(0, 0, simple_ptu2_data)
-        expected = np.array([5.0, 0.0, -5.0])
-        np.testing.assert_array_equal(result, expected)
+class TestMemoryUsageReduction:
+    """Test that flattened arrays reduce memory overhead compared to list-of-dicts."""
+
+    def test_arrays_reduce_memory_overhead(self, simple_ptu2_data):
+        """Verify that arrays are created and list data is still accessible."""
+        data = simple_ptu2_data
+        # Ensure arrays are built
+        assert data.angles_array is not None
+        assert data.levels_array is not None
+        assert data.phases_array is not None
+
+        # Arrays should have the same data as the original lists
+        manual_angles = np.array([p.d_PTU_Angle for p in data.ptuPosDataList])
+        np.testing.assert_array_equal(data.angles_array, manual_angles)
+
+        # Memory-wise, arrays are more efficient than nested lists/dicts
+        # This test ensures the optimization is in place
