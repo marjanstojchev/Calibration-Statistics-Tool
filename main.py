@@ -14,6 +14,7 @@ import parseTxAntDiagramData as parseTxAntDiag
 import logconfig
 import data_processing as dp
 from shared import safeparse as sp
+from shared.parse_helpers import filter_protocol_file_lists, merge_into_parsed_dicts
 import load_TxAntData as ld_txantdiag
 import auxiliary as aux
 import protocolsTest as protocolFilter
@@ -770,215 +771,185 @@ def setup_progress_bar(protToBeParsedDict: dict, protocolPathDict: dict) -> tupl
     return progBarLabelStr, protToBeParsedListLen
 
 
-def parseData(protocolPathDict, protToBeParsedDict, parsedProtDict, sysDiagFilePathDict, txDiagfilePathDict, sysDiagParsedDataDict, txAntDiagParsedDataDict):
+def _load_protocol_data(
+    filteredSysDiagList: list,
+    filteredTxAntDiagList: list,
+    protToBeParsedDict: dict,
+    progBarLabelStr: str,
+    protToBeParsedListLen: int,
+) -> tuple[list, list, list, list]:
+    """Load PTU2 and TxAntDiag files for every protocol; update the progress bar.
 
-    qt.parseProtTableTabWidget.setCurrentIndex(1)
-
-    if len(protToBeParsedDict['protocolPathTypeDictList']) == 0:
-        qt.parseProtProgresLabel.setText('No protocols to be parsed.')
-        return
-
-    relRowIdx = 0
-    if len(parsedProtDict['protocolPathTypeDictList']) == 0:
-        # clearTable(qt.parseProtAccProtTable)
-        qt.parseProtAccProtTable.setRowCount(0)
-        refRoxIdx = 0
-
-    filteredTxAntDiagList = []
-    filteredSysDiagList   = []
-
-    # check if loaded protocols are already parsed
-    for protocolFilePathIdx in range(len(protToBeParsedDict['protocolPathTypeDictList'])):
-
-        for sysDiagDict in  sysDiagFilePathDict['filePathList']:
-
-            if sysDiagDict['protocolPath'] == protToBeParsedDict['protocolPathTypeDictList'][protocolFilePathIdx]['protocolPath']:
-                filteredSysDiagList.append(sysDiagDict)
-
-        for txAntDiagDict in txDiagfilePathDict['filePathList']:
-
-            if txAntDiagDict['protocolPath'] == protToBeParsedDict['protocolPathTypeDictList'][protocolFilePathIdx]['protocolPath']:
-                filteredTxAntDiagList.append(txAntDiagDict)
-
-        parsedProtDict['protocolPathTypeDictList'].append(protToBeParsedDict['protocolPathTypeDictList'][protocolFilePathIdx])
-
-    sysDiagDataList   = []
-    txAntDiagDataList = []
-
-    sysDiagParsedDataList   = []
-    txAntDiagParsedDataList = []
-
-    ##ProgressBar range update
-    progBarLabelStr, protToBeParsedListLen = setup_progress_bar(protToBeParsedDict, protocolPathDict)
-
-
-    tenPercent = int(protToBeParsedListLen/10)
-    tenPercRes = protToBeParsedListLen%10
+    Returns (sysDiagDataList, txAntDiagDataList,
+             sysDiagParsedDataList, txAntDiagParsedDataList).
+    """
+    sysDiagDataList:        list = []
+    txAntDiagDataList:      list = []
+    sysDiagParsedDataList:  list = []
+    txAntDiagParsedDataList: list = []
 
     twentyPercent = int(protToBeParsedListLen / 5)
     twentyPercRes = protToBeParsedListLen % 5
-    # tenPercent = np.ceil((protFileIdx + 1) / protToBeParsedListLen * 100)
-    idx = 1
-    final = 0
+    idx      = 1
+    final    = 0
     setFinal = False
-    updateFormat = True
 
     for protFileIdx in range(protToBeParsedListLen):
-        # qt.parseProtProgresBar.setFormat(str(qt.parseProtProgresBar.value()) + ' / ' + str(protToBeParsedListLen))
-
+        # --- load sys-diag (PTU2) files ---
         sysDiagDataPerProt = filteredSysDiagList[protFileIdx]['ptu2FilesList']
-        sysDiagLoadedData = ld.LoadData(sysDiagDataPerProt, antSysDiag.plotSetup['useSensorMuster'], antSysDiag.plotSetup['sensorMusterList'])
-        if sysDiagLoadedData.invalidPath==1:
+        sysDiagLoadedData  = ld.LoadData(
+            sysDiagDataPerProt,
+            antSysDiag.plotSetup['useSensorMuster'],
+            antSysDiag.plotSetup['sensorMusterList'],
+        )
+        if sysDiagLoadedData.invalidPath == 1:
             parseDataLog.info(sysDiagLoadedData.invalidPathString)
         else:
             sysDiagDataList.append(sysDiagDataPerProt)
-            # sysDiagParsedDataDict['parsedDataList']+=sysDiagLoadedData.parseDataList
             sysDiagParsedDataList += sysDiagLoadedData.parseDataList
 
-
+        # --- load tx-ant-diag files ---
         txAntDiagDataPerProt = filteredTxAntDiagList[protFileIdx]['txAntDiagList']
-        txAntDiagLoadedData  = ld_txantdiag.LoadData(txAntDiagDataPerProt, txAntDiag.plotSetup['useSensorMuster'], txAntDiag.plotSetup['sensorMusterList'])
+        txAntDiagLoadedData  = ld_txantdiag.LoadData(
+            txAntDiagDataPerProt,
+            txAntDiag.plotSetup['useSensorMuster'],
+            txAntDiag.plotSetup['sensorMusterList'],
+        )
         if txAntDiagLoadedData.invalidPath == 1:
             parseDataLog.info(txAntDiagLoadedData.invalidPathString)
         else:
             txAntDiagDataList.append(txAntDiagDataPerProt)
             txAntDiagParsedDataList += txAntDiagLoadedData.parseDataList
-            # txAntDiagParsedDataDict['parsedDataList'] += txAntDiagLoadedData.parseDataList
 
-        if updateFormat == True:
+        # --- update progress bar ---
+        if setFinal:
+            qt.parseProtProgresBar.setFormat(f'{final} / {protToBeParsedListLen}')
+        else:
+            qt.parseProtProgresBar.setFormat(f'{idx} / {protToBeParsedListLen}')
 
-            if setFinal == False:
-                qt.parseProtProgresBar.setFormat(str(idx) + ' / ' + str(protToBeParsedListLen))
-            else:
-                qt.parseProtProgresBar.setFormat(str(final) + ' / ' + str(protToBeParsedListLen))
-                updateFormat = False
+        if twentyPercent != 0:
+            if idx % twentyPercent == 0:
+                _, tail = os.path.split(
+                    protToBeParsedDict['protocolPathTypeDictList'][protFileIdx]['protocolPath']
+                )
+                qt.parseProtProgresLabel.setText(progBarLabelStr + 'Protocol: ' + tail)
+                if int(idx / twentyPercent) < 5:
+                    qt.parseProtProgresBar.setValue(idx)
+                else:
+                    setFinal = True
+                    final    = idx + twentyPercRes
+                    qt.parseProtProgresBar.setValue(final)
+        else:
+            _, tail = os.path.split(
+                protToBeParsedDict['protocolPathTypeDictList'][protFileIdx]['protocolPath']
+            )
+            qt.parseProtProgresLabel.setText(progBarLabelStr + 'Protocol: ' + tail)
+            qt.parseProtProgresBar.setValue(idx)
 
-            # if ((protFileIdx + 1) % twentyPercent) == 0 and int((protFileIdx + 1) / twentyPercent) != 0:
+        idx += 1
 
-            if  twentyPercent != 0:
-                if (idx%twentyPercent) == 0 :
-                    head, tail = os.path.split(protToBeParsedDict['protocolPathTypeDictList'][protFileIdx]['protocolPath'])
-                    qt.parseProtProgresLabel.setText(progBarLabelStr + 'Protocol: ' + str(tail))
-                    if int((idx)/twentyPercent)<5:
-                        qt.parseProtProgresBar.setValue(idx)
-                    else:
-                        setFinal = True
-                        final = idx + twentyPercRes
-                        qt.parseProtProgresBar.setValue(final)
-            else:
-                head, tail = os.path.split(protToBeParsedDict['protocolPathTypeDictList'][protFileIdx]['protocolPath'])
-                qt.parseProtProgresLabel.setText(progBarLabelStr + 'Protocol: ' + str(tail))
-
-                qt.parseProtProgresBar.setValue(idx)
-
-            idx = idx + 1
-
-        # proc =  np.ceil((protFileIdx+1)/protToBeParsedListLen *100)#
-        # if (protFileIdx+1)%tenPercent == 0 and int((protFileIdx+1)/tenPercent)!=0:
-        #     head, tail = os.path.split(protToBeParsedDict['protocolPathList'][protFileIdx])
-        #     qt.parseProtProgresLabel.setText(progBarLabelStr + 'Protocol: ' + str(tail))
-        #     if int((protFileIdx+1)/tenPercent)<10:
-        #         qt.parseProtProgresBar.setValue(protFileIdx+1)
-        #     else:
-        #         qt.parseProtProgresBar.setValue(protFileIdx + 1 + tenPercRes)
-        #     qt.parseProtProgresBar.setFormat(str(qt.parseProtProgresBar.value()) + ' / ' + str(protToBeParsedListLen))
+    return sysDiagDataList, txAntDiagDataList, sysDiagParsedDataList, txAntDiagParsedDataList
 
 
-    # myLogger.info('§§§ Parsed SysDiag Existing List §§§§')
-    # for i in sysDiagParsedDataDict['parsedDataList']:
-    #     myLogger.info(i.fileTitle.fileNamePath)
+def _populate_accepted_protocols_table(
+    protToBeParsedDict: dict,
+    sysDiagDataList: list,
+    txAntDiagDataList: list,
+) -> None:
+    """Set up the accepted-protocols table columns and insert one row-group per protocol."""
+    header = qt.parseProtAccProtTable.horizontalHeader()
+    header.setSectionResizeMode(0, qt.QHeaderView.ResizeMode.Interactive)
+    qt.parseProtAccProtTable.setColumnWidth(0, 400)
+    header.setSectionResizeMode(1, qt.QHeaderView.ResizeMode.Interactive)
+    qt.parseProtAccProtTable.setColumnWidth(1, 110)
+    header.setSectionResizeMode(2, qt.QHeaderView.ResizeMode.Interactive)
+    header.setSectionResizeMode(3, qt.QHeaderView.ResizeMode.Stretch)
 
-    for ptu2FromList in sysDiagParsedDataList:
-        notInDict = 1
-        for ptu2FromDict in sysDiagParsedDataDict['parsedDataList']:
-            if ptu2FromList.fileTitle.fileNamePath == ptu2FromDict.fileTitle.fileNamePath:
-                notInDict = 0
-        if notInDict == 1:
-            sysDiagParsedDataDict['parsedDataList'].append(ptu2FromList)
+    if not sysDiagDataList or not txAntDiagDataList:
+        return
 
-    for txAntDiagFromList in txAntDiagParsedDataList:
-        notInDict = 1
-        for txAntDiagFromDict in txAntDiagParsedDataDict['parsedDataList']:
-            if txAntDiagFromList.fileTitle.fileNamePath == txAntDiagFromDict.fileTitle.fileNamePath:
-                notInDict = 0
-        if notInDict == 1:
-            txAntDiagParsedDataDict['parsedDataList'].append(txAntDiagFromList)
+    refRowIdx = qt.parseProtAccProtTable.rowCount()
 
-    # myLogger.info('*** Parsed SysDiag Updated List ****')
-    # for i in sysDiagParsedDataDict['parsedDataList']:
-    #     myLogger.info(i.fileTitle.fileNamePath)
+    for protocolFileIdx in range(len(protToBeParsedDict['protocolPathTypeDictList'])):
+        protocolPath             = protToBeParsedDict['protocolPathTypeDictList'][protocolFileIdx]['protocolPath']
+        protocolType             = protToBeParsedDict['protocolPathTypeDictList'][protocolFileIdx]['type']
+        sysDiagListPerProtocol   = sysDiagDataList[protocolFileIdx]
+        txAntDiagListPerProtocol = txAntDiagDataList[protocolFileIdx]
+        protTableData            = dp.ProtocolsTableData(protocolPath, sysDiagListPerProtocol, txAntDiagListPerProtocol)
 
-    qt.parseProtParsedLoadedProtLabel.setText(qt.parseProtParsedLoadedProtStr + str(len(parsedProtDict['protocolPathTypeDictList']))+ ' / '+ str(len(protocolPathDict['protocolPathTypeDictList'])))
+        if not sysDiagListPerProtocol and not txAntDiagListPerProtocol:
+            continue
+
+        for relRowIdx in range(protTableData.biggerListLength):
+            rowIdx = relRowIdx + refRowIdx
+            qt.parseProtAccProtTable.insertRow(rowIdx)
+            qt.parseProtAccProtTable.setItem(
+                rowIdx, 0,
+                QTableWidgetItem(protTableData.protocolPath if relRowIdx == 0 else ''),
+            )
+            qt.parseProtAccProtTable.setItem(rowIdx, 1, QTableWidgetItem(protocolType))
+            qt.parseProtAccProtTable.setItem(rowIdx, 2, QTableWidgetItem(protTableData.sysDiagFilePathShapedList[relRowIdx]))
+            qt.parseProtAccProtTable.setItem(rowIdx, 3, QTableWidgetItem(protTableData.txAntDiagFilePathShapedList[relRowIdx]))
+
+        for spanEntry in protTableData.smallerListRowSpanList:
+            qt.parseProtAccProtTable.setSpan(
+                spanEntry['spanStart'] + refRowIdx,
+                protTableData.smallerListColIdx,
+                spanEntry['spanCount'],
+                1,
+            )
+
+        qt.parseProtAccProtTable.setSpan(refRowIdx, 0, protTableData.biggerListLength, 1)
+        refRowIdx += protTableData.biggerListLength
+
+
+def parseData(
+    protocolPathDict: dict,
+    protToBeParsedDict: dict,
+    parsedProtDict: dict,
+    sysDiagFilePathDict: dict,
+    txDiagfilePathDict: dict,
+    sysDiagParsedDataDict: dict,
+    txAntDiagParsedDataDict: dict,
+) -> None:
+    """Orchestrate protocol parsing: filter → load → merge → update UI."""
+    qt.parseProtTableTabWidget.setCurrentIndex(1)
+
+    if not protToBeParsedDict['protocolPathTypeDictList']:
+        qt.parseProtProgresLabel.setText('No protocols to be parsed.')
+        return
+
+    if not parsedProtDict['protocolPathTypeDictList']:
+        qt.parseProtAccProtTable.setRowCount(0)
+
+    filteredSysDiagList, filteredTxAntDiagList = filter_protocol_file_lists(
+        protToBeParsedDict, sysDiagFilePathDict, txDiagfilePathDict, parsedProtDict
+    )
+
+    progBarLabelStr, protToBeParsedListLen = setup_progress_bar(protToBeParsedDict, protocolPathDict)
+
+    sysDiagDataList, txAntDiagDataList, sysDiagParsedDataList, txAntDiagParsedDataList = _load_protocol_data(
+        filteredSysDiagList, filteredTxAntDiagList,
+        protToBeParsedDict, progBarLabelStr, protToBeParsedListLen,
+    )
+
+    merge_into_parsed_dicts(
+        sysDiagParsedDataList, txAntDiagParsedDataList,
+        sysDiagParsedDataDict, txAntDiagParsedDataDict,
+    )
+
+    qt.parseProtParsedLoadedProtLabel.setText(
+        qt.parseProtParsedLoadedProtStr
+        + f'{len(parsedProtDict["protocolPathTypeDictList"])} / {len(protocolPathDict["protocolPathTypeDictList"])}'
+    )
     qt.parseProtPtu2FilesLabel.setText(qt.parseProtPtu2FilesStr + str(len(sysDiagParsedDataDict['parsedDataList'])))
     qt.parseProtTxAntDiagFilesLabel.setText(qt.parseProtTxAntDiagFilesStr + str(len(txAntDiagParsedDataDict['parsedDataList'])))
 
-    parseProtAccProtTableHeader = qt.parseProtAccProtTable.horizontalHeader()
-    # parseProtAccProtTableHeader.setSectionResizeMode(qt.QHeaderView.Interactive)
-    # parseProtAccProtTableHeader.setStretchLastSection(True)
-    #
+    _populate_accepted_protocols_table(protToBeParsedDict, sysDiagDataList, txAntDiagDataList)
 
-    parseProtAccProtTableHeader.setSectionResizeMode(0, qt.QHeaderView.ResizeMode.Interactive)
-    qt.parseProtAccProtTable.setColumnWidth(0, 400)
-
-    parseProtAccProtTableHeader.setSectionResizeMode(1, qt.QHeaderView.ResizeMode.Interactive)
-    qt.parseProtAccProtTable.setColumnWidth(1, 110)
-
-    parseProtAccProtTableHeader.setSectionResizeMode(2, qt.QHeaderView.ResizeMode.Interactive)
-
-    parseProtAccProtTableHeader.setSectionResizeMode(3, qt.QHeaderView.ResizeMode.Stretch)
-
-    refRoxIdx = qt.parseProtAccProtTable.rowCount()
-
-    # insert into table
-    if len(sysDiagDataList) != 0 and len(txAntDiagDataList) != 0:
-
-        for protocolFileIdx in range(len(protToBeParsedDict['protocolPathTypeDictList'])):
-
-            protocolPath = protToBeParsedDict['protocolPathTypeDictList'][protocolFileIdx]['protocolPath']
-            protocolType = protToBeParsedDict['protocolPathTypeDictList'][protocolFileIdx]['type']
-            sysDiagListPerProtocol   = sysDiagDataList[protocolFileIdx]
-            txAntDiagListPerProtocol = txAntDiagDataList[protocolFileIdx]
-            protTableData = dp.ProtocolsTableData(protocolPath, sysDiagListPerProtocol, txAntDiagListPerProtocol)
-
-            if len(sysDiagListPerProtocol) != 0 or len(txAntDiagListPerProtocol) != 0:
-
-                for relRowIdx in range(protTableData.biggerListLength):
-
-                    rowIdx = relRowIdx + refRoxIdx
-
-                    qt.parseProtAccProtTable.insertRow(rowIdx)
-
-                    if relRowIdx == 0:
-                        qt.parseProtAccProtTable.setItem(rowIdx, 0, QTableWidgetItem(protTableData.protocolPath))
-                    else:
-                        qt.parseProtAccProtTable.setItem(rowIdx, 0, QTableWidgetItem(''))
-
-                    qt.parseProtAccProtTable.setItem(rowIdx, 1, QTableWidgetItem(protocolType))
-                    qt.parseProtAccProtTable.setItem(rowIdx, 2, QTableWidgetItem(protTableData.sysDiagFilePathShapedList[relRowIdx]))
-                    qt.parseProtAccProtTable.setItem(rowIdx, 3, QTableWidgetItem(protTableData.txAntDiagFilePathShapedList[relRowIdx]))
-
-
-                rowSpanList = protTableData.smallerListRowSpanList
-
-                # # span smaller column
-                for rowSpanListIdx in range(len(rowSpanList)):
-                    rowSpanStart = rowSpanList[rowSpanListIdx]['spanStart'] + refRoxIdx
-                    rowSpanCount = rowSpanList[rowSpanListIdx]['spanCount']
-
-                    # myLogger.info(str(protocolFileIdx)+' ]'+', spanstart '+str(rowSpanStart)+', spancount ' +str(rowSpanCount))
-
-                    qt.parseProtAccProtTable.setSpan(rowSpanStart, protTableData.smallerListColIdx, rowSpanCount, 1)
-
-                # span protocol column
-                qt.parseProtAccProtTable.setSpan(refRoxIdx, 0, protTableData.biggerListLength, 1)
-
-                refRoxIdx += protTableData.biggerListLength
-
-    # sleep(20)
-    if len(protToBeParsedDict['protocolPathTypeDictList']) != 0:
-        qt.parseProtProgresLabel.setText('Parsing finished. Protocols parsed: ' + str(len(protToBeParsedDict['protocolPathTypeDictList'])) + '.')
-        # qt.parseProtProgresBar.reset()
-
+    qt.parseProtProgresLabel.setText(
+        f'Parsing finished. Protocols parsed: {len(protToBeParsedDict["protocolPathTypeDictList"])}.'
+    )
     protToBeParsedDict['protocolPathTypeDictList'][:] = []
 
 
