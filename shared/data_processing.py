@@ -1,3 +1,4 @@
+from __future__ import annotations
 import calcdiagram_functions as calc
 import logconfig as log
 from shared import safeparse as sp
@@ -5,29 +6,29 @@ from shared import safeparse as sp
 myLogger = log.antSysDiagLogger.logger
 
 class ImportedProtcolsData():
-    def __init__(self):
+    def __init__(self) -> None:
         self.protocolDataList=[]
 
 class ProtocolData():
-    def __init__(self):
+    def __init__(self) -> None:
         self.protocolPath=''
         self.ptu2DataList=[]
         self.txAntDiagDataList=[]
 
 class PTU2Data():
-    def __init__(self):
+    def __init__(self) -> None:
         self.filesList=[]
         self.protocolPath=''
 
 
 class TxAntDiagData():
-    def __init__(self):
+    def __init__(self) -> None:
         self.filesList=[]
         self.protocolPath=''
 
 
 class ProtocolsTableData():
-    def __init__(self,protocolPath,sysDiagFilePathList,txAntDiagFilePathList):
+    def __init__(self,protocolPath: str,sysDiagFilePathList: list,txAntDiagFilePathList: list) -> None:
         self.protocolPath=protocolPath
         self.sysDiagFilePathShapedList=[]
         self.txAntDiagFilePathShapedList=[]
@@ -169,7 +170,7 @@ class ProtocolsTableData():
                 self.smallerListRowSpanList.append(tempDict)
 
 
-def parsePlotWindowString(plotWindowStr):
+def parsePlotWindowString(plotWindowStr: str) -> dict:
     plotWindowConfig = {
 
         "graph": "",
@@ -215,7 +216,7 @@ def parsePlotWindowString(plotWindowStr):
 
     return plotWindowConfig
 
-def rxChStringMapping(graphTitle, rxCh):
+def rxChStringMapping(graphTitle: str, rxCh: int) -> str:
     rxChString=''
     # Mapping string for the phase difference channels
     # phDiffRxComb = ['RxAnt1-RxAnt0', 'RxAnt2-RxAnt1', 'RxAnt3-RxAnt2']
@@ -227,7 +228,7 @@ def rxChStringMapping(graphTitle, rxCh):
         rxChString='RxAnt'+ str(rxCh)
     return rxChString
 
-def graphTypeStringMapping(graphTitle):
+def graphTypeStringMapping(graphTitle: str) -> str:
     graphTypeString = ''
     if 'haseDiff' in graphTitle:
         graphTypeString = "all sensors, RxAnt comb.:"
@@ -236,7 +237,7 @@ def graphTypeStringMapping(graphTitle):
     return graphTypeString
 
 # Mapping string for the antenna diagram types
-def getAntDiagType(inputString):
+def getAntDiagType(inputString: str) -> str:
     if inputString == 'Az':
         antennaDiagType = 'Azimuth'
     else:
@@ -244,7 +245,7 @@ def getAntDiagType(inputString):
     return antennaDiagType
 
 # Get the num. of diagrams from the parsed data
-def getNofDiagrams(antType,parseDataList):
+def getNofDiagrams(antType: int, parseDataList: list) -> int:
     diagramIdxList=[]
     for pdIdx in range(len(parseDataList)):
         if parseDataList[pdIdx].antennaInfo.antennaType==antType:
@@ -256,7 +257,7 @@ def getNofDiagrams(antType,parseDataList):
         nofDiagrams=0
     return nofDiagrams
 
-def getDiagramList(antType,parseDataList):
+def getDiagramList(antType: int, parseDataList: list) -> list:
     diagramIdxList=[]
     for pdIdx in range(len(parseDataList)):
         if parseDataList[pdIdx].antennaInfo.antennaType==antType:
@@ -271,7 +272,7 @@ def getDiagramList(antType,parseDataList):
 
     return outputList
 
-def getDateAndTimeList(parseDataList):
+def getDateAndTimeList(parseDataList: list) -> list:
     dateAndTime = ''
     dateAndTimeList = []
     for listIdx in range(len(parseDataList)):
@@ -282,7 +283,7 @@ def getDateAndTimeList(parseDataList):
     return dateAndTimeList
 
 # Get the list of all sensors from the parsed data
-def getSensorList(parseDataList):
+def getSensorList(parseDataList: list) -> list:
     sensor = ''
     sensorList = []
     for listIdx in range(len(parseDataList)):
@@ -292,7 +293,7 @@ def getSensorList(parseDataList):
                 sensorList.append(parseDataList[listIdx].fileTitle.sensor)
     return sensorList
 
-def getDateTimeSensorCombList(antennaType,parseDataList):
+def getDateTimeSensorCombList(antennaType: int, parseDataList: list) -> list:
     outputDictList=[]
     sensor=''
     dateAndTime=''
@@ -307,7 +308,7 @@ def getDateTimeSensorCombList(antennaType,parseDataList):
                 outputDictList.append(outputDict)
     return outputDictList
 
-def getDateTimeSensorCombTable(dateTimeList,sensorList,dateAndTimeCombList):
+def getDateTimeSensorCombTable(dateTimeList: list, sensorList: list, dateAndTimeCombList: list) -> list:
 
     outputList=[]
     for k in range(len(dateAndTimeCombList)):
@@ -326,7 +327,7 @@ def getDateTimeSensorCombTable(dateTimeList,sensorList,dateAndTimeCombList):
 
 
 #Get number of RxAnt per sensor
-def getNofRxAntPerSensor(sensor, parseDataList):
+def getNofRxAntPerSensor(sensor: str, parseDataList: list) -> int:
     actualNofRxAnt=0
     for pdIdx in range(len(parseDataList)):
         if parseDataList[pdIdx].antennaInfo.fileTitle.sensorFound==1:
@@ -336,7 +337,7 @@ def getNofRxAntPerSensor(sensor, parseDataList):
     return actualNofRxAnt
 
 # Get the maximal number of Tx antenas of all sensors
-def getMaxNofTxAnt(sensorList,parseDataList):
+def getMaxNofTxAnt(sensorList: list, parseDataList: list) -> int:
     maxNofTxAnt=0
     maxNofTxAntList=[]
     for sensorIdx in range(len(sensorList)):
@@ -345,7 +346,7 @@ def getMaxNofTxAnt(sensorList,parseDataList):
     return max(maxNofTxAntList)
 
 # Get number of TxAnt per sensor
-def getNofTxAntPerSensor(sensor, parseDataList):
+def getNofTxAntPerSensor(sensor: str, parseDataList: list) -> int:
     actualTxAnt=0
     txAntList=[]
 
@@ -358,7 +359,7 @@ def getNofTxAntPerSensor(sensor, parseDataList):
     return max(txAntList)
 
 # Get TxAnt list
-def getTxAntList(parseDataList):
+def getTxAntList(parseDataList: list) -> list:
     actualTxAnt=0
     txAntList=[]
     for pdIdx in range(len(parseDataList)):
@@ -376,7 +377,7 @@ def getTxAntList(parseDataList):
 
 
 
-def getAngleStep(parseData,isTargetAngle,upsideDown):
+def getAngleStep(parseData, isTargetAngle: int, upsideDown: int) -> float:
     if isTargetAngle ==1:
         angle=calc.getTarAngVals(parseData,upsideDown)
     else:
@@ -386,14 +387,14 @@ def getAngleStep(parseData,isTargetAngle,upsideDown):
     step=abs(firstPoint-lastPoint)
     return step
 
-def getNofAnglePoints(parseData,isTargetAngle,upsideDown):
+def getNofAnglePoints(parseData, isTargetAngle: int, upsideDown: int) -> int:
     if isTargetAngle == 1:
         length=len(calc.getTarAngVals(parseData, upsideDown))
     else:
         length=len(calc.getPtuAngVals(parseData))
     return length
 
-def getRefAnglePoint(parseData,isTargetAngle,upsideDown):
+def getRefAnglePoint(parseData, isTargetAngle: int, upsideDown: int) -> float:
     if isTargetAngle ==1:
         angle=calc.getTarAngVals(parseData,upsideDown)
     else:
@@ -403,7 +404,7 @@ def getRefAnglePoint(parseData,isTargetAngle,upsideDown):
 
 
 # Get the desired diagrams list, according to the diagram configuration.
-def getDesiredDiagramsList(diagramConfig, diagramConfigList,antType, parseDataList):
+def getDesiredDiagramsList(diagramConfig: dict, diagramConfigList: list, antType: int, parseDataList: list) -> list:
     print(f"[DEBUG] getDesiredDiagramsList called with:")
     print(f"  - antType: {antType}")
     print(f"  - parseDataList length: {len(parseDataList)}")
@@ -483,7 +484,7 @@ def getDesiredDiagramsList(diagramConfig, diagramConfigList,antType, parseDataLi
     return desiredDiagramList
 
 # Returns a list of all parsed PTU2 files for a certain diagram.
-def getDataPerDiagram(desiredDiagram,loadedData):
+def getDataPerDiagram(desiredDiagram: int, loadedData) -> list:
     outputList=[]
     for pdIdx in range(len(loadedData.parseDataList)):
         if desiredDiagram==loadedData.parseDataList[pdIdx].fileTitle.diagram:
@@ -492,7 +493,7 @@ def getDataPerDiagram(desiredDiagram,loadedData):
 
 
 # Get the configured chirps
-def getChirpList(chirpSetup):
+def getChirpList(chirpSetup: dict) -> list:
     chirpList = []
     for diagram, set in chirpSetup.items():
         if set == 1:
@@ -500,7 +501,7 @@ def getChirpList(chirpSetup):
     return chirpList
 
 # Get the valid chirp according to the configuration and the active chirps info from the PTU2 files.
-def getValidChirp( chirpSetup, parseDataList, pdIdx):
+def getValidChirp(chirpSetup: dict, parseDataList: list, pdIdx: int) -> list:
     chirpList = getChirpList(chirpSetup)
     validChirpList = []
     for chirpIdx in range(len(chirpList)):
@@ -510,7 +511,7 @@ def getValidChirp( chirpSetup, parseDataList, pdIdx):
 
 
 # Get the actual number of Rx channels, per specific graph and a PTU2 file.
-def getNofActualRxChannels(graphList, graphIdx, parseDataList, parseDataIdx):
+def getNofActualRxChannels(graphList: list, graphIdx: int, parseDataList: list, parseDataIdx: int) -> int:
     if graphList[graphIdx].endswith('evel'):
         actualNofRxCh = parseDataList[parseDataIdx].antennaInfo.nofAntennas
     else:
@@ -518,7 +519,7 @@ def getNofActualRxChannels(graphList, graphIdx, parseDataList, parseDataIdx):
     return actualNofRxCh
 
 # Get the actual number of Rx channels, per specific graph and a PTU2 file.
-def getNofActualRxChannels(graph, parseDataList, pdIdx):
+def getNofActualRxChannels(graph: str, parseDataList: list, pdIdx: int) -> int:
     if graph.endswith('evel'):
         actualNofRxCh =parseDataList[pdIdx].antennaInfo.nofAntennas
     else:
@@ -526,7 +527,7 @@ def getNofActualRxChannels(graph, parseDataList, pdIdx):
     return actualNofRxCh
 
 # Get the maximal number of Rx channels for specific graph, of all PTU2 files.
-def getMaxNofRxCh(graph,parseDataList):
+def getMaxNofRxCh(graph: str, parseDataList: list) -> int:
     nofRxChList = []
     for pdIdx in range(len(parseDataList)):
 
@@ -535,7 +536,7 @@ def getMaxNofRxCh(graph,parseDataList):
     return max(nofRxChList)
 
 # Get the data for the actual graph for specific graph, chirp, rx channel, and PTU2 file
-def getActualGraphData(graph, rxChannel, chirp, parseDataList, pdIdx):
+def getActualGraphData(graph: str, rxChannel: int, chirp: int, parseDataList: list, pdIdx: int):
     actualDiagramData = 0
     if graph == "level":
         actualDiagramData = calc.getAntLevel(rxChannel, chirp, parseDataList[pdIdx])
@@ -628,7 +629,7 @@ def getActualGraphData(graph, rxChannel, chirp, parseDataList, pdIdx):
 #             upperMargin = whole * (-10)
 #     return upperMargin
 
-def azDataFound(parseDataList):
+def azDataFound(parseDataList: list) -> bool:
     val=False
     for pdIdx in range(len(parseDataList)):
         if (parseDataList[pdIdx].measSetupInfo.antennaDiagramTypeFound == 1) and (parseDataList[pdIdx].measSetupInfo.antennaDiagramType == 'Az'):
@@ -636,7 +637,7 @@ def azDataFound(parseDataList):
             break
     return val
 
-def noDiagTypeDataFound(parseDataList):
+def noDiagTypeDataFound(parseDataList: list) -> bool:
     val=False
     for pdIdx in range(len(parseDataList)):
         if (parseDataList[pdIdx].measSetupInfo.antennaDiagramTypeFound == 0):
@@ -645,7 +646,7 @@ def noDiagTypeDataFound(parseDataList):
     return val
 
 # Get the list of all antenna types from the parsed data
-def getAntennaTypesList(parseDataList):
+def getAntennaTypesList(parseDataList: list) -> list:
     antennaType = 0
     antennaTypeList = []
 
@@ -659,14 +660,14 @@ def getAntennaTypesList(parseDataList):
     outputList=list(antTypeSet)
     return outputList
 
-def getPtu2ListPerAntennaType(antType,parseDataList):
+def getPtu2ListPerAntennaType(antType: int, parseDataList: list) -> list:
     outputList=[]
     for listIdx in range(len(parseDataList)):
         if parseDataList[listIdx].antennaInfo.antennaType == antType:
             outputList.append(parseDataList[listIdx])
     return outputList
 
-def getFreqListPerDiagram(chirpConfig,diagNum,parseDataList):
+def getFreqListPerDiagram(chirpConfig: dict, diagNum: int, parseDataList: list) -> list:
     freqList=[]
     for pdIdx in range(len(parseDataList)):
         if parseDataList[pdIdx].fileTitle.diagramFound==1:
@@ -677,7 +678,7 @@ def getFreqListPerDiagram(chirpConfig,diagNum,parseDataList):
 
     return  freqList
 
-def getFreqList(chirpConfig, diagramList,parseDataList):
+def getFreqList(chirpConfig: dict, diagramList: list, parseDataList: list) -> list:
     freqList=[]
     for pdIdx in range(len(parseDataList)):
         for diagIdx in range(len(diagramList)):
@@ -688,7 +689,7 @@ def getFreqList(chirpConfig, diagramList,parseDataList):
 
     return  freqList
 
-def getAvgFreqPerDiagram (chirpConfig,diagNum,parseDataList):
+def getAvgFreqPerDiagram(chirpConfig: dict, diagNum: int, parseDataList: list) -> float:
     freqList=getFreqListPerDiagram(chirpConfig,diagNum,parseDataList)
 
     avgFreq = 0
@@ -699,7 +700,7 @@ def getAvgFreqPerDiagram (chirpConfig,diagNum,parseDataList):
     return avgFreq
 
 
-def getMaxFreqPerDiagram (chirpConfig,diagNum,parseDataList):
+def getMaxFreqPerDiagram(chirpConfig: dict, diagNum: int, parseDataList: list) -> float:
     freqList=getFreqListPerDiagram(chirpConfig,diagNum,parseDataList)
     maxFreq = 0
     if len(freqList)!=0:
@@ -708,7 +709,7 @@ def getMaxFreqPerDiagram (chirpConfig,diagNum,parseDataList):
         myLogger.error("Empty frequency list.")
     return maxFreq
 
-def getMinFreqPerDiagram (chirpConfig,diagNum,parseDataList):
+def getMinFreqPerDiagram(chirpConfig: dict, diagNum: int, parseDataList: list) -> float:
     freqList=getFreqListPerDiagram(chirpConfig,diagNum,parseDataList)
 
     minFreq = 0
@@ -718,7 +719,7 @@ def getMinFreqPerDiagram (chirpConfig,diagNum,parseDataList):
         myLogger.error("Empty frequency list.")
     return minFreq
 
-def getAvgFreq (chirpConfig,diagramList,parseDataList):
+def getAvgFreq(chirpConfig: dict, diagramList: list, parseDataList: list) -> float:
     freqList=getFreqList(chirpConfig,diagramList,parseDataList)
 
     avgFreq = 0
@@ -729,7 +730,7 @@ def getAvgFreq (chirpConfig,diagramList,parseDataList):
     return avgFreq
 
 
-def getMaxFreq(chirpConfig,diagramList,parseDataList):
+def getMaxFreq(chirpConfig: dict, diagramList: list, parseDataList: list) -> float:
     freqList=getFreqList(chirpConfig,diagramList,parseDataList)
     maxFreq = 0
     if len(freqList)!=0:
@@ -738,7 +739,7 @@ def getMaxFreq(chirpConfig,diagramList,parseDataList):
         myLogger.error("Empty frequency list.")
     return maxFreq
 
-def getMinFreq (chirpConfig,diagramList,parseDataList):
+def getMinFreq(chirpConfig: dict, diagramList: list, parseDataList: list) -> float:
     freqList=getFreqList(chirpConfig,diagramList,parseDataList)
 
     minFreq = 0

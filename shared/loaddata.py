@@ -1,3 +1,4 @@
+from __future__ import annotations
 import os
 import parsePTU2data as pd
 import enum
@@ -24,7 +25,7 @@ class AbsPathType(enum.Enum):
 
 # Class containing the loaded data, including the parsed PTU2 files list, error status data, and meta data
 class LoadData:
-    def __init__(self,absPath,useSensorMuster,sensorMusterList):
+    def __init__(self, absPath, useSensorMuster: bool, sensorMusterList: list) -> None:
         self.searchPath = SearchPath.Invalid
         self.parseDataList = []
         self.sensorMusterList=sensorMusterList
@@ -39,7 +40,7 @@ class LoadData:
         self.parseLogging()
 
     # Logging for the parsing errors
-    def parseLogging(self):
+    def parseLogging(self) -> None:
         errorString=''
         if self.counter >0:
             for i in range(len(self.errorStringList)):
@@ -47,14 +48,14 @@ class LoadData:
             myLogger.error('Parsing errors: '+errorString)
 
    # Formating function for the parsing errors
-    def addParseDataError(self,parseData):
+    def addParseDataError(self, parseData) -> str:
         logStr = ""
         for errStrIdx in range(len(parseData.errorList)):
             logStr = logStr + "\n" + parseData.errorList[errStrIdx]
         return logStr
 
 
-    def proceessPath(self,absPath):
+    def proceessPath(self, absPath) -> None:
         ptu2PathEnd = "_PTU2.txt"
         protocolPathEnd = '_Protocol.txt'
 
@@ -148,7 +149,7 @@ class LoadData:
             # myLogger.error(self.errorString)
 
     # Load parsed data for a specific search path
-    def loadData(self,absPath):
+    def loadData(self, absPath) -> None:
 
         absPathType=AbsPathType.Path
 

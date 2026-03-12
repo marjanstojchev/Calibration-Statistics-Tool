@@ -1,40 +1,41 @@
+from __future__ import annotations
 import re
 # import io
 import enum
 import numpy as np
 
-def dotAndCommaSci(string):
+def dotAndCommaSci(string: str) -> bool:
     if re.match(r"^[+-]?(?:0|[1-9]\d*)(?:[\,\.]\d*)?(?:[eE][+\-]?\d+)$",string)==None:
         return False
     else:
         return True
 
-def dotAndCommaDcm(string):
+def dotAndCommaDcm(string: str) -> bool:
     if re.match(r"^\d*[.,]?\d*$",string)==None:
         return False
     else:
         return True
 
-def checkDecimal(string):
+def checkDecimal(string: str) -> bool:
     try:
         float(string)
         return True
     except(ValueError,TypeError):
         return False
 
-def checkInt(string):
+def checkInt(string: str) -> bool:
     try:
         int(string)
         return True
     except(ValueError,TypeError):
         return False
 
-def checkInvCultInt(string):
+def checkInvCultInt(string: str) -> bool:
     if (re.match(r'^(\d+|\d{1,3}(,\d{3})*)(\.\d+)?$',string)!=None):
         string=string.replace(',','')
     return checkInt(string)
 
-def checkWholeNum(string):
+def checkWholeNum(string: str) -> bool:
     if(checkDecimal(string)):
         temp=float(string)
         if temp.is_integer():
@@ -44,7 +45,7 @@ def checkWholeNum(string):
     else:
         return False
 
-def checkHex(string):
+def checkHex(string: str) -> bool:
     try:
         int(string,16)
         return True
@@ -56,7 +57,7 @@ class TypeEnum(enum.Enum):
     Int64=1
     UInt32=2
 
-def checkConvertType(inputValue,typeEnum):
+def checkConvertType(inputValue, typeEnum: TypeEnum) -> bool:
     if typeEnum ==0:
         try:
             np.int32(inputValue)

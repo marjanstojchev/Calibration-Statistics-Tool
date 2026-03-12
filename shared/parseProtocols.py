@@ -1,3 +1,4 @@
+from __future__ import annotations
 from shared import safeparse as sp
 from logconfig import logAdapter_PP as log
 import yaml
@@ -61,7 +62,7 @@ class ProtocolHeadEnum(enum.Enum):
 
 
 class ProtocolHeadElement:
-    def __init__(self,name):
+    def __init__(self, name) -> None:
         self.name   = name
         self.lineNr = 0
         self.nameFound = 0
@@ -69,7 +70,7 @@ class ProtocolHeadElement:
         self.valuesList  = []
 
 class ProtocolHeadElementValue:
-    def __init__(self,name):
+    def __init__(self, name) -> None:
         self.name  = name
         self.value = ''
 
@@ -88,7 +89,7 @@ class MeasurementDurationsEnum(enum.Enum):
     Level_Powermeter_dB = 'Level-Powermeter[dB]'
 
 class MeasurementDuration():
-    def __init__(self):
+    def __init__(self) -> None:
         self.name = ''
         self.nameFound = 0
 
@@ -103,7 +104,7 @@ class MeasurementDuration():
         self.errorStatus = ErrorStatusEnum.Ok
 
 class MeasSetting():
-    def __init__(self):
+    def __init__(self) -> None:
         self.name = ''
         self.nameFound = 0
 
@@ -213,7 +214,7 @@ TxAntPowerCorrCurvePLCM_PossibleNames = [TxAntPowerCorrCurveEnum.PowermeterLevel
 TxAntPowerCorrCurveDict[TxAntPowerCorrCurveEnum.PowermeterLevelCorrMethod] = TxAntPowerCorrCurvePLCM_PossibleNames
 
 class MeasurementType():
-    def __init__(self,name,possibleNames,type):
+    def __init__(self, name: str, possibleNames: list, type: MeasurementEnum) -> None:
         self.name = name
         self.nameFound = 0
         self.parameterMeasurementValueDict = dict()
@@ -254,14 +255,14 @@ class MeasurementType():
                         self.parameterMeasurementValueDict[parameter]=MeasurementValue(parameter,txAntPowerCorrCurvePossibleNames)
 
 
-    def searchPatternInPossibleNames(self,pattern,possibleNames):
+    def searchPatternInPossibleNames(self, pattern: str, possibleNames: list) -> bool:
         status = False
         for item in possibleNames:
             if pattern in item:
                 status = True
         return  status
 
-    def searchBasicParamNamesWithoutHeader(self,lineNr):
+    def searchBasicParamNamesWithoutHeader(self, lineNr: int) -> None:
         order = 0
 
         for listItem in BasicMeasurementParamListBasicVariant:
@@ -289,7 +290,7 @@ class MeasurementType():
     #     for listItem in BasicMeasurementParamDict.items():
     #
 
-    def searchBasicParamNames(self,line,lineNr):
+    def searchBasicParamNames(self, line: str, lineNr: int) -> None:
 
         lineList = line.split(';')
 
@@ -315,7 +316,7 @@ class MeasurementType():
                     log.warning('Measurements, measurements type: ' + self.name+ ', parameter name not found: ' + paramKey.value + ', line ' + str(lineNr))
                     paramValue.errorStatus = ErrorStatusEnum.Ok
 
-    def parseBasicParamNames(self,lineList,lineNr):
+    def parseBasicParamNames(self, lineList: list, lineNr: int) -> None:
 
         for paramKey, paramValue in self.parameterMeasurementValueDict.items():
             for lineIdx in range(len(lineList)):
@@ -338,7 +339,7 @@ class MeasurementType():
                             log.warning('Measurements, parsing to float failed, measurements type: ' + self.name + ', parameter: ' + paramKey.value + ', line ' + str(lineNr))
 
 class MeasurementValue():
-    def __init__(self,name,possibleNames = []):
+    def __init__(self, name, possibleNames: list = []) -> None:
         self.name = name
         self.nameFound = 0
 
@@ -356,7 +357,7 @@ class MeasurementValue():
         self.errorStatus = ErrorStatusEnum.Ok
 
 class Limit():
-    def __init__(self):
+    def __init__(self) -> None:
         self.name  = ''
         self.value = 0.0
         self.min = 0.0
@@ -383,7 +384,7 @@ class Limit():
 
 
 class AbbortCriterion():
-    def __init__(self):
+    def __init__(self) -> None:
         self.id = 0
         self.name = ''
         self.values = []
@@ -397,20 +398,20 @@ class AbbortCriterion():
         self.nameFound = 0
 
 class AbbortCriterions():
-    def __init__(self):
+    def __init__(self) -> None:
         self.abbortCriterionList = []
 
 class MeasurementLimit():
-    def __init__(self):
+    def __init__(self) -> None:
         self.limitsList = []
 
 class ProtocolParseInput():
-    def __init__(self):
+    def __init__(self) -> None:
         self.measurementLimit = MeasurementLimit()
         self.abbortCriterions = AbbortCriterions()
 
 class ParseProtocols():
-    def __init__(self,protocolType):
+    def __init__(self, protocolType: ProtocolType) -> None:
         # log.error('Error')
         # log.warning('Warning')
         # log.info('info')
@@ -445,7 +446,7 @@ class ParseProtocols():
         self.errorList    = []
         self.errorStatus  = ErrorStatusEnum.Ok
 
-    def generateMeasurmentLimitDict(self, measurementLimit, protocolParseInputDict):
+    def generateMeasurmentLimitDict(self, measurementLimit: MeasurementLimit, protocolParseInputDict: dict) -> tuple:
 
         outputDict = dict()
 
@@ -523,7 +524,7 @@ class ParseProtocols():
 
         return outputDict, measurementLimit
 
-    def generateMeasurmentLimitDictHeaders(self, measurementLimit, protocolParseInputDict):
+    def generateMeasurmentLimitDictHeaders(self, measurementLimit, protocolParseInputDict: dict) -> dict:
 
         outputDict = dict()
         for headobject,headvalue in measurementLimit.items():
@@ -547,7 +548,7 @@ class ParseProtocols():
 
         return outputDict
 
-    def extendInputMeasurementLimitDict(self):
+    def extendInputMeasurementLimitDict(self) -> None:
 
         log.info('Extending '+str(self.protocolType)+' input MeasurementLimit dict.')
 
@@ -672,7 +673,7 @@ class ParseProtocols():
             self.errorStatus = ErrorStatusEnum.Error
             return
 
-    def saveProtocolParseInputDictYAML(self, measLimDict, outputPath):
+    def saveProtocolParseInputDictYAML(self, measLimDict: dict, outputPath: str) -> None:
         log.info('Saving '+str(self.protocolType)+' protocol parse input dict YAML.')
 
         try:
@@ -685,7 +686,7 @@ class ParseProtocols():
             log.error('Save Protocol Parse Dict YAML, exception: ' + str(exception) + '.')
             self.errorStatus = ErrorStatusEnum.Error
 
-    def loadProtocolParseInputDictYAML(self, filePath):
+    def loadProtocolParseInputDictYAML(self, filePath: str) -> None:
         try:
             # inputLimitDict=dict()
 
@@ -702,7 +703,7 @@ class ParseProtocols():
 
         pass
 
-    def loadProtocolParseInputDict(self, protocolParseInputDict):
+    def loadProtocolParseInputDict(self, protocolParseInputDict: dict) -> None:
 
         log.info('Loading ' + str(self.protocolType) + ' protocol prescriptions input dict.')
 
@@ -760,7 +761,7 @@ class ParseProtocols():
             log.error('Load Protocol Parse Input dict, no top-level dict availble.')
             self.errorStatus = ErrorStatusEnum.Error
 
-    def generateInputFilteredMeasurementLimit(self,inputLimitDict):
+    def generateInputFilteredMeasurementLimit(self, inputLimitDict: dict) -> None:
 
         log.info('Generate '+str(self.protocolType)+' input-filtered MeasurementLimit.')
 
@@ -840,7 +841,7 @@ class ParseProtocols():
                 self.errorStatus = ErrorStatusEnum.Error
                 return
 
-    def rawParseProtocols(self,protocolCategories, protocolPath):
+    def rawParseProtocols(self, protocolCategories: list, protocolPath: str) -> None:
 
         log.info('Parsing without prescribed input, ' + str(self.protocolType) + ' protocol file: ' + str(protocolPath))
 
@@ -1424,7 +1425,7 @@ class ParseProtocols():
         #     self.errorStatus = ErrorStatusEnum.Error
 
 class ParseInputLimitsGroups:
-    def __init__(self):
+    def __init__(self) -> None:
         self.burnInErrorStatus = 0
         self.calErrorStatus = 0
 
@@ -1434,15 +1435,15 @@ class ParseInputLimitsGroups:
         self.burnInExtInputLimitsGroupsDict = dict()
         self.calExtInputLimitsGroupsDict = dict()
 
-    def loadBurnInInputLimitsGroupsDictYAML(self, filePath):
+    def loadBurnInInputLimitsGroupsDictYAML(self, filePath: str) -> None:
 
         self.burnInInputLimitsGroupsDict,self.burnInErrorStatus= self.loadInputLimitsGroupsDictYAML(filePath)
 
-    def loadCalInputLimitsGroupsDictYAML(self, filePath):
+    def loadCalInputLimitsGroupsDictYAML(self, filePath: str) -> None:
 
         self.calInputLimitsGroupsDict,self.calErrorStatus= self.loadInputLimitsGroupsDictYAML(filePath)
 
-    def loadInputLimitsGroupsDictYAML(self, filePath):
+    def loadInputLimitsGroupsDictYAML(self, filePath: str) -> tuple:
         errorStatus=0
         # try:
             # inputLimitDict=dict()
@@ -1540,17 +1541,17 @@ class ParseInputLimitsGroups:
 
         return inputLimitDict, errorStatus
 
-    def extendBurnInInputLimitsGroupsDict(self, groupNamesList):
+    def extendBurnInInputLimitsGroupsDict(self, groupNamesList: list) -> None:
         protType='BurnIn'
 
         self.burnInExtInputLimitsGroupsDict, self.burnInErrorStatus =self.extendInputLimitsGroupsDict(groupNamesList, self.burnInInputLimitsGroupsDict, protType)
 
-    def extendCalInputLimitsGroupsDict(self, groupNamesList):
+    def extendCalInputLimitsGroupsDict(self, groupNamesList: list) -> None:
         protType='Calibration'
 
         self.calExtInputLimitsGroupsDict, self.calErrorStatus =self.extendInputLimitsGroupsDict(groupNamesList, self.calInputLimitsGroupsDict, protType)
 
-    def extendInputLimitsGroupsDict(self, groupNamesDictList, inputLimitsGroupsDict, protType):
+    def extendInputLimitsGroupsDict(self, groupNamesDictList: list, inputLimitsGroupsDict: dict, protType: str) -> tuple:
 
         errorStatus=0
         protTypeStr='BurnIn'
@@ -1598,7 +1599,7 @@ class ParseInputLimitsGroups:
                 #
             return outputDict, errorStatus
 
-    def saveToActualBurnInLimitsGroupsDict(self, limitsGroup, alreadyExtended):
+    def saveToActualBurnInLimitsGroupsDict(self, limitsGroup, alreadyExtended: int) -> None:
 
         limNameDict= self.saveToActualLimitsGroupsDict(limitsGroup)
 
@@ -1607,7 +1608,7 @@ class ParseInputLimitsGroups:
         else:
             self.burnInExtInputLimitsGroupsDict[limitsGroup.name] =limNameDict
 
-    def saveToActualCalLimitsGroupsDict(self, limitsGroup, alreadyExtended):
+    def saveToActualCalLimitsGroupsDict(self, limitsGroup, alreadyExtended: int) -> None:
 
         limNameDict= self.saveToActualLimitsGroupsDict(limitsGroup)
 
@@ -1616,7 +1617,7 @@ class ParseInputLimitsGroups:
         else:
             self.calExtInputLimitsGroupsDict[limitsGroup.name] =limNameDict
 
-    def saveToActualLimitsGroupsDict(self,limitsGroup):
+    def saveToActualLimitsGroupsDict(self, limitsGroup) -> dict:
 
         limNameDict=dict()
         limitsDict = dict()
@@ -1640,12 +1641,12 @@ class ParseInputLimitsGroups:
 
         return limNameDict
 
-    def saveLimitsGroupsDictYAML(self, limGroupsDict, outputPath):
+    def saveLimitsGroupsDictYAML(self, limGroupsDict: dict, outputPath: str) -> None:
         with codecs.open(outputPath, 'w+', encoding='iso-8859-1')as yaml_file:
 
             yaml.dump(limGroupsDict, yaml_file, default_flow_style=False, sort_keys=False, allow_unicode=True, encoding='iso-8859-1')
 
-def generateInputLimitsFromFile(filePath,limExportPath):
+def generateInputLimitsFromFile(filePath: str, limExportPath: str) -> None:
     try:
         with open(filePath, 'r') as protocolFile:
 

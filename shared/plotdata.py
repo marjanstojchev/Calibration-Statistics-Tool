@@ -1,3 +1,4 @@
+from __future__ import annotations
 import os
 import matplotlib.pyplot as plt
 import numpy as np
@@ -23,7 +24,7 @@ legFigTitle = 'legend.png'
 
 # Graph meta data
 class GraphData:
-    def __init__(self):
+    def __init__(self) -> None:
         self.graphTitle        = ''
         self.txAnt             = 0
         self.rxCh              = 0
@@ -46,7 +47,7 @@ class GraphData:
 
 
 # Save the plotted graph figure with a given title.
-def saveFig(fig, figureTitle, dpi):
+def saveFig(fig, figureTitle: str, dpi: int) -> None:
     figTitle = figureTitle+'.png'
     fig.set_figheight(9)
     fig.set_figwidth(16)
@@ -60,7 +61,7 @@ def saveFig(fig, figureTitle, dpi):
     gc.collect()
 
 # Save the plotted graph figure with a given title.
-def saveFigRx(fig, figureTitle, dpi, graph, isTrgLayout):
+def saveFigRx(fig, figureTitle: str, dpi: int, graph: str, isTrgLayout: int) -> None:
     figTitle = figureTitle+'.png'
     fig.set_figheight(9)
     fig.set_figwidth(16)
@@ -151,7 +152,7 @@ def saveFigRx(fig, figureTitle, dpi, graph, isTrgLayout):
 #
 #     return angleList
 
-def getAngleData(parseDataList, desiredDiagList, plotSetup):
+def getAngleData(parseDataList: list, desiredDiagList: list, plotSetup: dict) -> list:
     combDictList= []
     outputList  = []
     outputDist  = dict()
@@ -222,7 +223,7 @@ def getAngleData(parseDataList, desiredDiagList, plotSetup):
     return outputList
 
 # Get angle step from PTU2 parsed data, for angle setup configuration.
-def getAngleStep(parseData):
+def getAngleStep(parseData) -> float:
     # if isTargetAngle ==1:
     #     angle=calc.getTarAngVals(parseData,upsideDown)
     # else:
@@ -234,7 +235,7 @@ def getAngleStep(parseData):
     return step
 
 # Get number fo angle points from PTU2 parsed data, for angle setup configuration.
-def getNofAnglePoints(parseData):
+def getNofAnglePoints(parseData) -> int:
     # if isTargetAngle == 1:
     #     length=len(calc.getTarAngVals(parseData, upsideDown))
     # else:
@@ -243,7 +244,7 @@ def getNofAnglePoints(parseData):
     return length
 
 # Get the reference angle point(the first point from the angle array) from PTU2 parsed data, for angle setup configuration.
-def getRefAnglePoint(parseData):
+def getRefAnglePoint(parseData) -> float:
     # if isTargetAngle ==1:
     #     angle=calc.getTarAngVals(parseData,upsideDown)
     # else:
@@ -254,7 +255,7 @@ def getRefAnglePoint(parseData):
 
 
 # Get the list of all configred graphs to be drawn.
-def getGraphList(graphConfig):
+def getGraphList(graphConfig: dict) -> list:
     graphList = []
     for graph, set in graphConfig.items():
         if set == 1:
@@ -262,7 +263,7 @@ def getGraphList(graphConfig):
     return graphList
 
 # Mapping string for the graph titles
-def graphStringMapping(graphTitle):
+def graphStringMapping(graphTitle: str) -> str:
     graphString     =''
     if graphTitle   == 'level':
         graphString ='Level [dB]'
@@ -297,18 +298,18 @@ def graphStringMapping(graphTitle):
 #     return rxChString
 
 # Get PTU angle values
-def getAngle(parseDataList, x):
+def getAngle(parseDataList: list, x: int) -> np.ndarray:
     angle = calc.getPtuAngVals(parseDataList[x])
     return angle
 
 # Get target angle values
-def getTargetAngle( plotSetup, parseDataList, x):
+def getTargetAngle(plotSetup: dict, parseDataList: list, x: int) -> np.ndarray:
     upsideDown = getUpsideDown(plotSetup)
     tarAngle = calc.getTarAngVals(parseDataList[x], upsideDown)
     return tarAngle
 
 # Get the info for the upside down set up sensor, from the configuration.
-def getUpsideDown( plotSetup):
+def getUpsideDown(plotSetup: dict) -> bool:
     if plotSetup['upsideDown'] == 0:
         upsideDown = False
     else:
@@ -318,7 +319,7 @@ def getUpsideDown( plotSetup):
 
 
 # Get the data for the actual graph for specific graph, chirp, rx channel, and PTU2 file
-def getActualGraphData(graph, rxChannel, chirp, parseDataList, parseDataIdx):
+def getActualGraphData(graph: str, rxChannel: int, chirp: int, parseDataList: list, parseDataIdx: int) -> np.ndarray:
     actualDiagramData = 0
     if graph == 'level':
         actualDiagramData = calc.getAntLevel(rxChannel, chirp, parseDataList[parseDataIdx])
@@ -353,7 +354,7 @@ def getActualGraphData(graph, rxChannel, chirp, parseDataList, parseDataIdx):
     return actualDiagramData
 
 # Set plot collor for each sensor
-def setColor(combIdx):
+def setColor(combIdx: int) -> str:
     colorList = ['b', 'r', 'g', 'm', 'k', 'c', 'orange', 'midnightblue',
                   'maroon', 'springgreen', 'purple', 'dimgrey', 'teal',
                   'yellow', 'thistle', 'lime', 'darkgoldenrod', 'rosybrown',
@@ -369,13 +370,13 @@ def setColor(combIdx):
     return color
 
 #  Check if diagram is calculation of average from the basic types.
-def isAvgDiagram(graph):
+def isAvgDiagram(graph: str) -> bool:
     isAvg = False
     if graph.startswith('avg'):
         isAvg = True
     return isAvg
 
-def getAllOnOneSlideTitle(allOnOneSlideGraphList, diagramConfig, desiredDiagramList):
+def getAllOnOneSlideTitle(allOnOneSlideGraphList: list, diagramConfig: dict, desiredDiagramList: list) -> str:
     title = ''
     for i in range(len(allOnOneSlideGraphList)):
         if i==0:
@@ -405,7 +406,7 @@ def getAllOnOneSlideTitle(allOnOneSlideGraphList, diagramConfig, desiredDiagramL
 
     return title
 
-def getAllOnOneSlideDbLabel(allOnOneSlideGraphList):
+def getAllOnOneSlideDbLabel(allOnOneSlideGraphList: list) -> str:
     title = ''
     levelList = []
     for i in range(len(allOnOneSlideGraphList)):
@@ -418,7 +419,7 @@ def getAllOnOneSlideDbLabel(allOnOneSlideGraphList):
             title = title+' - '+graphStringMapping(levelList[i])
     return title
 
-def getAllOnOneSlideDegLabel(allOnOneSlideGraphList):
+def getAllOnOneSlideDegLabel(allOnOneSlideGraphList: list) -> str:
     title = ''
     phDiffList = []
     for i in range(len(allOnOneSlideGraphList)):
@@ -431,7 +432,7 @@ def getAllOnOneSlideDegLabel(allOnOneSlideGraphList):
             title = title+' - '+graphStringMapping(phDiffList[i])
     return title
 
-def useSecondAxis(allOnOneSlideGraphList):
+def useSecondAxis(allOnOneSlideGraphList: list) -> bool:
     ret = False
     phDiffFound = False
     levelFound  = False
@@ -446,7 +447,7 @@ def useSecondAxis(allOnOneSlideGraphList):
     return ret
     # return [True for graph in allOnOneSlideGraphList if 'evel' in graph and 'Diff' in graph ]
 
-def getPrimAxisTitle(allOnOneSlideGraphList):
+def getPrimAxisTitle(allOnOneSlideGraphList: list) -> str:
     ret = ''
     for graphIdx in range(len(allOnOneSlideGraphList)):
         if 'evel' in allOnOneSlideGraphList[graphIdx]['graphType']:
@@ -458,7 +459,7 @@ def getPrimAxisTitle(allOnOneSlideGraphList):
     return ret
 
 
-def plotAll(plotSetup, chirpConfig, allOnOneSlideGraphList, desiredDiagList, dateTimeSensorList, parseDataList, diagramConfig, pickradius):
+def plotAll(plotSetup: dict, chirpConfig: dict, allOnOneSlideGraphList: list, desiredDiagList: list, dateTimeSensorList: list, parseDataList: list, diagramConfig: dict, pickradius: int) -> None:
     # Create subplots and plot figure
     fig, ax1 = plt.subplots()
     ax1.grid(True)
@@ -787,7 +788,7 @@ def plotAll(plotSetup, chirpConfig, allOnOneSlideGraphList, desiredDiagList, dat
 
 
 # Generate graph for specific graph type, specific diagram num., all Rx channels together, and all sensors.
-def plotDiagram(plotSetup, chirpConfig, graph, diagramNum, dateAndTimeSensorList, antType, parseDataList, dictScalingDict, lowerMarginDict, upperMarginDict, pickradius):
+def plotDiagram(plotSetup: dict, chirpConfig: dict, graph: str, diagramNum: int, dateAndTimeSensorList: list, antType: int, parseDataList: list, dictScalingDict: dict, lowerMarginDict: dict, upperMarginDict: dict, pickradius: int) -> GraphData:
     if 'iff' in graph and plotSetup['threeGraphLayout']==1:
         font = 18
     else:
@@ -1072,7 +1073,7 @@ def plotDiagram(plotSetup, chirpConfig, graph, diagramNum, dateAndTimeSensorList
     return graphData
 
 # Generate graphs for specific graph type, specific diagram num., all Rx channels separate, and all sensors.
-def plotDiagramRxCh(plotSetup, chirpConfig, graph, diagramNum, rxCh, dateTimeSensorCombList, antType, parseDataList, dictScalingDict, lowerMarginDict, upperMarginDict, pickradius):
+def plotDiagramRxCh(plotSetup: dict, chirpConfig: dict, graph: str, diagramNum: int, rxCh: int, dateTimeSensorCombList: list, antType: int, parseDataList: list, dictScalingDict: dict, lowerMarginDict: dict, upperMarginDict: dict, pickradius: int) -> GraphData:
     if 'iff' in graph and plotSetup['threeGraphLayout'] == 1:
         font = 18
     else:
@@ -1344,7 +1345,7 @@ def plotDiagramRxCh(plotSetup, chirpConfig, graph, diagramNum, rxCh, dateTimeSen
     return graphData
 
 # Generate legend figure for all sensors
-def generateLegend(plotSetup, dateTimeSensorCombList):
+def generateLegend(plotSetup: dict, dateTimeSensorCombList: list) -> None:
 
     # Create legend figure
     legFig = plt.figure(figsize=(2, 6))
@@ -1412,7 +1413,7 @@ def generateLegend(plotSetup, dateTimeSensorCombList):
 
 
 # Lower margin of all drawn sensor diagrams for a specific graph
-def scaleLowerMargin( graph, chirpSetup, parseDataList):
+def scaleLowerMargin(graph: str, chirpSetup: dict, parseDataList: list) -> float | None:
     actualGraph = 0
     lowerMarginList = []
     for pdIdx in range(len(parseDataList)):
@@ -1443,7 +1444,7 @@ def scaleLowerMargin( graph, chirpSetup, parseDataList):
         return lowerMargin
 
 # Upper margin of all drawn sensor diagrams for a specific graph
-def scaleUpperMargin(graph, chirpSetup, parseDataList):
+def scaleUpperMargin(graph: str, chirpSetup: dict, parseDataList: list) -> float | None:
     actualGraph = 0
     upperMarginList = []
     for pdIdx in range(len(parseDataList)):
@@ -1474,7 +1475,7 @@ def scaleUpperMargin(graph, chirpSetup, parseDataList):
         return upperMargin
 
 # Scaling factor for the diffPhaseDiff and avgDifPhaseDiff diagrams
-def scale(graph, chirpSetup, plotSetup, parseDataList):
+def scale(graph: str, chirpSetup: dict, plotSetup: dict, parseDataList: list) -> float:
     absMaxList = []
     maxValue = 0
     minValue = 0
@@ -1528,7 +1529,7 @@ def scale(graph, chirpSetup, plotSetup, parseDataList):
     return max(absMaxList)
 
 # Scaling factor for the diffPhaseDiff and avgDifPhaseDiff diagrams
-def scalePerDiagram(graph, diagramNr, chirpSetup, plotSetup, parseDataList):
+def scalePerDiagram(graph: str, diagramNr: int, chirpSetup: dict, plotSetup: dict, parseDataList: list) -> float | None:
     absMaxList = []
     maxValue = 0
     minValue = 0

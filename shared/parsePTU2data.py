@@ -1,3 +1,4 @@
+from __future__ import annotations
 import os
 from enum import Enum
 import io
@@ -15,64 +16,64 @@ except:
 
 # Power level [dB] and Power level variance [dB^2] per measurement point(angle) inside  one chirp
 class AntennaLevelData:
-    def __init__(self):
+    def __init__(self) -> None:
         self.dLevel = -10000  # [dB]
         self.dVarianzLevel = -10000  # [dB ^ 2]
 
 # Phase difference [°] and phase difference variance [dB^2] between two antennas per measurement point(angle) inside one chirp
 class DiffPhaseData:
-    def __init__(self):
+    def __init__(self) -> None:
         self.dDiffPhase = -10000 # [°]
         self.dVarianzDiffPhase = -10000 # [° ^ 2]
 
 # Lists of AntennaLevelData and DiffPhaseData for one chirp, regarding more antennas
 class ChirpMeasData:
-    def __init__(self, antennaLevelData, diffPhaseData):
+    def __init__(self, antennaLevelData: list, diffPhaseData: list) -> None:
        self.antennaLevelDataList = antennaLevelData[:]
        self.diffPhaseDataList = diffPhaseData[:]
 
 # PTU angle and chirp measurement data per angle
 class PtuPosMeasData:
-    def __init__(self):
+    def __init__(self) -> None:
         self.d_PTU_Angle = -10000 # [°]
         self.chirpMeasDataList = []
     # Pass a list of chirps
-    def setChirpMeasDataList(self, chirpMeasDataList):
+    def setChirpMeasDataList(self, chirpMeasDataList: list) -> None:
         self.chirpMeasDataList = chirpMeasDataList[:]
 
 # Meeta data about chirp
 class ChirpInfo:
-    def __init__(self):
+    def __init__(self) -> None:
         self.chirp  = 0
         self.active = 0 # Chirp
         self.centerFrequency = 0 # [Hz]
         self.diffPhaseOffsetList=[]
     # Pass a list of phase difference offsets
-    def setDiffPhases(self, diffPhaseOffsetList):
+    def setDiffPhases(self, diffPhaseOffsetList: list) -> None:
         self.diffPhaseOffsetList = []
         self.diffPhaseOffsetList = diffPhaseOffsetList[:]
 
 # Meta data about antenna
 class AntennaInfo:
-    def __init__(self):
+    def __init__(self) -> None:
         self.rfSerial = None
         self.antennaType = 0
         self.nofAntennas = 0
         self.nofAntennaDiffValues = 0
         self.antennaDistancesList = []
     # Pass a list of antenna distances
-    def setAntennaDistances(self, antennaDistancesList):
+    def setAntennaDistances(self, antennaDistancesList: list) -> None:
         self.antennaDistancesList = []
         self.antennaDistancesList = antennaDistancesList[:]
     # Get the number of differences between antennas
-    def getNofAntennaDiffValues(self):
+    def getNofAntennaDiffValues(self) -> int:
         return len(self.antennaDistancesList)
     # Set number of differences between antennas
-    def setNofAntennaDiffValues(self, nofAntennaDiffValues):
+    def setNofAntennaDiffValues(self, nofAntennaDiffValues: int) -> None:
         self.nofAntennaDiffValues = nofAntennaDiffValues
 
 class MeasSetupInfo:
-    def __init__(self):
+    def __init__(self) -> None:
         self.phyDoppGenDist          = 0
         self.doppGenHeightPtuZero    = 0
         self.rfBoardMidHeightPtuZero = 0
@@ -90,7 +91,7 @@ class MeasSetupInfo:
 # Data from the parsed PTU2 file, containing antenna info, chirp info list, and meaurements data for each ptu position
 class PTU2ParseData:
     MAX_CHIRP = 4
-    def __init__(self):
+    def __init__(self) -> None:
         self.bDataValid     = False
         self.fileNamePath   = ''
         self.errorList      = []
@@ -108,7 +109,7 @@ class PTU2ParseData:
         self.phases_array  = None
 
     # Build flat NumPy arrays from ptuPosDataList for fast slicing in calcdiagram_functions
-    def buildArrays(self):
+    def buildArrays(self) -> None:
         nof_angles   = len(self.ptuPosDataList)
         nof_antennas = self.antennaInfo.nofAntennas
         nof_diff     = self.antennaInfo.getNofAntennaDiffValues()
@@ -132,7 +133,7 @@ class PTU2ParseData:
         )  # shape: (nof_angles, MAX_CHIRP, nof_diff)
 
     # Call parse data from the PTU2ParseData object (parseData wrapper)
-    def parseFile(self, fileNamePath, useSensorMuster, sensorMusterList):
+    def parseFile(self, fileNamePath: str, useSensorMuster: int, sensorMusterList: list) -> None:
         self.errorList = []
         self.fileNamePath = fileNamePath
         parseFile(fileNamePath, self)
@@ -140,7 +141,7 @@ class PTU2ParseData:
 
 # Meta data class from the PTU2 file title
 class FileTitle:
-    def __init__(self):
+    def __init__(self) -> None:
         self.dateAndTime = ''
         self.date = ''
         self.time = ''
@@ -169,7 +170,7 @@ class FileTitle:
 
 
     # Parse the PTU2 file title
-    def parseFileTitle(self, fileNamePath,useSensorMuster,sensorMusterList):
+    def parseFileTitle(self, fileNamePath: str, useSensorMuster: int, sensorMusterList: list) -> None:
 
         self.fileNamePath = fileNamePath
         self.useSensorMuster  = useSensorMuster
@@ -283,7 +284,7 @@ class searchParts(Enum):
 
 
 # Control wrapper for interpretData
-def parseFile(fileNamePath,ptu2ParseData):
+def parseFile(fileNamePath: str, ptu2ParseData: PTU2ParseData) -> PTU2ParseData:
     if myLogger:
         myLogger.info('Parsing: ' + fileNamePath)
     else:
@@ -298,7 +299,7 @@ def parseFile(fileNamePath,ptu2ParseData):
     return ptu2ParseData
 
 # Read and interpret the data for every part of the PTU2 file
-def interpretData(fileNamePath,ptu2ParseData):
+def interpretData(fileNamePath: str, ptu2ParseData: PTU2ParseData) -> None:
     strMeasName = ptu2ParseData.fileNamePath
     headerLineIndicator0 = 'PTU-Angle['
 
@@ -441,7 +442,7 @@ def interpretData(fileNamePath,ptu2ParseData):
             ptu2ParseData.errorList.append(strMeasName + ' found (only) ' + str(chirpCounter)+ ' Chirp data of ' + str(ptu2ParseData.MAX_CHIRP) + ' Chirps')
 
 # Parses the antenna info part
-def getAntennaData(lineArray, ptu2ParseData):
+def getAntennaData(lineArray: list, ptu2ParseData: PTU2ParseData) -> bool:
     bRet = True
     if len(lineArray) >= 4:
         index = 0
@@ -503,7 +504,7 @@ def getAntennaData(lineArray, ptu2ParseData):
     return bRet
 
 # Control wrapper for getChirpData
-def readChirpData(lineArray,ptu2ParseData,chirpcounter):
+def readChirpData(lineArray: list, ptu2ParseData: PTU2ParseData, chirpcounter: int) -> bool:
     if not getChirpData(lineArray,ptu2ParseData):
         ptu2ParseData.errorList.append(str(ptu2ParseData.fileNamePath) + ' Error 2 - Chirp ' + str(chirpcounter) + ' daten einlesen')
         return False
@@ -511,7 +512,7 @@ def readChirpData(lineArray,ptu2ParseData,chirpcounter):
         return True
 
 # Parses the chirp info part
-def getChirpData(lineArray, ptu2ParseDataClass):
+def getChirpData(lineArray: list, ptu2ParseDataClass: PTU2ParseData) -> bool:
     bRet = True
     if len(lineArray) != (3 + ptu2ParseDataClass.antennaInfo.getNofAntennaDiffValues()):
         return False
@@ -552,14 +553,14 @@ def getChirpData(lineArray, ptu2ParseDataClass):
     return bRet
 
 # Control wrapper for getMeasData
-def readPosPtuData(lineArray,ptu2ParseData):
+def readPosPtuData(lineArray: list, ptu2ParseData: PTU2ParseData) -> bool:
     if not getMeasData(lineArray,ptu2ParseData):
         ptu2ParseData.errorList.append(str(ptu2ParseData.fileNamePath) + ' Error 3 - Messdaten einlesen')
         return False
     return True
 
 # Parses the measurements data part per one PTU position
-def getMeasData(lineArray,ptu2ParseData):
+def getMeasData(lineArray: list, ptu2ParseData: PTU2ParseData) -> bool:
     bRet  =  True
     nofChirpValues = 2*(ptu2ParseData.antennaInfo.nofAntennas + ptu2ParseData.antennaInfo.getNofAntennaDiffValues())
 

@@ -1,3 +1,4 @@
+from __future__ import annotations
 import os
 import protocolsTest as protocolfilter
 import pyside_qtgui as qt
@@ -38,7 +39,7 @@ prottobeparseddict = {
 }
 
 
-def getprotcols(abspath, LatestProtocol, BurnInStart, EOLError, EOLAbbortCriterian, EOLMeasLimitsExceeded, allprotocolspathnameslist):
+def getprotcols(abspath: str, LatestProtocol: bool, BurnInStart: bool, EOLError: bool, EOLAbbortCriterian: bool, EOLMeasLimitsExceeded: bool, allprotocolspathnameslist: list) -> tuple:
     busefileswitherror = EOLError
     busefilesabbortcriterion = EOLAbbortCriterian
     busefileswithlimitsexceeded = EOLMeasLimitsExceeded
@@ -88,7 +89,7 @@ def getprotcols(abspath, LatestProtocol, BurnInStart, EOLError, EOLAbbortCriteri
         # elif len(ptu2FilesListDict['ptu2FilesList'])!=0 and:
     return accprotlist, accerrorprotlist, accabbortcritprotlist, acclimitexceededprotlist, filteredprotocolslist
 
-def importprotocolsdirpath(abspath, LatestProtocol, BurnInStart, EOLError, EOLAbbortCriterian, EOLMeasLimitsExceeded):
+def importprotocolsdirpath(abspath: str, LatestProtocol: bool, BurnInStart: bool, EOLError: bool, EOLAbbortCriterian: bool, EOLMeasLimitsExceeded: bool) -> None:
     protocoldirpath = abspath
     protocolfileslist = protocolfilter.ProtocolInfoClass.GetAllProtocolsList(
         protocoldirpath)
@@ -102,7 +103,7 @@ def importprotocolsdirpath(abspath, LatestProtocol, BurnInStart, EOLError, EOLAb
 
 
 
-def getprotpathtypedictlist(protocolPathList, BurnInStart):
+def getprotpathtypedictlist(protocolPathList: list, BurnInStart: bool) -> list:
 
     outputList = []
 
@@ -175,7 +176,7 @@ def getprotpathtypedictlist(protocolPathList, BurnInStart):
 
 
 
-def filterprotocoldata(abspath, LatestProtocol, BurnInStart, EOLError, EOLAbbortCriterian, EOLMeasLimitsExceeded, protocolfileslist):
+def filterprotocoldata(abspath: str, LatestProtocol: bool, BurnInStart: bool, EOLError: bool, EOLAbbortCriterian: bool, EOLMeasLimitsExceeded: bool, protocolfileslist: list) -> None:
 
 
     if len(protocolfileslist) == 0:
@@ -227,16 +228,16 @@ def filterprotocoldata(abspath, LatestProtocol, BurnInStart, EOLError, EOLAbbort
 
 # Class containing the loaded data, including the parsed PTU2 files list, error status data, and meta data
 class loadprotocol:
-    def __init__(self, abspath, LatestProtocol, BurnInStart, EOLError, EOLAbbortCriterian, EOLMeasLimitsExceeded):
+    def __init__(self, abspath: str, LatestProtocol: bool, BurnInStart: bool, EOLError: bool, EOLAbbortCriterian: bool, EOLMeasLimitsExceeded: bool) -> None:
         self.loaddata(abspath, LatestProtocol, BurnInStart, EOLError, EOLAbbortCriterian, EOLMeasLimitsExceeded)
         self.protocolpathdict = protocolpathdict
 
     # Load parsed data for a specific search path
-    def loaddata(self, abspath, LatestProtocol, BurnInStart, EOLError, EOLAbbortCriterian, EOLMeasLimitsExceeded):
+    def loaddata(self, abspath: str, LatestProtocol: bool, BurnInStart: bool, EOLError: bool, EOLAbbortCriterian: bool, EOLMeasLimitsExceeded: bool) -> None:
         clear()
         importprotocolsdirpath(abspath, LatestProtocol, BurnInStart, EOLError, EOLAbbortCriterian, EOLMeasLimitsExceeded)
 
-def clear():
+def clear() -> None:
     global protocolpathdict
     protocolpathdict = {
         'protocolPathTypeDictList': [],

@@ -1,3 +1,4 @@
+from __future__ import annotations
 import logging as log
 import os
 import enum
@@ -5,7 +6,7 @@ import sys
 import errno
 
 
-def createDirectory(outputPath):
+def createDirectory(outputPath: str) -> tuple[bool, str]:
     errorStr = 'Creating directory OK, path: '+ outputPath +'.'
     status=True
     if not os.path.isdir(outputPath):
@@ -54,7 +55,7 @@ logFormatter = log.Formatter("%(asctime)s [%(module)s] [%(levelname)-5.5s] %(mes
 
 
 class Logger():
-    def __init__(self,loggerName):
+    def __init__(self, loggerName: str) -> None:
         self.loggerName = loggerName
         self.logger = log.getLogger(self.loggerName)
         self.fileHandlerDict = dict()
@@ -65,7 +66,7 @@ class Logger():
         # self.logger.addHandler(self.consoleHandler)
         self.logger.setLevel(log.DEBUG)
 
-    def setLevel(self,logLevel):
+    def setLevel(self, logLevel: int) -> None:
         self.logger.setLevel(logLevel)
 
     # def info(self,message):
@@ -77,9 +78,9 @@ class Logger():
     # def debug(self, message):
     #     self.logger.debug(message)
 
-    def setFormatter(self,formatter):
+    def setFormatter(self, formatter: log.Formatter) -> None:
         self.logFormatter = formatter
-    def addFileHandler(self,filePath,mode):
+    def addFileHandler(self, filePath: str, mode: str) -> tuple[int, str]:
         errorStatus = 0
         errorString = 'Logger: Status OK.'
         try:
@@ -93,17 +94,17 @@ class Logger():
             errorStatus = 1
         return errorStatus, errorString
 
-    def removeConsoleHandler(self):
+    def removeConsoleHandler(self) -> None:
         self.logger.removeHandler(self.consoleHandler)
 
-    def addConsoleHandler(self):
+    def addConsoleHandler(self) -> None:
         # if consoleOutput==ConsoleOutput.On:
         consoleHandler = log.StreamHandler()
         consoleHandler.setFormatter(self.logFormatter)
         self.logger.addHandler(consoleHandler)
         self.consoleHandler = consoleHandler
 
-    def addTableHandler(self,handler):
+    def addTableHandler(self, handler: log.Handler) -> None:
         self.logger.addHandler(handler)
         self.tableHandler = handler
 

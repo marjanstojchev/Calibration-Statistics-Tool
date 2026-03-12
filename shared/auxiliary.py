@@ -1,3 +1,4 @@
+from __future__ import annotations
 import os
 import shutil
 from shutil import copyfile
@@ -58,7 +59,7 @@ calLimGroupsFileName = 'CalLimGroups.yaml'
 calLimGroupsFilePath = os.path.join(basicDir, calLimGroupsFileName)
 
 # Clear the output directory
-def clearAll(outputFolderPath):
+def clearAll(outputFolderPath: str) -> tuple[bool, str]:
     status = True
     errorString = 'Clearing output directory: Status OK.'
     try:
@@ -76,7 +77,7 @@ def clearAll(outputFolderPath):
         errorString = "Clearing output directory: " + str(e)
     return status,errorString
 
-def createDirectory(outputPath):
+def createDirectory(outputPath: str) -> tuple[bool, str]:
     errorStr = 'Creating directory OK, path: '+ outputPath +'.'
     status=True
     if not os.path.isdir(outputPath):
@@ -90,7 +91,7 @@ def createDirectory(outputPath):
                 # myLogger.error(errorStr)
     return status, errorStr
 
-def copyFile(src,dest):
+def copyFile(src: str, dest: str) -> tuple[bool, str]:
     errorStr='Copying: Status OK.'
     status = True
     try:
@@ -102,7 +103,7 @@ def copyFile(src,dest):
     return status,errorStr
 
 # Save the plotted graph figure with a given title.
-def saveFig(fig,figurePath):
+def saveFig(fig, figurePath: str) -> tuple[bool, str]:
     status=True
     errorStr=''
     figurePath=figurePath+'.png'

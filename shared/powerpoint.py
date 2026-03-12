@@ -1,3 +1,4 @@
+from __future__ import annotations
 import enum
 import pptx
 import sys
@@ -149,7 +150,7 @@ class OnlyTableEnum(enum.IntEnum):
 
 # pptx presentation class
 class Presentation:
-    def __init__(self, starttemp):
+    def __init__(self, starttemp: str) -> None:
         # temp = sys.modules[self.__module__].__file__
         temp = os.path.dirname(sys.argv[0])
         # temp = os.path.split(temp)
@@ -168,12 +169,12 @@ class Presentation:
 
 
     # add a slide function for input slide layout
-    def add_slide(self, slideLayout):
+    def add_slide(self, slideLayout: SlideLayout) -> SlideLayout:
         slideLayout.setLayout(self)
         return slideLayout
 
     # save pptx presentation for input file name
-    def save(self, pptxPath):
+    def save(self, pptxPath: str) -> None:
 
         # add Disclaimer
         # add end slide
@@ -197,20 +198,20 @@ class Presentation:
 # Abstract slide layout class
 class SlideLayout(ABC):
     @abstractmethod
-    def setLayout(self):
+    def setLayout(self) -> None:
         pass
     # Get info about the actual slide elements layout numbering
-    def getShapesList(self):
+    def getShapesList(self) -> None:
         for shape in self.slide.placeholders:
             print('%d %s' % (shape.placeholder_format.idx, shape.name))
 
-    def getNofGraphs(self):
+    def getNofGraphs(self) -> None:
         pass
 
 # statsLimitsGroupsLayout
 
 class StatsLimitsGroupsLayout(SlideLayout):
-    def setLayout(self,Presentation):
+    def setLayout(self,Presentation) -> None:
         self.slide    = Presentation.prt.slides.add_slide(Presentation.prt.slide_layouts[SlideLayoutEnum.StatsLimitsGroupsLayout])
 
         self.title    = self.slide.shapes[StatsLimitsGroupsLayoutEnum.Title]
@@ -226,44 +227,44 @@ class StatsLimitsGroupsLayout(SlideLayout):
 
 # All on one slide layout class
 class OneGraphLayout(SlideLayout):
-    def setLayout(self,Presentation):
+    def setLayout(self,Presentation) -> None:
         self.slide   = Presentation.prt.slides.add_slide(Presentation.prt.slide_layouts[SlideLayoutEnum.OneGraphLayout])
         self.title   = self.slide.shapes[AllOnOneSlideLayoutEnum.Title]
         self.text    = self.slide.shapes[AllOnOneSlideLayoutEnum.Text]
         self.caption = self.slide.shapes[AllOnOneSlideLayoutEnum.Caption]
         self.image   = self.slide.shapes[AllOnOneSlideLayoutEnum.Image]
 
-    def getNofGraphs(self):
+    def getNofGraphs(self) -> int:
         return 1
 
 # All on one slide layout class setcurves
 class OneGraphLayoutsetcurves(SlideLayout):
-    def setLayout(self,Presentation):
+    def setLayout(self,Presentation) -> None:
         self.slide   = Presentation.prt.slides.add_slide(Presentation.prt.slide_layouts[SlideLayoutEnum.OneGraphLayoutsetcurves])
         self.title   = self.slide.shapes[AllOnOneSlideLayoutEnum.Title]
         self.text    = self.slide.shapes[AllOnOneSlideLayoutEnum.Text]
         self.caption = self.slide.shapes[AllOnOneSlideLayoutEnum.Caption]
         self.image   = self.slide.shapes[AllOnOneSlideLayoutEnum.Image]
 
-    def getNofGraphs(self):
+    def getNofGraphs(self) -> int:
         return 1
 
 # All on one slide layout class stats
 class OneGraphLayoutstats(SlideLayout):
-    def setLayout(self,Presentation):
+    def setLayout(self,Presentation) -> None:
         self.slide   = Presentation.prt.slides.add_slide(Presentation.prt.slide_layouts[SlideLayoutEnum.OneGraphLayoutstats])
         self.title   = self.slide.shapes[AllOnOneSlideLayoutEnum.Title]
         self.text    = self.slide.shapes[AllOnOneSlideLayoutEnum.Text]
         self.caption = self.slide.shapes[AllOnOneSlideLayoutEnum.Caption]
         self.image   = self.slide.shapes[AllOnOneSlideLayoutEnum.Image]
 
-    def getNofGraphs(self):
+    def getNofGraphs(self) -> int:
         return 1
 
 
 # Two-graph layout class
 class TwoGraphLayout(SlideLayout):
-    def setLayout(self,Presentation):
+    def setLayout(self,Presentation) -> None:
         self.slide        = Presentation.prt.slides.add_slide(Presentation.prt.slide_layouts[SlideLayoutEnum.TwoGraphLayout])
         self.title        = self.slide.shapes[TwoGraphLayoutEnum.Title]
         self.primText     = self.slide.shapes[TwoGraphLayoutEnum.PrimText]
@@ -273,7 +274,7 @@ class TwoGraphLayout(SlideLayout):
 
 # Two-graph layout class Curves
 class TwoGraphLayoutCurves(SlideLayout):
-    def setLayout(self,Presentation):
+    def setLayout(self,Presentation) -> None:
         self.slide        = Presentation.prt.slides.add_slide(Presentation.prt.slide_layouts[SlideLayoutEnum.TwoGraphLayoutCurves])
         self.title        = self.slide.shapes[TwoGraphLayoutCurvesEnum.Title]
         self.primText     = self.slide.shapes[TwoGraphLayoutCurvesEnum.PrimText]
@@ -284,7 +285,7 @@ class TwoGraphLayoutCurves(SlideLayout):
 
 # One-graph layout class
 class OneFieldLayout(SlideLayout):
-    def setLayout(self,Presentation):
+    def setLayout(self,Presentation) -> None:
         self.slide     =Presentation.prt.slides.add_slide(Presentation.prt.slide_layouts[SlideLayoutEnum.OneFieldLayout])
         self.title     = self.slide.shapes[OneFieldLayoutEnum.Title]
         self.titletext = self.slide.shapes[OneFieldLayoutEnum.TitleText]
@@ -292,7 +293,7 @@ class OneFieldLayout(SlideLayout):
 
 # One-graph layout class
 class SeparationSheet(SlideLayout):
-    def setLayout(self,Presentation):
+    def setLayout(self,Presentation) -> None:
         self.slide = Presentation.prt.slides.add_slide(Presentation.prt.slide_layouts[SlideLayoutEnum.SeparationSheet])
         self.title = self.slide.shapes[SeparationSheetEnum.Title]
         self.text  = self.slide.shapes[SeparationSheetEnum.Text]
@@ -301,7 +302,7 @@ class SeparationSheet(SlideLayout):
 
 # Sensor-and-list layout class
 class SensorListAndLegend(SlideLayout):
-    def setLayout(self,Presentation):
+    def setLayout(self,Presentation) -> None:
         self.slide            = Presentation.prt.slides.add_slide(Presentation.prt.slide_layouts[SlideLayoutEnum.SensorListAndLegend])
         self.title            = self.slide.shapes[SensorListAndLegendEnum.Title]
         self.text             = self.slide.shapes[SensorListAndLegendEnum.Text]
@@ -310,7 +311,7 @@ class SensorListAndLegend(SlideLayout):
         self.tablePlaceholder = self.slide.shapes[SensorListAndLegendEnum.SensorListTable]
 
 class OnlyTableLayout(SlideLayout):
-    def setLayout(self,Presentation):
+    def setLayout(self,Presentation) -> None:
         self.slide            =Presentation.prt.slides.add_slide(Presentation.prt.slide_layouts[SlideLayoutEnum.OnlyTableLayout])
         self.title            = self.slide.shapes[OnlyTableEnum.Title]
         self.text             = self.slide.shapes[OnlyTableEnum.Text]
@@ -318,7 +319,7 @@ class OnlyTableLayout(SlideLayout):
 
 # Four-graph layout class
 class FourGraphLayout(SlideLayout):
-    def setLayout(self,Presentation):
+    def setLayout(self,Presentation) -> None:
         self.imageList    = []
         self.captionsList = []
         self.slide   = Presentation.prt.slides.add_slide(Presentation.prt.slide_layouts[SlideLayoutEnum.FourGraphLayout])
@@ -335,25 +336,25 @@ class FourGraphLayout(SlideLayout):
         self.getImageList()
         self.getCaptionsList()
 
-    def getImageList(self):
+    def getImageList(self) -> None:
         self.imageList.append(self.img1)
         self.imageList.append(self.img2)
         self.imageList.append(self.img3)
         self.imageList.append(self.img4)
 
-    def getCaptionsList(self):
+    def getCaptionsList(self) -> None:
         self.captionsList.append(self.img1Cap)
         self.captionsList.append(self.img2Cap)
         self.captionsList.append(self.img3Cap)
         self.captionsList.append(self.img4Cap)
 
 
-    def getNofGraphs(self):
+    def getNofGraphs(self) -> int:
         return 4
 
 # Three-graph layout class
 class ThreeGraphLayout(SlideLayout):
-    def setLayout(self,Presentation):
+    def setLayout(self,Presentation) -> None:
         self.imageList    = []
         self.captionsList = []
         self.slide   = Presentation.prt.slides.add_slide(Presentation.prt.slide_layouts[SlideLayoutEnum.ThreeGraphLayoutCaptions])
@@ -369,22 +370,22 @@ class ThreeGraphLayout(SlideLayout):
         self.getImageList()
         self.getCaptionsList()
 
-    def getImageList(self):
+    def getImageList(self) -> None:
         self.imageList.append(self.img1)
         self.imageList.append(self.img2)
         self.imageList.append(self.img3)
 
-    def getCaptionsList(self):
+    def getCaptionsList(self) -> None:
         self.captionsList.append(self.img1Cap)
         self.captionsList.append(self.img2Cap)
         self.captionsList.append(self.img3Cap)
 
-    def getNofGraphs(self):
+    def getNofGraphs(self) -> int:
         return 3
 
 # Two-graph layout class
 class TwoGraphTxAntDiagLayout(SlideLayout):
-    def setLayout(self,Presentation):
+    def setLayout(self,Presentation) -> None:
         self.imageList    = []
         self.captionsList = []
         self.slide     = Presentation.prt.slides.add_slide(Presentation.prt.slide_layouts[SlideLayoutEnum.TwoGraphTxAntDiagLayout])
@@ -398,21 +399,21 @@ class TwoGraphTxAntDiagLayout(SlideLayout):
         self.getImageList()
         self.getCaptionsList()
 
-    def getImageList(self):
+    def getImageList(self) -> None:
         self.imageList.append(self.image1)
         self.imageList.append(self.image2)
 
 
-    def getCaptionsList(self):
+    def getCaptionsList(self) -> None:
         self.captionsList.append(self.image1Cap)
         self.captionsList.append(self.image2Cap)
 
-    def getNofGraphs(self):
+    def getNofGraphs(self) -> int:
         return 2
 
 # Two-graph layout class
 class TwoImagesPlaceHolder(SlideLayout):
-    def setLayout(self,Presentation):
+    def setLayout(self,Presentation) -> None:
         self.imageList    = []
         self.captionsList = []
         self.slide     = Presentation.prt.slides.add_slide(Presentation.prt.slide_layouts[SlideLayoutEnum.TwoImagesPlaceHolderLayout])
@@ -426,23 +427,23 @@ class TwoImagesPlaceHolder(SlideLayout):
         self.getImageList()
         self.getCaptionsList()
 
-    def getImageList(self):
+    def getImageList(self) -> None:
         self.imageList.append(self.image1)
         self.imageList.append(self.image2)
 
 
-    def getCaptionsList(self):
+    def getCaptionsList(self) -> None:
         self.captionsList.append(self.image1Cap)
         self.captionsList.append(self.image2Cap)
 
-    def getNofGraphs(self):
+    def getNofGraphs(self) -> int:
         return 2
 
 
 
 # Graph list to slide mapper class, for all Rx channels together drawn graphs.
 class TwoGraphConfig:
-    def __init__(self, twoGraphConfig, graphAndDiagramList, diagramNr, graphList):
+    def __init__(self, twoGraphConfig: dict, graphAndDiagramList: list, diagramNr: int, graphList: list) -> None:
         self.primGraph    = 0
         self.secGraph     = 0
         self.onlyOneGraph = 0
@@ -451,7 +452,7 @@ class TwoGraphConfig:
         self.getOnlyOneGraph(twoGraphConfig, graphList)
 
     # Get only one graph
-    def getOnlyOneGraph(self, twoGraphConfig, graphList):
+    def getOnlyOneGraph(self, twoGraphConfig: dict, graphList: list) -> None:
         if twoGraphConfig['primGraph'] in graphList and twoGraphConfig['secGraph'] not in graphList:
             self.onlyOneGraph = self.primGraph
         elif twoGraphConfig['primGraph'] in graphList and twoGraphConfig['secGraph']  in graphList:
@@ -462,7 +463,7 @@ class TwoGraphConfig:
             self.onlyOneGraph =0
 
     # Set the data for the primary graphs in the two-graph layout, per one diagram nr.
-    def setPrimGraph(self, twoGraphConfig, graphAndDiagramList, diagramNr):
+    def setPrimGraph(self, twoGraphConfig: dict, graphAndDiagramList: list, diagramNr: int) -> None:
         gdListShape = np.shape(graphAndDiagramList)
         nofGraphs   = gdListShape[0]
         nofDiagrams = gdListShape[1]
@@ -472,7 +473,7 @@ class TwoGraphConfig:
                     self.primGraph = graphAndDiagramList[graphIdx][diagramIdx]
 
     # Set the data for the secondary graphs in the two-graph layout, per one diagram nr.
-    def setSecGraph(self, twoGraphConfig, graphAndDiagramList, diagramNr):
+    def setSecGraph(self, twoGraphConfig: dict, graphAndDiagramList: list, diagramNr: int) -> None:
         gdListShape = np.shape(graphAndDiagramList)
         nofGraphs   = gdListShape[0]
         nofDiagrams = gdListShape[1]
@@ -483,7 +484,7 @@ class TwoGraphConfig:
 
 # Graph list to slide mapper class, for all Rx channels separate drawn graphs.
 class TwoGraphConfigRx(TwoGraphLayout):
-    def __init__(self, twoGraphConfig, graphDiagramRxChList, diagramNr, graphList):
+    def __init__(self, twoGraphConfig: dict, graphDiagramRxChList: list, diagramNr: int, graphList: list) -> None:
         self.primGraphList    = []
         self.secGraphList     = []
         self.onlyOneGraphList = 0
@@ -492,7 +493,7 @@ class TwoGraphConfigRx(TwoGraphLayout):
         self.getOnlyOneGraph(twoGraphConfig, graphList)
 
     # Get only one graph
-    def getOnlyOneGraph(self, twoGraphConfig, graphList):
+    def getOnlyOneGraph(self, twoGraphConfig: dict, graphList: list) -> None:
         if twoGraphConfig['primGraph'] in graphList and twoGraphConfig['secGraph'] not in graphList:
             self.onlyOneGraphList = self.primGraphList
         elif twoGraphConfig['primGraph'] in graphList and twoGraphConfig['secGraph'] in graphList:
@@ -503,7 +504,7 @@ class TwoGraphConfigRx(TwoGraphLayout):
             self.onlyOneGraphList = 0
 
     # Set the list for the primary graphs in the two-graph layout, per one diagram nr.
-    def setPrimGraph(self, twoGraphConfig, graphDiagramRxChList, diagramNr):
+    def setPrimGraph(self, twoGraphConfig: dict, graphDiagramRxChList: list, diagramNr: int) -> None:
         gdListShape = np.shape(graphDiagramRxChList)
         nofGraphs   = gdListShape[0]
         nofDiagrams = gdListShape[1]
@@ -515,7 +516,7 @@ class TwoGraphConfigRx(TwoGraphLayout):
                         self.primGraphList.append(rxChList[rxCh])
 
     # Set the list for the secondary graphs in the two-graph layout, per one diagram nr.
-    def setSecGraph(self, twoGraphConfig, graphDiagramRxChList, diagramNr):
+    def setSecGraph(self, twoGraphConfig: dict, graphDiagramRxChList: list, diagramNr: int) -> None:
         gdListShape = np.shape(graphDiagramRxChList)
         nofGraphs   = gdListShape[0]
         nofDiagrams = gdListShape[1]
@@ -528,11 +529,11 @@ class TwoGraphConfigRx(TwoGraphLayout):
 
 class FourGraphConfigRx(TwoGraphLayout):
 
-    def __init__(self, fourGraphConfig, graphDiagramRxChList, diagramNr, graphList):
+    def __init__(self, fourGraphConfig: dict, graphDiagramRxChList: list, diagramNr: int, graphList: list) -> None:
         self.graphList = []
         self.setGraphList(fourGraphConfig, graphDiagramRxChList, diagramNr)
 
-    def setGraphList(self, fourGraphConfig, graphDiagramRxChList, diagramNr):
+    def setGraphList(self, fourGraphConfig: dict, graphDiagramRxChList: list, diagramNr: int) -> None:
         gdListShape = np.shape(graphDiagramRxChList)
         nofGraphs   = gdListShape[0]
         nofDiagrams = gdListShape[1]
@@ -546,11 +547,11 @@ class FourGraphConfigRx(TwoGraphLayout):
 
 class ThreeGraphConfigRx(TwoGraphLayout):
 
-    def __init__(self, threeGraphConfig, graphDiagramRxChList, diagramNr, graphList):
+    def __init__(self, threeGraphConfig: dict, graphDiagramRxChList: list, diagramNr: int, graphList: list) -> None:
         self.graphList = []
         self.setGraphList(threeGraphConfig, graphDiagramRxChList, diagramNr)
 
-    def setGraphList(self, threeGraphConfig, graphDiagramRxChList, diagramNr):
+    def setGraphList(self, threeGraphConfig: dict, graphDiagramRxChList: list, diagramNr: int) -> None:
         gdListShape = np.shape(graphDiagramRxChList)
         nofGraphs   = gdListShape[0]
         nofDiagrams = gdListShape[1]

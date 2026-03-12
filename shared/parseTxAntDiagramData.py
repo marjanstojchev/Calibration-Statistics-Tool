@@ -1,3 +1,4 @@
+from __future__ import annotations
 import os
 from enum import Enum
 import io
@@ -10,7 +11,7 @@ myLogger=log.mainLoadDataLogger.logger
 
 # PTU angle and chirp measurement data per angle
 class PtuPosMeasData:
-    def __init__(self):
+    def __init__(self) -> None:
         self.d_PTU_AzAngle = -10000 # [°]
         self.d_PTU_ElAngle = -10000 # [°]
         self.level_dBm = -10000 #[dBm]
@@ -24,7 +25,7 @@ class PtuPosMeasData:
 # Data from the parsed TxAnt diagram file, containing meaurements data for each ptu position
 class TxAntDiagramParseData:
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.bDataValid = False
         self.fileNamePath = ''
         self.errorList = []
@@ -33,7 +34,7 @@ class TxAntDiagramParseData:
         self.ptuPosDataList = [] # Messdaten an der jeweiligen ptu position
         self.fileTitle = FileTitle()
     # Call parse data from the PTU2ParseData object (parseData wrapper)
-    def parseFile(self, fileNamePath, useSensorMuster, sensorMusterList):
+    def parseFile(self, fileNamePath: str, useSensorMuster: int, sensorMusterList: list) -> None:
         self.errorList = []
         self.fileNamePath = fileNamePath
         parseFile(fileNamePath, self)
@@ -42,7 +43,7 @@ class TxAntDiagramParseData:
 
 # Meta data class from the PTU2 file title
 class FileTitle:
-    def __init__(self):
+    def __init__(self) -> None:
         self.dateAndTime  = ''
         self.date    = ''
         self.time    = ''
@@ -71,7 +72,7 @@ class FileTitle:
         self.sensorMusterFoundDict=dict()
 
     # Parse the PTU2 file title
-    def parseFileTitle(self, fileNamePath, useSensorMuster, sensorMusterList):
+    def parseFileTitle(self, fileNamePath: str, useSensorMuster: int, sensorMusterList: list) -> None:
 
         self.fileNamePath     = fileNamePath
         self.useSensorMuster  = useSensorMuster
@@ -180,7 +181,7 @@ class FileTitle:
                     self.sensor = self.rf + binder + self.dsp
                     self.sensorFound = 1
 
-def setParDict(lineArray, nofMeasDataFields):
+def setParDict(lineArray: list, nofMeasDataFields: int) -> dict:
 
         parMappingDict = dict()
         dictEntry = {}
@@ -226,7 +227,7 @@ class searchParts(Enum):
 
 
 # Control wrapper for interpretData
-def parseFile(fileNamePath, txAntDiagParseData):
+def parseFile(fileNamePath: str, txAntDiagParseData: TxAntDiagramParseData) -> TxAntDiagramParseData:
     myLogger.info("Parsing: " + fileNamePath)
     txAntDiagParseData.fileNamePath = fileNamePath
     interpretData(fileNamePath, txAntDiagParseData)
@@ -237,7 +238,7 @@ def parseFile(fileNamePath, txAntDiagParseData):
     return txAntDiagParseData
 
 # Read and interpret the data for every part of the PTU2 file
-def interpretData(fileNamePath, txAntDiagParseData):
+def interpretData(fileNamePath: str, txAntDiagParseData: TxAntDiagramParseData) -> None:
     strMeasName = txAntDiagParseData.fileNamePath
 
     headerLineIndicator0 = "% PTU-Angle"
@@ -386,7 +387,7 @@ def interpretData(fileNamePath, txAntDiagParseData):
 
 
 # Control wrapper for getMeasData
-def readPosPtuData(lineArray, txAntDiagParseData, nofMeasDataFields, parMappingDict, currentPart):
+def readPosPtuData(lineArray: list, txAntDiagParseData: TxAntDiagramParseData, nofMeasDataFields: int, parMappingDict: dict, currentPart: searchParts) -> bool:
     if not getMeasData(lineArray, txAntDiagParseData, nofMeasDataFields, parMappingDict, currentPart):
         if currentPart == searchParts.MaxHeaderData:
             txAntDiagParseData.errorList.append(str(txAntDiagParseData.fileNamePath) + ' Error - Reading MAXIMUM(SPEC) header measurement data')
@@ -397,7 +398,7 @@ def readPosPtuData(lineArray, txAntDiagParseData, nofMeasDataFields, parMappingD
     return True
 
 # Parses the measurements data part per one PTU position
-def getMeasData(lineArray, txAntDiagParseData, nofMeasDataFields, parMappingDict, currentPart):
+def getMeasData(lineArray: list, txAntDiagParseData: TxAntDiagramParseData, nofMeasDataFields: int, parMappingDict: dict, currentPart: searchParts) -> bool:
     bRet = True
 
     ptuPosMeasData = PtuPosMeasData()
