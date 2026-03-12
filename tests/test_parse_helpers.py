@@ -1,12 +1,23 @@
 """Unit tests for shared.parse_helpers.
 
-Tests cover the two pure-logic helpers extracted from main.parseData:
+Tests cover the pure-logic helpers extracted from main.py:
   - filter_protocol_file_lists
   - merge_into_parsed_dicts
+  - deduplicate_protocol_list
+  - walk_protocol_files
+  - update_filtered_protocol_list
+  - collect_unparsed_protocols
 """
 import pytest
 from types import SimpleNamespace
-from shared.parse_helpers import filter_protocol_file_lists, merge_into_parsed_dicts
+from shared.parse_helpers import (
+    filter_protocol_file_lists,
+    merge_into_parsed_dicts,
+    deduplicate_protocol_list,
+    walk_protocol_files,
+    update_filtered_protocol_list,
+    collect_unparsed_protocols,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -285,3 +296,274 @@ class TestMergeIntoParsedDicts:
         # sys unchanged, tx gets the new item
         assert len(sys_dict["parsedDataList"]) == 1
         assert len(tx_dict["parsedDataList"]) == 1
+
+
+# ---------------------------------------------------------------------------
+# deduplicate_protocol_list
+# ---------------------------------------------------------------------------
+
+class TestDeduplicateProtocolList:
+
+    def test_empty_existing_returns_all(self):
+        result = deduplicate_protocol_list(['a.txt', 'b.txt'], [])
+        assert result == ['a.txt', 'b.txt']
+
+    def test_all_duplicates_returns_empty(self):
+        existing = [{'protocolPath': 'a.txt'}, {'protocolPath': 'b.txt'}]
+        result = deduplicate_protocol_list(['a.txt', 'b.txt'], existing)
+        assert result == []
+
+    def test_partial_duplicates(self):
+        existing = [{'protocolPath': 'a.txt'}]
+        result = deduplicate_protocol_list(['a.txt', 'b.txt'], existing)
+        assert result == ['b.txt']
+
+    def test_empty_input_returns_empty(self):
+        result = deduplicate_protocol_list([], [{'protocolPath': 'a.txt'}])
+        assert result == []
+
+    def test_preserves_order(self):
+        result = deduplicate_protocol_list(['c.txt', 'a.txt', 'b.txt'], [])
+        assert result == ['c.txt', 'a.txt', 'b.txt']
+
+    def test_no_mutation_of_input(self):
+        orig = ['a.txt', 'b.txt']
+        existing = [{'protocolPath': 'a.txt'}]
+        deduplicate_protocol_list(orig, existing)
+        assert orig == ['a.txt', 'b.txt']
+
+
+# ---------------------------------------------------------------------------
+# walk_protocol_files
+# ---------------------------------------------------------------------------
+
+def _make_pre_parse_info(path, error=False, abort=False, limits=False):
+    return SimpleNamespace(
+        PathName=path,
+        bErrorOccured=error,
+        bAbortCriterion=abort,
+        bLimitExceeded=limits,
+    )
+
+
+def _mock_ptu2_fn(dir_path, pattern):
+    return [f'{dir_path}/ptu2_match.txt']
+
+
+def _mock_txantdiag_fn(dir_path, stem):
+    return [f'{dir_path}/txant_match.txt']
+
+
+def _noop_fn(dir_path, arg):
+    return []
+
+
+class TestWalkProtocolFiles:
+
+    def test_search_ptu2_only(self):
+        protos = [_make_pre_parse_info('/data/Protocol.txt')]
+        ptu2, tx, acc, err, abort, lim = walk_protocol_files(
+            protos, True, False, False, False, False,
+            _mock_ptu2_fn, _noop_fn,
+        )
+        assert len(ptu2) == 1
+        assert ptu2[0]['protocolPath'] == '/data/Protocol.txt'
+        assert ptu2[0]['ptu2FilesList'] == ['/data/ptu2_match.txt']
+        assert tx == []
+        assert acc == ['/data/Protocol.txt']
+
+    def test_search_txantdiag_only(self):
+        protos = [_make_pre_parse_info('/data/Protocol.txt')]
+        ptu2, tx, acc, err, abort, lim = walk_protocol_files(
+            protos, False, True, False, False, False,
+            _noop_fn, _mock_txantdiag_fn,
+        )
+        assert ptu2 == []
+        assert len(tx) == 1
+        assert tx[0]['protocolPath'] == '/data/Protocol.txt'
+        assert tx[0]['txAntDiagList'] == ['/data/txant_match.txt']
+
+    def test_search_both(self):
+        protos = [_make_pre_parse_info('/data/Protocol.txt')]
+        ptu2, tx, acc, err, abort, lim = walk_protocol_files(
+            protos, True, True, False, False, False,
+            _mock_ptu2_fn, _mock_txantdiag_fn,
+        )
+        assert len(ptu2) == 1
+        assert len(tx) == 1
+
+    def test_error_flag_collected(self):
+        protos = [_make_pre_parse_info('/data/Protocol.txt', error=True)]
+        _, _, acc, err, abort, lim = walk_protocol_files(
+            protos, False, False, True, False, False,
+            _noop_fn, _noop_fn,
+        )
+        assert err == ['/data/Protocol.txt']
+        assert abort == []
+        assert lim == []
+
+    def test_abort_flag_collected(self):
+        protos = [_make_pre_parse_info('/data/Protocol.txt', abort=True)]
+        _, _, acc, err, abort, lim = walk_protocol_files(
+            protos, False, False, False, True, False,
+            _noop_fn, _noop_fn,
+        )
+        assert abort == ['/data/Protocol.txt']
+
+    def test_limits_flag_collected(self):
+        protos = [_make_pre_parse_info('/data/Protocol.txt', limits=True)]
+        _, _, acc, err, abort, lim = walk_protocol_files(
+            protos, False, False, False, False, True,
+            _noop_fn, _noop_fn,
+        )
+        assert lim == ['/data/Protocol.txt']
+
+    def test_flags_not_collected_when_disabled(self):
+        """Error/abort/limits not appended when their use-flag is False."""
+        protos = [_make_pre_parse_info('/data/Protocol.txt', error=True, abort=True, limits=True)]
+        _, _, acc, err, abort, lim = walk_protocol_files(
+            protos, False, False, False, False, False,
+            _noop_fn, _noop_fn,
+        )
+        assert err == [] and abort == [] and lim == []
+
+    def test_acc_prot_always_appended(self):
+        protos = [
+            _make_pre_parse_info('/data/A_Protocol.txt'),
+            _make_pre_parse_info('/data/B_Protocol.txt'),
+        ]
+        _, _, acc, *_ = walk_protocol_files(
+            protos, False, False, False, False, False,
+            _noop_fn, _noop_fn,
+        )
+        assert acc == ['/data/A_Protocol.txt', '/data/B_Protocol.txt']
+
+    def test_empty_input_returns_empty_lists(self):
+        ptu2, tx, acc, err, abort, lim = walk_protocol_files(
+            [], True, True, True, True, True,
+            _mock_ptu2_fn, _mock_txantdiag_fn,
+        )
+        assert ptu2 == tx == acc == err == abort == lim == []
+
+    def test_filename_strip_protocol_chip(self):
+        """'Protocol_Chip' prefix is stripped when building the PTU2 search pattern."""
+        called_with = {}
+
+        def capture_ptu2_fn(dir_path, pattern):
+            called_with['pattern'] = pattern
+            return []
+
+        protos = [_make_pre_parse_info('/data/Protocol_Chip_2024.txt')]
+        walk_protocol_files(
+            protos, True, False, False, False, False,
+            capture_ptu2_fn, _noop_fn,
+        )
+        # After stripping 'Protocol_Chip', stem should contain '_2024'
+        assert 'PTU2' in called_with['pattern']
+        assert 'Protocol_Chip' not in called_with['pattern']
+
+
+# ---------------------------------------------------------------------------
+# update_filtered_protocol_list
+# ---------------------------------------------------------------------------
+
+class TestUpdateFilteredProtocolList:
+
+    def _fdict(self, paths=None):
+        return {'protocolPathList': list(paths or [])}
+
+    def test_new_paths_added(self):
+        fdict = self._fdict()
+        update_filtered_protocol_list(['a.txt', 'b.txt'], fdict, set())
+        assert fdict['protocolPathList'] == ['a.txt', 'b.txt']
+
+    def test_existing_paths_not_duplicated(self):
+        fdict = self._fdict(['a.txt'])
+        update_filtered_protocol_list(['a.txt', 'b.txt'], fdict, set())
+        assert fdict['protocolPathList'].count('a.txt') == 1
+        assert 'b.txt' in fdict['protocolPathList']
+
+    def test_accepted_paths_removed(self):
+        fdict = self._fdict(['a.txt', 'b.txt', 'c.txt'])
+        update_filtered_protocol_list([], fdict, {'a.txt', 'c.txt'})
+        assert fdict['protocolPathList'] == ['b.txt']
+
+    def test_add_then_remove_accepted(self):
+        """Paths added in this call that are also in accepted_set are removed."""
+        fdict = self._fdict()
+        update_filtered_protocol_list(['a.txt', 'b.txt'], fdict, {'a.txt'})
+        assert fdict['protocolPathList'] == ['b.txt']
+
+    def test_empty_inputs_no_change(self):
+        fdict = self._fdict(['x.txt'])
+        update_filtered_protocol_list([], fdict, set())
+        assert fdict['protocolPathList'] == ['x.txt']
+
+    def test_all_accepted_leaves_empty_list(self):
+        fdict = self._fdict(['a.txt', 'b.txt'])
+        update_filtered_protocol_list([], fdict, {'a.txt', 'b.txt'})
+        assert fdict['protocolPathList'] == []
+
+
+# ---------------------------------------------------------------------------
+# collect_unparsed_protocols
+# ---------------------------------------------------------------------------
+
+class TestCollectUnparsedProtocols:
+
+    def _parsed_dict(self, paths):
+        return {'protocolPathTypeDictList': [{'protocolPath': p} for p in paths]}
+
+    def _to_parse_dict(self):
+        return {'protocolPathTypeDictList': []}
+
+    def _accepted(self, paths):
+        return [{'protocolPath': p, 'type': 'Cal'} for p in paths]
+
+    def test_all_new_appended(self):
+        to_parse = self._to_parse_dict()
+        skipped = collect_unparsed_protocols(
+            self._accepted(['a.txt', 'b.txt']),
+            self._parsed_dict([]),
+            to_parse,
+        )
+        assert len(to_parse['protocolPathTypeDictList']) == 2
+        assert skipped == []
+
+    def test_already_parsed_skipped(self):
+        to_parse = self._to_parse_dict()
+        skipped = collect_unparsed_protocols(
+            self._accepted(['a.txt', 'b.txt']),
+            self._parsed_dict(['a.txt']),
+            to_parse,
+        )
+        paths = [d['protocolPath'] for d in to_parse['protocolPathTypeDictList']]
+        assert paths == ['b.txt']
+        assert skipped == ['a.txt']
+
+    def test_all_already_parsed(self):
+        to_parse = self._to_parse_dict()
+        skipped = collect_unparsed_protocols(
+            self._accepted(['a.txt', 'b.txt']),
+            self._parsed_dict(['a.txt', 'b.txt']),
+            to_parse,
+        )
+        assert to_parse['protocolPathTypeDictList'] == []
+        assert set(skipped) == {'a.txt', 'b.txt'}
+
+    def test_empty_accepted_no_change(self):
+        to_parse = self._to_parse_dict()
+        skipped = collect_unparsed_protocols([], self._parsed_dict(['a.txt']), to_parse)
+        assert to_parse['protocolPathTypeDictList'] == []
+        assert skipped == []
+
+    def test_no_double_append_on_repeated_call(self):
+        """Calling twice with the same accepted list must not duplicate entries."""
+        parsed = self._parsed_dict([])
+        to_parse = self._to_parse_dict()
+        collect_unparsed_protocols(self._accepted(['a.txt']), parsed, to_parse)
+        # Simulate second call: 'a.txt' now in parsed
+        parsed['protocolPathTypeDictList'].append({'protocolPath': 'a.txt'})
+        collect_unparsed_protocols(self._accepted(['a.txt']), parsed, to_parse)
+        paths = [d['protocolPath'] for d in to_parse['protocolPathTypeDictList']]
+        assert paths.count('a.txt') == 1

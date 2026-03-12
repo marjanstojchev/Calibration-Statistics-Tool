@@ -14,7 +14,14 @@ import parseTxAntDiagramData as parseTxAntDiag
 import logconfig
 import data_processing as dp
 from shared import safeparse as sp
-from shared.parse_helpers import filter_protocol_file_lists, merge_into_parsed_dicts
+from shared.parse_helpers import (
+    filter_protocol_file_lists,
+    merge_into_parsed_dicts,
+    deduplicate_protocol_list,
+    walk_protocol_files,
+    update_filtered_protocol_list,
+    collect_unparsed_protocols,
+)
 import load_TxAntData as ld_txantdiag
 import auxiliary as aux
 import protocolsTest as protocolFilter
@@ -315,198 +322,190 @@ def getProtPathTypeDictList(protocolPathList):
     return outputList
 
 
-def fillInProtocolData(protocolFilesList, acceptedProtocolPathDict, filteredProtocolPathDict, protocolPathDict, sysDiagFilePathDict, txDiagfilePathDict, parsedProtDict, protToBeParsedDict, parseProtSysDiagCheckBox, parseProtTxAntDiagCheckBox):
+def _update_protocol_dicts(
+    accepted_crit_prot_list: list,
+    sys_diag_file_path_dict_temp: list,
+    tx_diag_file_path_dict_temp: list,
+    filtered_protocol_list: list,
+    acc_error_prot_list: list,
+    acc_abort_crit_prot_list: list,
+    acc_limit_exceeded_prot_list: list,
+    accepted_protocol_path_dict: dict,
+    filtered_protocol_path_dict: dict,
+    protocol_path_dict: dict,
+    parsed_prot_dict: dict,
+    prot_to_be_parsed_dict: dict,
+) -> list:
+    """Merge getprotcols results into the shared state dicts.
 
+    Updates accepted/filtered/parsed dicts and returns the list of protocol
+    path-type dicts that still need to be parsed.
+    """
+    accepted_protocol_path_dict['errorProtList']         += acc_error_prot_list
+    accepted_protocol_path_dict['abbortCritProtList']    += acc_abort_crit_prot_list
+    accepted_protocol_path_dict['limitExceededProtList'] += acc_limit_exceeded_prot_list
+
+    accepted_prot_path_type_dict_list = getProtPathTypeDictList(accepted_crit_prot_list)
+
+    protocol_path_dict['protocolPathTypeDictList'] += accepted_prot_path_type_dict_list
+
+    accepted_path_set = {d['protocolPath'] for d in protocol_path_dict['protocolPathTypeDictList']}
+    update_filtered_protocol_list(filtered_protocol_list, filtered_protocol_path_dict, accepted_path_set)
+
+    parseDataLog.info('Filtered Protocol List:')
+    for elem in filtered_protocol_path_dict['protocolPathList']:
+        parseDataLog.info(elem)
+
+    already_parsed = collect_unparsed_protocols(
+        accepted_prot_path_type_dict_list, parsed_prot_dict, prot_to_be_parsed_dict
+    )
+    for path in already_parsed:
+        parseDataLog.info('Protocol is already parsed: ' + path)
+
+    parseDataLog.info('Num. of Total Accepted Protocols: ' + str(len(protocol_path_dict['protocolPathTypeDictList'])))
+    parseDataLog.info('Num. of System Diagram Files: ' + str(len(sys_diag_file_path_dict_temp)))
+
+    return accepted_prot_path_type_dict_list
+
+
+def _populate_sel_prot_table(
+    accepted_prot_path_type_dict_list: list,
+    sys_diag_file_path_dict_temp: list,
+    tx_diag_file_path_dict_temp: list,
+) -> None:
+    """Set up the selected-protocols table columns and insert one row-group per protocol."""
+    header = qt.parseProtSelProtTable.horizontalHeader()
+    header.setSectionResizeMode(0, qt.QHeaderView.ResizeMode.Interactive)
+    qt.parseProtSelProtTable.setColumnWidth(0, 400)
+    header.setSectionResizeMode(1, qt.QHeaderView.ResizeMode.Interactive)
+    qt.parseProtSelProtTable.setColumnWidth(1, 110)
+    header.setSectionResizeMode(2, qt.QHeaderView.ResizeMode.Interactive)
+    header.setSectionResizeMode(3, qt.QHeaderView.ResizeMode.Stretch)
+
+    ref_row_idx = qt.parseProtSelProtTable.rowCount()
+
+    for prot_idx, entry in enumerate(accepted_prot_path_type_dict_list):
+        protocol_path           = entry['protocolPath']
+        protocol_type           = entry['type']
+        sys_diag_per_prot       = sys_diag_file_path_dict_temp[prot_idx]['ptu2FilesList']
+        tx_ant_diag_per_prot    = tx_diag_file_path_dict_temp[prot_idx]['txAntDiagList']
+        prot_table_data         = dp.ProtocolsTableData(protocol_path, sys_diag_per_prot, tx_ant_diag_per_prot)
+
+        if sys_diag_per_prot or tx_ant_diag_per_prot:
+            for rel_row in range(prot_table_data.biggerListLength):
+                row_idx = rel_row + ref_row_idx
+                qt.parseProtSelProtTable.insertRow(row_idx)
+                qt.parseProtSelProtTable.setItem(
+                    row_idx, 0,
+                    QTableWidgetItem(prot_table_data.protocolPath if rel_row == 0 else ''),
+                )
+                qt.parseProtSelProtTable.setItem(row_idx, 1, QTableWidgetItem(protocol_type))
+                qt.parseProtSelProtTable.setItem(row_idx, 2, QTableWidgetItem(prot_table_data.sysDiagFilePathShapedList[rel_row]))
+                qt.parseProtSelProtTable.setItem(row_idx, 3, QTableWidgetItem(prot_table_data.txAntDiagFilePathShapedList[rel_row]))
+
+            for span_entry in prot_table_data.smallerListRowSpanList:
+                qt.parseProtSelProtTable.setSpan(
+                    span_entry['spanStart'] + ref_row_idx,
+                    prot_table_data.smallerListColIdx,
+                    span_entry['spanCount'],
+                    1,
+                )
+
+            qt.parseProtSelProtTable.setSpan(ref_row_idx, 0, prot_table_data.biggerListLength, 1)
+            qt.parseProtSelProtTable.setSpan(ref_row_idx, 1, prot_table_data.biggerListLength, 1)
+            ref_row_idx += prot_table_data.biggerListLength
+        else:
+            row_idx = prot_idx + ref_row_idx
+            qt.parseProtSelProtTable.insertRow(row_idx)
+            qt.parseProtSelProtTable.setItem(row_idx, 0, QTableWidgetItem(protocol_path))
+            qt.parseProtSelProtTable.setItem(row_idx, 1, QTableWidgetItem(protocol_type))
+
+
+def fillInProtocolData(
+    protocolFilesList: list,
+    acceptedProtocolPathDict: dict,
+    filteredProtocolPathDict: dict,
+    protocolPathDict: dict,
+    sysDiagFilePathDict: dict,
+    txDiagfilePathDict: dict,
+    parsedProtDict: dict,
+    protToBeParsedDict: dict,
+    parseProtSysDiagCheckBox,
+    parseProtTxAntDiagCheckBox,
+) -> None:
+    """Load and validate new protocol files; update all state dicts and the UI table."""
     qt.parseProtTableTabWidget.setCurrentIndex(0)
 
-    if len(protocolFilesList) == 0:
+    if not protocolFilesList:
         return
 
     qt.parseProtProgresLabel.setText('Loading...')
-
     qt.parseProtProgresBar.reset()
 
-    relRowIdx = 0
-    if len(protocolPathDict['protocolPathTypeDictList']) == 0:
+    if not protocolPathDict['protocolPathTypeDictList']:
         qt.parseProtSelProtTable.setRowCount(0)
-        refRoxIdx = 0
 
-    auxProtPathList = []
+    protNonRepList = deduplicate_protocol_list(
+        protocolFilesList, protocolPathDict['protocolPathTypeDictList']
+    )
+    for p in set(protocolFilesList) - set(protNonRepList):
+        parseDataLog.info('Protocol is already imported: ' + p)
 
-    for protDict in protocolPathDict['protocolPathTypeDictList']:
-        auxProtPathList.append(protDict['protocolPath'])
+    sysDiagFilePathDictTemp, txDiagfilePathDictTemp, acceptedCritProtList, accErrorProtList, accAbbortCritProtList, accLimitExceededProtList, filteredProtocolList = getprotcols(
+        protNonRepList, parseProtSysDiagCheckBox.isChecked(), parseProtTxAntDiagCheckBox.isChecked()
+    )
 
-    # protNotPresent=0
-    protNonRepList = []
-    for protocolFilePath in protocolFilesList:
-        if protocolFilePath not in auxProtPathList:
-            # protNotPresent=1
-            # tempDict=dict()
-            # tempDict['protocolPath']=protocolFilePath
-            # tempDict['type']='Unclear'
-            protNonRepList.append(protocolFilePath)
-            # protocolPathDict['protocolPathList'].append(protocolFilePath)
-        else:
-            parseDataLog.info('Protocol is already imported: ' + protocolFilePath)
-
-    sysDiagFilePathDictTemp, txDiagfilePathDictTemp, acceptedCritProtList, accErrorProtList, accAbbortCritProtList, accLimitExceededProtList, filteredProtocolList = getprotcols(protNonRepList, parseProtSysDiagCheckBox.isChecked(), parseProtTxAntDiagCheckBox.isChecked())
-
-    acceptedProtocolPathDict['errorProtList']         += accErrorProtList
-    acceptedProtocolPathDict['abbortCritProtList']    += accAbbortCritProtList
-    acceptedProtocolPathDict['limitExceededProtList'] += accLimitExceededProtList
-
-    acceptedProtPathTypeDictList = getProtPathTypeDictList(acceptedCritProtList)
-
-
-
-    if len(sysDiagFilePathDictTemp) != 0:
+    if sysDiagFilePathDictTemp:
         sysDiagFilePathDict['filePathList'] += sysDiagFilePathDictTemp
-
-    if len(txDiagfilePathDictTemp) != 0:
+    if txDiagfilePathDictTemp:
         txDiagfilePathDict['filePathList'] += txDiagfilePathDictTemp
 
-    protocolPathDict['protocolPathTypeDictList'] += acceptedProtPathTypeDictList
+    acceptedProtPathTypeDictList = _update_protocol_dicts(
+        acceptedCritProtList,
+        sysDiagFilePathDictTemp, txDiagfilePathDictTemp,
+        filteredProtocolList,
+        accErrorProtList, accAbbortCritProtList, accLimitExceededProtList,
+        acceptedProtocolPathDict, filteredProtocolPathDict,
+        protocolPathDict, parsedProtDict, protToBeParsedDict,
+    )
 
-    auxProtPathList = []
+    _populate_sel_prot_table(acceptedProtPathTypeDictList, sysDiagFilePathDictTemp, txDiagfilePathDictTemp)
 
-    for protDict in protocolPathDict['protocolPathTypeDictList']:
-        auxProtPathList.append(protDict['protocolPath'])
-
-
-    for protocolFilePath in filteredProtocolList:
-        if protocolFilePath not in filteredProtocolPathDict['protocolPathList']:
-
-            filteredProtocolPathDict['protocolPathList'].append(protocolFilePath)
-
-    filteredProtocolPathDict['protocolPathList'] = [protocolFilePath for protocolFilePath in filteredProtocolPathDict['protocolPathList'] if protocolFilePath not in auxProtPathList]
-
-    parseDataLog.info('Filtered Protocol List:')
-    for elem in filteredProtocolPathDict['protocolPathList']:
-        parseDataLog.info(elem)
-
-    auxParsedProtPathList = []
-
-    for protDict in parsedProtDict['protocolPathTypeDictList']:
-        auxParsedProtPathList.append(protDict['protocolPath'])
-
-
-    # check if loaded protocols are already parsed
-    for protocolFilePathIdx in range(len(acceptedProtPathTypeDictList)):
-
-        if acceptedProtPathTypeDictList[protocolFilePathIdx]['protocolPath'] not in auxParsedProtPathList:
-            protToBeParsedDict['protocolPathTypeDictList'].append(acceptedProtPathTypeDictList[protocolFilePathIdx])
-        else:
-            parseDataLog.info('Protocol is already parsed: ' + acceptedProtPathTypeDictList[protocolFilePathIdx]['protocolPath'])
-
-
-    protColSpanBegin = 0
-
-    parseProtSelProtTableHeader = qt.parseProtSelProtTable.horizontalHeader()
-    # parseProtSelProtTableHeader.setSectionResizeMode(qt.QHeaderView.Interactive)
-    # qt.parseProtSelProtTable.setColumnWidth(1,110)
-    # parseProtSelProtTableHeader.setStretchLastSection(True)
-    #
-
-
-    parseProtSelProtTableHeader.setSectionResizeMode(0, qt.QHeaderView.ResizeMode.Interactive)
-    qt.parseProtSelProtTable.setColumnWidth(0, 400)
-
-    parseProtSelProtTableHeader.setSectionResizeMode(1, qt.QHeaderView.ResizeMode.Interactive)
-    qt.parseProtSelProtTable.setColumnWidth(1, 110)
-
-    parseProtSelProtTableHeader.setSectionResizeMode(2, qt.QHeaderView.ResizeMode.Interactive)
-
-    parseProtSelProtTableHeader.setSectionResizeMode(3, qt.QHeaderView.ResizeMode.Stretch)
-
-
-
-    refRoxIdx=qt.parseProtSelProtTable.rowCount()
-
-
-    parseDataLog.info('Num. of Total Accepted Protocols: ' + str(len(protocolPathDict['protocolPathTypeDictList'])))
-    parseDataLog.info('Num. of System Diagram Files: ' + str(len(sysDiagFilePathDictTemp)))
-
-    # insert into table
-    # if len(sysDiagFilePathDictTemp)!=0 and len(txDiagfilePathDictTemp)!=0:
-
-
-
-    for protocolFileIdx in range(len(acceptedProtPathTypeDictList)):
-        # myLogger.info(str(protocolFileIdx) + ' ]' + ', SysDiag ' + str(len(sysDiagFilePathDictTemp[protocolFileIdx]['ptu2FilesList'])) + ', TxAntDiag ' + str(len(txDiagfilePathDictTemp[protocolFileIdx]['txAntDiagList'])))
-        sysDiagListPerProtocol = sysDiagFilePathDictTemp[protocolFileIdx]['ptu2FilesList']
-        txAntDiagListPerProtocol = txDiagfilePathDictTemp[protocolFileIdx]['txAntDiagList']
-        protocolPath = acceptedProtPathTypeDictList[protocolFileIdx]['protocolPath']
-
-        if len(sysDiagListPerProtocol) != 0 or len(txAntDiagListPerProtocol) != 0:
-
-            protTableData=dp.ProtocolsTableData(protocolPath, sysDiagListPerProtocol, txAntDiagListPerProtocol)
-
-            for relRowIdx in range(protTableData.biggerListLength):
-
-                rowIdx = relRowIdx +refRoxIdx
-
-                qt.parseProtSelProtTable.insertRow(rowIdx)
-
-                if relRowIdx == 0:
-                    qt.parseProtSelProtTable.setItem(rowIdx, 0, QTableWidgetItem(protTableData.protocolPath))
-                else:
-                    qt.parseProtSelProtTable.setItem(rowIdx, 0, QTableWidgetItem(''))
-
-                qt.parseProtSelProtTable.setItem(rowIdx, 1, QTableWidgetItem(acceptedProtPathTypeDictList[protocolFileIdx]['type']))
-                qt.parseProtSelProtTable.setItem(rowIdx, 2, QTableWidgetItem(protTableData.sysDiagFilePathShapedList[relRowIdx]))
-                qt.parseProtSelProtTable.setItem(rowIdx, 3, QTableWidgetItem(protTableData.txAntDiagFilePathShapedList[relRowIdx]))
-
-
-            rowSpanList = protTableData.smallerListRowSpanList
-
-            # # span smaller column
-            for rowSpanListIdx in range(len(rowSpanList)):
-
-                rowSpanStart = rowSpanList[rowSpanListIdx]['spanStart'] + refRoxIdx
-                rowSpanCount = rowSpanList[rowSpanListIdx]['spanCount']
-
-                # myLogger.info(str(protocolFileIdx)+' ]'+', spanstart '+str(rowSpanStart)+', spancount ' +str(rowSpanCount))
-
-                qt.parseProtSelProtTable.setSpan(rowSpanStart, protTableData.smallerListColIdx, rowSpanCount, 1)
-
-            # span protocol column
-            qt.parseProtSelProtTable.setSpan(refRoxIdx, 0, protTableData.biggerListLength, 1)
-            qt.parseProtSelProtTable.setSpan(refRoxIdx, 1, protTableData.biggerListLength, 1)
-
-            refRoxIdx += protTableData.biggerListLength
-
-        else:
-
-            relRowIdx = protocolFileIdx
-            rowIdx = relRowIdx + refRoxIdx
-
-            qt.parseProtSelProtTable.insertRow(rowIdx)
-
-            # if relRowIdx == 0:
-            qt.parseProtSelProtTable.setItem(rowIdx, 0, QTableWidgetItem(protocolPath))
-            # else:
-            #     qt.parseProtSelProtTable.setItem(rowIdx, 0, QTableWidgetItem(''))
-
-            qt.parseProtSelProtTable.setItem(rowIdx, 1, QTableWidgetItem(acceptedProtPathTypeDictList[protocolFileIdx]['type']))
-
-
-    if len(protToBeParsedDict['protocolPathTypeDictList']) != 0:
-            qt.parseProtProgresBar.setRange(0, len(protToBeParsedDict['protocolPathTypeDictList']))
-            qt.parseProtProgresBar.setValue(0)
-            qt.parseProtProgresBar.setFormat(
-                str(qt.parseProtProgresBar.value()) + ' / ' + str(len(protToBeParsedDict['protocolPathTypeDictList'])))
-            progBarLabelStr = 'Protocols to be parsed: ' + str(len(protToBeParsedDict['protocolPathTypeDictList'])) + ' / ' + str(
-                len(protocolPathDict['protocolPathTypeDictList'])) + '. '
-            qt.parseProtProgresLabel.setText(progBarLabelStr)
-            # qt.parseProtProgresBar.setTextVisible(True)
+    if protToBeParsedDict['protocolPathTypeDictList']:
+        qt.parseProtProgresBar.setRange(0, len(protToBeParsedDict['protocolPathTypeDictList']))
+        qt.parseProtProgresBar.setValue(0)
+        qt.parseProtProgresBar.setFormat(
+            f'{qt.parseProtProgresBar.value()} / {len(protToBeParsedDict["protocolPathTypeDictList"])}'
+        )
+        progBarLabelStr = (
+            f'Protocols to be parsed: {len(protToBeParsedDict["protocolPathTypeDictList"])}'
+            f' / {len(protocolPathDict["protocolPathTypeDictList"])}. '
+        )
+        qt.parseProtProgresLabel.setText(progBarLabelStr)
     else:
         qt.parseProtProgresLabel.setText('No new protocols Loaded.')
 
-    qt.parseProtLoadedProtLabel.setText(qt.parseProtLoadedProtStr + str(len(protocolPathDict['protocolPathTypeDictList'])) + ' / ' + str(len(filteredProtocolPathDict['protocolPathList'])+len(protocolPathDict['protocolPathTypeDictList'])))
-    qt.parseProtEolErrorLabel.setText(qt.parseProtEolErrorStr +str(len(acceptedProtocolPathDict['errorProtList'])) +' / ' +str(len(protocolPathDict['protocolPathTypeDictList'])))
-    qt.parseProtAbbortCritLabel.setText(qt.parseProtAbbortCritStr + str(len(acceptedProtocolPathDict['abbortCritProtList'])) + ' / ' + str(len(protocolPathDict['protocolPathTypeDictList'])))
-    qt.parseProtMeasLimitsExcLabel.setText(qt.parseProtMeasLimitsExcStr + str(len(acceptedProtocolPathDict['limitExceededProtList'])) + ' / ' + str(len(protocolPathDict['protocolPathTypeDictList'])))
-    qt.parseProtParsedLoadedProtLabel.setText(qt.parseProtParsedLoadedProtStr + str(len(parsedProtDict['protocolPathTypeDictList']))+ ' / '+ str(len(protocolPathDict['protocolPathTypeDictList'])))
+    total = len(protocolPathDict['protocolPathTypeDictList'])
+    qt.parseProtLoadedProtLabel.setText(
+        qt.parseProtLoadedProtStr
+        + f'{total} / {len(filteredProtocolPathDict["protocolPathList"]) + total}'
+    )
+    qt.parseProtEolErrorLabel.setText(
+        qt.parseProtEolErrorStr
+        + f'{len(acceptedProtocolPathDict["errorProtList"])} / {total}'
+    )
+    qt.parseProtAbbortCritLabel.setText(
+        qt.parseProtAbbortCritStr
+        + f'{len(acceptedProtocolPathDict["abbortCritProtList"])} / {total}'
+    )
+    qt.parseProtMeasLimitsExcLabel.setText(
+        qt.parseProtMeasLimitsExcStr
+        + f'{len(acceptedProtocolPathDict["limitExceededProtList"])} / {total}'
+    )
+    qt.parseProtParsedLoadedProtLabel.setText(
+        qt.parseProtParsedLoadedProtStr
+        + f'{len(parsedProtDict["protocolPathTypeDictList"])} / {total}'
+    )
 
 
 def addAndParsePtu2Files(sysDiagParsedDataDict, separatePtu2ParsedDataDict, separatePtu2FailedDataDict):
@@ -1134,97 +1133,46 @@ def clearTable(tableWidget):
     tableWidgetHeader.setSectionResizeMode(qt.QHeaderView.ResizeMode.Stretch)
 
 
-def getprotcols(allProtocolsPathNamesList, searchPtu2Files, searchTxAntDiagFiles):
-    bUseFilesWithError = qt.parseProtEolErrorCheckBox.isChecked()
-    bUseFilesAbbortCriterion = qt.parseProtEolAbortCheckBox.isChecked()
+def getprotcols(
+    allProtocolsPathNamesList: list,
+    searchPtu2Files: bool,
+    searchTxAntDiagFiles: bool,
+) -> tuple[list, list, list, list, list, list, list]:
+    """Pre-parse, filter and walk protocols; return file-association lists."""
+    bUseFilesWithError          = qt.parseProtEolErrorCheckBox.isChecked()
+    bUseFilesAbbortCriterion    = qt.parseProtEolAbortCheckBox.isChecked()
     bUseFilesWIthLimitsExceeded = qt.parseProtEolMeasLimitsCheckBox.isChecked()
 
-    # erste infos ob fehler, abbruchkriterien, messgrenzen ueberschreitungen
-    PreParseInfoProtocolsList, emptyprotocolslist, errorprotocolslist, abbortcritprotocolslist, LimitExceededprotocolslist = protocolFilter.ProtocolInfoClass.PreParseProtcols(allProtocolsPathNamesList)
-    # filtere liste, nur die gewuenschten protokolle in liste
-    parseDataLog.info('Filter Protocols: UseFilesWithError = ' + str(bUseFilesWithError) + ',  UseFilesAbbortCriterion = ' + str(bUseFilesAbbortCriterion) + ',  UseFilesWIthLimitsExceeded = ' + str(bUseFilesWIthLimitsExceeded))
+    PreParseInfoProtocolsList, *_ = protocolFilter.ProtocolInfoClass.PreParseProtcols(allProtocolsPathNamesList)
 
-    acceptedProtocolsList, filteredProtocolsList = protocolFilter.ProtocolInfoClass.FilterProtocols(PreParseInfoProtocolsList, bUseFilesWithError, bUseFilesAbbortCriterion, bUseFilesWIthLimitsExceeded)
+    parseDataLog.info(
+        f'Filter Protocols: UseFilesWithError = {bUseFilesWithError}, '
+        f'UseFilesAbbortCriterion = {bUseFilesAbbortCriterion}, '
+        f'UseFilesWIthLimitsExceeded = {bUseFilesWIthLimitsExceeded}'
+    )
 
-    parseDataLog.info('Accepted Protocols ' + str(len(acceptedProtocolsList)) + ' of ' + str(len(allProtocolsPathNamesList)))
-    
-    # Use only the latest protocol from sensors files
+    acceptedProtocolsList, filteredProtocolsList = protocolFilter.ProtocolInfoClass.FilterProtocols(
+        PreParseInfoProtocolsList, bUseFilesWithError, bUseFilesAbbortCriterion, bUseFilesWIthLimitsExceeded
+    )
+    parseDataLog.info(f'Accepted Protocols {len(acceptedProtocolsList)} of {len(allProtocolsPathNamesList)}')
+
     if qt.parseProtnewProtCheckBox.isChecked():
-        # Applied two filters to be sure
         parseDataLog.info('Only the latest protocol will be selected.')
         acceptedProtocolsList = protocolFilter.ProtocolInfoClass.FilterNewProtocols(acceptedProtocolsList)
-        # acceptedProtocolsList = protocolFilter.ProtocolInfoClass.FilterNewProtocols(acceptedProtocolsList)
 
-    # #####
     for cPreParseInfo in acceptedProtocolsList:
         parseDataLog.info(cPreParseInfo.PathName)
 
+    filteredProtocolsList = [p.PathName for p in filteredProtocolsList]
 
-    protocolData  = dp.ImportedProtcolsData()
-    ptu2FilesList = []
-    txAntDiagList = []
-    accProtList   = []
+    ptu2FilesList, txAntDiagList, accProtList, accErrorProtList, accAbbortCritProtList, accLimitExceededProtList = walk_protocol_files(
+        acceptedProtocolsList,
+        searchPtu2Files, searchTxAntDiagFiles,
+        bUseFilesWithError, bUseFilesAbbortCriterion, bUseFilesWIthLimitsExceeded,
+        protocolFilter.ProtocolInfoClass.getfiltered_ptu2filelist,
+        protocolFilter.ProtocolInfoClass.getfiltered_txantdiagramfilelist,
+    )
 
-    filteredProtocolsList = [filteredProtocolsList[i].PathName for i in range(len(filteredProtocolsList))]
-
-    accErrorProtList         = []
-    accAbbortCritProtList    = []
-    accLimitExceededProtList = []
-
-
-
-    for cPreParseInfo in acceptedProtocolsList:
-
-        # test ptu file
-        ptu2FilesListDict = {
-            'protocolPath':'',
-            'ptu2FilesList':[]
-        }
-
-        txAntDiagListDict = {
-            'protocolPath': '',
-            'txAntDiagList': []
-        }
-        emptyTxAntDiagList = 0
-        emptyPtu2List = 0
-        strPathOnly, strFileNameOnly = os.path.split(cPreParseInfo.PathName)
-        stFileNameWithoutPTU = strFileNameOnly.replace('Protocol_Chip','').replace('Protocol','').replace('protocol','')
-        strSplitFileNameAndExtension = os.path.splitext(stFileNameWithoutPTU)
-        if(searchPtu2Files == 1):
-            strSearchPattern = strSplitFileNameAndExtension[0] + '*PTU2*' + strSplitFileNameAndExtension[1];
-            templist = protocolFilter.ProtocolInfoClass.getfiltered_ptu2filelist(strPathOnly, strSearchPattern)
-            ptu2FilesListDict['ptu2FilesList'] = templist
-
-        if(searchTxAntDiagFiles == 1):
-            # strSearchPattern = strSplitFileNameAndExtension[0] + '*PTU2*' + strSplitFileNameAndExtension[1];
-            templist = protocolFilter.ProtocolInfoClass.getfiltered_txantdiagramfilelist(strPathOnly, strSplitFileNameAndExtension[0])
-
-            txAntDiagListDict['txAntDiagList'] = templist
-
-
-        # if len(ptu2FilesListDict['ptu2FilesList'])!=0 or len(txAntDiagListDict['txAntDiagList'])!=0:
-
-        if (searchPtu2Files == 1):
-            ptu2FilesListDict['protocolPath'] = cPreParseInfo.PathName
-            ptu2FilesList.append(ptu2FilesListDict)
-
-        if (searchTxAntDiagFiles == 1):
-            txAntDiagListDict['protocolPath'] = cPreParseInfo.PathName
-            txAntDiagList.append(txAntDiagListDict)
-
-
-        if bUseFilesWithError and cPreParseInfo.bErrorOccured:
-            accErrorProtList.append(cPreParseInfo.PathName)
-
-        if bUseFilesAbbortCriterion and cPreParseInfo.bAbortCriterion:
-            accAbbortCritProtList.append(cPreParseInfo.PathName)
-
-        if bUseFilesWIthLimitsExceeded and cPreParseInfo.bLimitExceeded:
-            accLimitExceededProtList.append(cPreParseInfo.PathName)
-
-        accProtList.append(cPreParseInfo.PathName)
-
-        # elif len(ptu2FilesListDict['ptu2FilesList'])!=0 and:
     return ptu2FilesList, txAntDiagList, accProtList, accErrorProtList, accAbbortCritProtList, accLimitExceededProtList, filteredProtocolsList
 
 errmsg = 'Error!'
