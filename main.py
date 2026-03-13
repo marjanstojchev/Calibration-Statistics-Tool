@@ -2261,7 +2261,6 @@ def antPatTableLEditParse(inputString):
 
 qt.antPatHeaderNameLEdit.setText('Antenna_Pattern_Tables')
 qt.antPatHeaderNameLEdit.setEnabled(False)
-            parseData.parseFile(txAntDiag, antSysDiag.plotSetup['useSensorMuster'], antSysDiag.plotSetup['sensorMusterList'])
 qt.antPatHeaderIdentifierLEdit.setText('36')
 qt.antPatHeaderIdentifierLEdit.setEnabled(False)
 
