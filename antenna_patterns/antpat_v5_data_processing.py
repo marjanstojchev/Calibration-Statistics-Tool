@@ -719,55 +719,6 @@ class DataTable():
         self.setTableMeasDataVals()
         self.setAngle()
 
-# Class containing the data for Antenna Pattern WITHOUT diagram type info, for certain Configured Table and certain Antenna Type, Angle setup, and Chirp.
-# class DataTableNoDiagType(DataTable):
-#     # Set the list of data for No Diagram Type info setup, certain Antenna Type, Tx antennas, Configured tables, Angle setup, and Chirp.
-#     def setTableMeasDataList(self, parseDataList):
-#         myLogger.debug('Getting PTU2 parsed data WITHOUT dagram type info, Table' + str(self.configTable.antennaPatternIdx) + ': ' + str(self.configTable.getStr()))
-#
-#         antennaTypeData = getAntennaTypeData(self.antennaType, parseDataList)
-#
-#         if len(antennaTypeData) != 0:
-#
-#             applicableTxAntData = getApplicableTxAntIndData(self.configTable.applTxAntInd,self.configTable.nofApplicableTxAnt, upsideDownData)
-#
-#             if len(applicableTxAntData)==0:
-#                 myLogger.debug('No applicable Tx Antenna data found.')
-#                 noTxAntData = getNoTxAntData(antennaTypeData)
-#
-#                 noDiagTypeList = getNonDiagTypeFilesList(noTxAntData)
-#             else:
-#
-#                 noDiagTypeList = getNonDiagTypeFilesList(applicableTxAntData)
-#
-#             if len(noDiagTypeList)!=0:
-#
-#                 for txAntDiagTypeIdx in range(len(noDiagTypeList)):
-#                     if getNofAnglePoints(noDiagTypeList[txAntDiagTypeIdx], self.ptu2InputConf.targetAngle,
-#                                          self.ptu2InputConf.upsideDown) == self.angleSetup.nofAnglePoints and \
-#                             getAngleStep(noDiagTypeList[txAntDiagTypeIdx], self.ptu2InputConf.targetAngle,
-#                                          self.ptu2InputConf.upsideDown) == self.angleSetup.angleStepSize and \
-#                             getRefAnglePoint(noDiagTypeList[txAntDiagTypeIdx], self.ptu2InputConf.targetAngle,
-#                                              self.ptu2InputConf.upsideDown) == self.angleSetup.refAnglePoint \
-#                             and noDiagTypeList[txAntDiagTypeIdx].chirpInfoList[self.chirp].active==1:
-#                         tableMeasData = TableMeasData()
-#                         tableMeasData.parseData = noDiagTypeList[txAntDiagTypeIdx]
-#                         self.tableMeasDataList.append(tableMeasData)
-#                         myLogger.info('PTU2 file added: ' + tableMeasData.parseData.fileNamePath)
-#
-#                 if len(self.tableMeasDataList) == 0:
-#                     self.errorStatus = 1
-#                     myLogger.debug('No PTU2 parsed data files WITHOUT diagram type info found: Table' + str(
-#                         self.configTable.antennaPatternIdx) + '- ' + self.configTable.getStr())
-#                 else:
-#                     self.errorStatus = 0
-#             else:
-#                 self.errorStatus = 1
-#                 myLogger.debug("No data for WITHOUT diagram type info found: " + antennaDiagramTypeMapping(self.configTable.rotationAxis) + '.')
-#
-#         else:
-#             self.errorStatus=1
-#             myLogger.debug("No PTU2 parsed data files WITHOUT diagram type info found: Antenna Type: " +str(self.antennaType)+'.')
 
 # Class containing the norm level data and PTU2 parsed data for certain element of the list containing data for certain input.
 class TableMeasData():

@@ -450,24 +450,12 @@ def getDesiredDiagramsList(diagramConfig: dict, diagramConfigList: list, antType
             for diagIdx in range (len(diagramTempList)):
                 if diagramTempList[diagIdx]>=low and diagramTempList[diagIdx]<=high and diagramTempList[diagIdx]%2!=0:
                     desiredDiagramList.append(diagramTempList[diagIdx])
-            # if (low % 2) == 0:
-            #     low=low+1
-            # else:
-            #     low=low
-            # for i in range(low, high+1, 2):
-            #     desiredDiagramList.append(i)
         else:
 
 
             for diagIdx in range (len(diagramTempList)):
                 if diagramTempList[diagIdx]>=low and diagramTempList[diagIdx]<=high and diagramTempList[diagIdx]%2==0:
                     desiredDiagramList.append(diagramTempList[diagIdx])
-            # if (low % 2) == 0:
-            #     low = low
-            # else:
-            #     low = low+1
-            # for i in range(low, high+1, 2):
-            #     desiredDiagramList.append(i)
     else:
         # Preserve original order while removing duplicates
         filteredDiagList = []
@@ -571,39 +559,6 @@ def getActualGraphData(graph: str, rxChannel: int, chirp: int, parseDataList: li
     return actualDiagramData
 
 
-# def scaleLowerMargin(graph, chirpSetup, parseDataList):
-#     actualGraph = 0
-#     lowerMarginList = []
-#     for pdIdx in range(len(parseDataList)):
-#         validChirpList = getValidChirp(chirpSetup, parseDataList[pdIdx])
-#         nofRxCh = getMaxNofRxCh(graph, parseDataList)
-#         for chirp in range(len(validChirpList)):
-#             for rxCh in range(nofRxCh):
-#                 actualGraph = getActualGraphData(graph, rxCh, chirp, parseDataList[pdIdx])
-#                 minValue = actualGraph.min()
-#                 lowerMarginList.append(minValue)
-#
-#     lowerMargin = min(lowerMarginList)
-#     whole = int(abs(lowerMargin) / 10)
-#     rest = abs(lowerMargin) % 10
-#
-#     if lowerMargin >= 0:
-#         if rest > 5:
-#             lowerMargin = whole * 10
-#         else:
-#             lowerMargin = whole * 10 - 10
-#     else:
-#         if rest < 5:
-#             lowerMargin = whole * (-10) - 10
-#         else:
-#             lowerMargin = whole * (-10) - 20
-#     return lowerMargin
-#
-#     # Upper margin of all drawn sensor diagrams for a specific graph
-#
-#
-# def scaleUpperMargin(graph, chirpSetup, parseDataList):
-#     actualGraph = 0
 #     upperMarginList = []
 #     for pdIdx in range(len(parseDataList)):
 #         validChirpList = getValidChirp(chirpSetup, parseDataList[pdIdx])

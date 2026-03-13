@@ -87,67 +87,6 @@ def saveFigRx(fig, figureTitle: str, dpi: int, graph: str, isTrgLayout: int) -> 
     gc.collect()
 
 
-# def generateIdealCurvesData(parseDataList, desiredDiagList, dateTimeSensorList, allOnOneSlideGraphList, plotSetup):
-#     angleDataList =getAngleData(parseDataList, desiredDiagList, plotSetup)
-# #     # # Adding the ideal phase difference line to the phase difference graphs
-# #     # if plotSetup['idealPhaseDiff'] == 1 and allOnOneSlideGraphList[graphIdx].endswith('Diff') and 'avgDiffPhase' not in allOnOneSlideGraphList[graphIdx] and 'diffPhase' not in allOnOneSlideGraphList[graphIdx]:
-# #     #
-# #     angleTemp = 0
-# #
-# #     angleTempPdIdxDict = {
-# #         'angletemp': 0,
-# #         'pdIdx': 0
-# #     }
-# #
-#     angleList = []
-# #     ptuList=[]
-# #     angleTempList = []
-#     cond = 0
-# #
-#     for pdIdx in range(len(parseDataList)):
-#
-#         for diagIdx in range(len(desiredDiagList)):
-# #
-# #             # for dtsIdx in range(len(dateTimeSensorList)):
-# #             #
-# #             #
-#             if desiredDiagList[diagIdx] == parseDataList[pdIdx].fileTitle.diagram :
-# #                     # dateTimeSensorList[dtsIdx]['sensor'] == parseDataList[pdIdx].fileTitle.sensor and \
-# #                     # dateTimeSensorList[dtsIdx]['dateAndTime'] == parseDataList[pdIdx].fileTitle.dateAndTime:
-# #
-#                 # Get the ptu angle for the specific PTU2 file
-#                 angle = getAngle(parseDataList, pdIdx)
-#
-#                 # Get the ptu angle for the specific PTU2 file
-#                 tarAngle = getTargetAngle(plotSetup, parseDataList, pdIdx)
-#
-#                 if plotSetup['targetAngle'] == 1:
-#                     angle = tarAngle
-#
-#
-#                 if cond == 0:
-#                     # angleTempList.append(angle)
-#                     angleTempPdIdxDict = dict()
-#                     angleTempPdIdxDict.update({'angletemp': angle, 'pdIdx': pdIdx})
-#
-#                     angleList.append(angle)
-#                     # ptuList.append(pdIdx)
-#
-#                     cond = 1
-#                 else:
-#                     for aTmpIdx in range(len(angleList)):
-#                         if np.array_equal(angleList[aTmpIdx], angle) == False:
-#                             # angleTempList.append(angle)
-#
-#                             # angleTemp = angle.copy()
-#
-#                             angleTempPdIdxDict = dict()
-#                             angleTempPdIdxDict.update({'angletemp': angle, 'pdIdx': pdIdx})
-#
-#                             #angleTempPdIdxDict['angletemp'] = angleTemp
-#                             # angleTempPdIdxDict['pdIdx'] = pdIdx
-#
-#                             angleList.append(angle)
 #                             # ptuList.append(pdIdx)
 #
 #     return angleList
@@ -285,15 +224,6 @@ def graphStringMapping(graphTitle: str) -> str:
         graphString = 'Corr. Phase Diff. [°]'
     return graphString
 
-# def rxChStringMapping(graphTitle, rxCh):
-#     rxChString=''
-#     # Mapping string for the phase difference channels
-#     # phDiffRxComb = ['RxAnt1-RxAnt0', 'RxAnt2-RxAnt1', 'RxAnt3-RxAnt2']
-#     if 'haseDiff'  in graphTitle:
-#         lower=str(rxCh)
-#         upper=str(rxCh+1)
-#         rxChString='RxAnt'+upper+'-'+'RxAnt'+lower
-#     else:
 #         rxChString='RxAnt'+ str(rxCh)
 #     return rxChString
 
@@ -709,29 +639,6 @@ def plotAll(plotSetup: dict, chirpConfig: dict, allOnOneSlideGraphList: list, de
                                         plotLabel = 'ax1_' + plotLabel
                                         ax1.plot(angle, actualGraphData, '.-', pickradius=2, color=color, label = plotLabel)
 
-                        # # Adding the ideal phase difference line to the phase difference graphs
-                        # if plotSetup['idealPhaseDiff'] == 1 and allOnOneSlideGraphList[graphIdx].endswith('Diff') and 'avgDiffPhase' not in allOnOneSlideGraphList[graphIdx] and 'diffPhase' not in allOnOneSlideGraphList[graphIdx]:
-                        #
-                        #
-                        #     if cond ==0:
-                        #         # angleTempList.append(angle)
-                        #         angleTempPdIdxDict=dict()
-                        #         angleTempPdIdxDict.update({'angletemp': angle, 'pdIdx': pdIdx})
-                        #
-                        #         angleList.append(angleTempPdIdxDict)
-                        #         cond = 1
-                        #     else:
-                        #         for aTmpIdx in range(len(angleList)):
-                        #             if np.array_equal(angleList[aTmpIdx]['angletemp'], angle) == False:
-                        #                 # angleTempList.append(angle)
-                        #
-                        #                 # angleTemp = angle.copy()
-                        #                 angleTempPdIdxDict = dict()
-                        #                 angleTempPdIdxDict.update({'angletemp': angle, 'pdIdx': pdIdx})
-                        #                 # angleTempPdIdxDict['angletemp'] = angleTemp
-                        #                 # angleTempPdIdxDict['pdIdx'] = pdIdx
-                        #
-                        #                 angleList.append(angleTempPdIdxDict)
 
     if plotSetup['idealPhaseDiff'] == 1:
 

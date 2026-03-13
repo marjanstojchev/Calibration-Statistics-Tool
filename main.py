@@ -1,7 +1,6 @@
 import os
 import sys
 
-# Add subfolders to path so imports work with reorganized folder structure
 _root = os.path.dirname(os.path.abspath(__file__))
 for _subdir in ['shared', 'ui', 'system_diagrams', 'tx_diagrams', 'antenna_patterns']:
     _path = os.path.join(_root, _subdir)
@@ -38,9 +37,8 @@ import pyside_qtgui as qt
 from PySide6.QtWidgets import QTableWidgetItem
 import AntennaSystemDiagrams as antSysDiag
 import TxAntDiagrams as txAntDiag
-import antpat_v5_main_v3 as antPat1  # YAML version 1
+import antpat_v5_main_v3 as antPat1
 
-# loadDataLogger=logconfig.loadDataLogger
 parseDataLogger = logconfig.mainLoadDataLogger
 parseDataLog = logconfig.mainLoadDataLogger.logger
 logconfig.mainLoadDataLogger.addTableHandler(qt.mainLogTableHandler)
@@ -57,7 +55,6 @@ if errorStatus == 1:
 logconfig.antSysDiagLogger.addTableHandler(qt.mainLogTableHandler)
 
 
-# import  txantdiag_logconfig
 txAntDiagLogger = logconfig.txAntDiagLogger
 txAntDiagLog = logconfig.txAntDiagLogger.logger
 errorStatus, errorSting = logconfig.txAntDiagLogger.addFileHandler(logconfig.txAntDiagLogFilePath, 'w+')
@@ -66,7 +63,6 @@ if errorStatus == 1:
 logconfig.txAntDiagLogger.addTableHandler(qt.mainLogTableHandler)
 
 
-# import antpat_logconfig
 antpatLogger = logconfig.antPatLogger
 antpatLog = logconfig.antPatLogger.logger
 errorStatus, errorSting = logconfig.antPatLogger.addFileHandler(logconfig.antPatLogFilePath, 'w+')
@@ -82,10 +78,6 @@ txDiagfilePathDict = {
     'filePathList': []
 }
 
-# protocolPathTypeDict={
-#     'protocolPath':'',
-#     'type':'Undefined'
-# }
 
 protocolPathDict={
     'protocolPathTypeDictList':[],
@@ -124,10 +116,6 @@ separateTxAntDiagFailedDataDict={
     'parsedDataList': []
 }
 
-# protStatsDict={
-#     'nofLoadedProt':0,
-#     'nofSuccLoadedProt':0
-# }
 
 burnInProtocolPathDict={
     'protocolPathList':[]
@@ -175,16 +163,13 @@ qt.parseProtBurnInCalGroupRadio3.setChecked(False)
 ### Protocols Data
 qt.parseProtProtDataBurnInInclCheckBox.setChecked(True)
 qt.parseProtProtDataBurnInExtCheckBox.setChecked(False)
-# qt.parseProtProtDataInFileBurnInLEdit.setText('')
 
 
 qt.parseProtProtDataCalInclCheckBox.setChecked(True)
 qt.parseProtProtDataCalExtCheckBox.setChecked(False)
-# qt.parseProtProtDataInFileCalLEdit.setText('')
 
 
 qt.parseProtProtDataInFileBurnInLabel.setToolTip(aux.burnInLimitsFilePath)
-# qt.parseProtProtDataInFileBurnInLabel.setToolTipDuration(5000)
 qt.parseProtProtDataInFileBurnInLabel.setText(aux.burnInLimitsFilePath)
 
 
@@ -193,19 +178,16 @@ qt.parseProtProtDataInFileCalLabel.setText(aux.calLimitsFilePath)
 
 
 qt.parseProtProtDataLimGroupsBurnInLabel.setToolTip(aux.burnInLimGroupsFilePath)
-# qt.parseProtProtDataInFileBurnInLabel.setToolTipDuration(5000)
 qt.parseProtProtDataLimGroupsBurnInLabel.setText(aux.burnInLimGroupsFilePath)
 
 
 qt.parseProtProtDataLimGroupsCalLabel.setToolTip(aux.calLimGroupsFilePath)
-# qt.parseProtProtDataInFileCalLabel.setToolTipDuration(5000)
 qt.parseProtProtDataLimGroupsCalLabel.setText(aux.calLimGroupsFilePath)
 
 
 qt.statsInputConfPathLabel.setText(aux.statsinputconffilepath)
 qt.statsInputConfPathLabel.setToolTip(aux.statsinputconffilepath)
 
-# Stats button connections removed - module not in project
 qt.parseProtProtDataInFileBurnInPushBtn.clicked.connect(lambda: loadBurnInInputLimitsFile())
 qt.parseProtProtDataInFileCalPushBtn.clicked.connect(lambda : loadCalInputLimitsFile())
 qt.parseProtProtDataLimGroupsBurnInPushBtn.clicked.connect(lambda: loadBurnInLimitsGroupsFile())
@@ -246,7 +228,6 @@ def getProtPathTypeDictList(protocolPathList):
             tempDict = dict()
             tempDict['protocolPath'] = protocol
             tempDict['type'] = 'Unclear'
-            # Filter the 'BurnIn At Start' protocols
             filterProt = False
             try:
                 with open(protocol, 'r') as protocolFile:
@@ -291,14 +272,12 @@ def getProtPathTypeDictList(protocolPathList):
                             filterProt = True
                             break
                 
-                # Do no add 'BurnIn At Start' protocols filter
                 if not qt.parseProtBurnStartCheckBox.isChecked():
                     if tempDict['type'] == 'BurnIn':
                         if not filterProt:
                             outputList.append(tempDict)
                     else:
                         outputList.append(tempDict)
-                # Add protocol files without any filter
                 else:
                     outputList.append(tempDict)
 
@@ -515,7 +494,6 @@ def addAndParsePtu2Files(sysDiagParsedDataDict, separatePtu2ParsedDataDict, sepa
     ptu2FilesList = []
     if qt.parseProtAddAndParsePtu2FDialog.exec_():
         ptu2FilesList = qt.parseProtAddAndParsePtu2FDialog.selectedFiles()
-        # Sort to ensure consistent display order
         ptu2FilesList.sort()
 
     for item in ptu2FilesList:
@@ -639,64 +617,6 @@ def addAndParseTxAntDiagFiles(txAntDiagParsedDataDict, separateTxAntDiagParsedDa
         qt.parseProtAddTxAntDiagFailedTable.setItem(txAntDiagFileIdx, 0, QTableWidgetItem(
             separateTxAntDiagFailedDataDict['parsedDataList'][txAntDiagFileIdx].fileTitle.fileNamePath))
 
-# def parseCertDbProtocols(certProtParsedDataDict, certDbParsedDataDict, certDbFailedDataDict, newBurnInPathList, newCalPathList):
-#
-#     qt.parseProtTableTabWidget.setCurrentIndex(4)
-#
-#     for item in newBurnInPathList:
-#         parseDataLog.info(item)
-#
-#     certDbFailedDataList = []
-#     certDbParsedDataList = []
-#     for txAntDiag in newBurnInPathList:
-#         parseData = parseProtocols.ParseProtocols()
-#         # parseData.parseFile(txAntDiag,antSysDiag.plotSetup['useSensorMuster'],antSysDiag.plotSetup['sensorMusterList'])
-#         if parseData.errorStatus == False:
-#             certDbFailedDataList.append(parseData)
-#         else:
-#             certDbParsedDataList.append(parseData)
-#
-#     for certDbFromList in certDbFailedDataList:
-#         notInDict = 1
-#
-#         for certDbFromDict in certDbFailedDataDict['parsedDataList']:
-#             if certDbFromList.fileTitle.fileNamePath == certDbFromDict.fileTitle.fileNamePath:
-#                 notInDict = 0
-#         if notInDict == 1:
-#             certDbFailedDataDict['parsedDataList'].append(certDbFromList)
-#
-#     for certDbFromList in certDbParsedDataList:
-#         notInDict = 1
-#
-#         for certDbFromDict in certDbParsedDataDict['parsedDataList']:
-#             if certDbFromList.fileTitle.fileNamePath == certDbFromDict.fileTitle.fileNamePath:
-#                 notInDict = 0
-#         if notInDict == 1:
-#             certDbParsedDataDict['parsedDataList'].append(certDbFromList)
-#
-#     for certDbFromList in certDbParsedDataList:
-#         notInDict = 1
-#
-#         for certDbFromDict in certProtParsedDataDict['parsedDataList']:
-#             if certDbFromList.fileTitle.fileNamePath == certDbFromDict.fileTitle.fileNamePath:
-#                 notInDict = 0
-#         if notInDict == 1:
-#             certProtParsedDataDict['parsedDataList'].append(certDbFromList)
-#
-#     clearTable(qt.parseProtAddTxAntDiagParsedTable)
-#
-#     for certDbFileIdx in range(len(certDbParsedDataDict['parsedDataList'])):
-#         qt.parseProtCertDbParsedTable.insertRow(certDbFileIdx)
-#         qt.parseProtCertDbParsedTable.setItem(certDbFileIdx, 0, QTableWidgetItem(certDbParsedDataDict['parsedDataList'][certDbFileIdx].fileTitle.fileNamePath))
-#
-#     qt.parseProtSepParTxAntDiagFilesLabel.setText(qt.parseProtSepParTxAntDiagFilesStr + str(len(certDbParsedDataDict['parsedDataList'])))
-#
-#     clearTable(qt.parseProtAddTxAntDiagFailedTable)
-#
-#     for certDbFileIdx in range(len(certDbFailedDataDict['parsedDataList'])):
-#         qt.parseProtCertDbFailedTable.insertRow(certDbFileIdx)
-#         qt.parseProtCertDbFailedTable.setItem(certDbFileIdx, 0, QTableWidgetItem(certDbFailedDataDict['parsedDataList'][certDbFileIdx].fileTitle.fileNamePath))
-#
 
 
 def loadCalInputLimitsFile():
@@ -960,35 +880,13 @@ def importDbProtocolsList(burnInProtocolPathDict, burnInParsedProtDict, burnInPr
 
 def importBurnInProtocolsList(burnInProtocolPathDict, burnInParsedProtDict, burnInProtToBeParsedDict, allCertProtocolPathDict):
     # cert module removed - using simplified version without cert.importData
-    # burnInProtocolsPath = qt.certImportDataBurnInFolderLEdit.text()  # Removed: widget no longer exists
-
     burnInProtocolFilesList = []
-    # try:
-    #     for root, dirs, files in os.walk(burnInProtocolsPath):
-    #         for file in files:
-    #             if file.endswith('Protocol.txt'):
-    #                 path = os.path.join(root,file)
-    #                 burnInProtocolFilesList.append(path)
-    # except Exception as e:
-    #     parseDataLog.error('Importing BurnIn Protoocols from directory: '+str(e)+'.')
-
     fillInCertProtocolData(burnInProtocolFilesList, burnInProtocolPathDict, burnInParsedProtDict, burnInProtToBeParsedDict, allCertProtocolPathDict, 'BurnIn')
 
 
 def importCalProtocolsList(calProtocolPathDict, calParsedProtDict, calProtToBeParsedDict, allCertProtocolPathDict):
     # cert module removed - using simplified version without cert.importData
-    # calProtocolsPath = qt.certImportDataCalFolderLEdit.text()  # Removed: widget no longer exists
-
     calProtocolFilesList = []
-    # try:
-    #     for root, dirs, files in os.walk(calProtocolsPath):
-    #         for file in files:
-    #             if file.endswith('Protocol.txt'):
-    #                 path = os.path.join(root,file)
-    #                 calProtocolFilesList.append(path)
-    # except Exception as e:
-    #     parseDataLog.error('Importing Calibration Protoocols from directory: '+str(e)+'.')
-
     fillInCertProtocolData(calProtocolFilesList, calProtocolPathDict, calParsedProtDict, calProtToBeParsedDict, allCertProtocolPathDict, 'Calibration')
 
 
@@ -1000,10 +898,6 @@ def fillInCertProtocolData(protocolFilesList, protocolPathDict, parsedProtDict, 
     if len(protocolFilesList) == 0:
         return
 
-    #
-    # qt.parseProtProgresLabel.setText('Loading...')
-    #
-    # qt.parseProtProgresBar.reset()
 
     relRowIdx = 0
     refRowIdx = 0
@@ -1011,13 +905,10 @@ def fillInCertProtocolData(protocolFilesList, protocolPathDict, parsedProtDict, 
         # qt.parseProtSelCertProtTable.setRowCount(0)  # Removed: widget no longer exists
         refRowIdx = 0
 
-    # protNotPresent=0
     protNonRepList = []
     for protocolFilePath in protocolFilesList:
         if protocolFilePath not in allCertProtocolPathDict['protocolPathList']:
-            # protNotPresent=1
             protNonRepList.append(protocolFilePath)
-            # protocolPathDict['protocolPathList'].append(protocolFilePath)
         else:
             parseDataLog.info('Protocol is already imported: ' + protocolFilePath)
 
@@ -1055,21 +946,6 @@ def fillInCertProtocolData(protocolFilesList, protocolPathDict, parsedProtDict, 
         if protType == 'Calibration':
             strType = 'Calibration'
 
-        # Removed: parseProtSelCertProtTable row/item setup (widget no longer exists)
-
-
-    #
-    #
-    # if len(protToBeParsedDict['protocolPathList']) != 0:
-    #     qt.parseProtProgresBar.setRange(0, len(protToBeParsedDict['protocolPathList']))
-    #     qt.parseProtProgresBar.setValue(0)
-    #     qt.parseProtProgresBar.setFormat(str(qt.parseProtProgresBar.value()) + ' \ ' + str(len(protToBeParsedDict['protocolPathList'])))
-    #     progBarLabelStr = 'Protocols to be parsed: ' + str(len(protToBeParsedDict['protocolPathList'])) + ' / ' + str(
-    #         len(protocolPathDict['protocolPathList'])) + '. '
-    #     qt.parseProtProgresLabel.setText(progBarLabelStr)
-    #     # qt.parseProtProgresBar.setTextVisible(True)
-    # else:
-    #     qt.parseProtProgresLabel.setText('No new protocols Loaded.')
 
 
 def clearData(protocolPathDict, acceptedProtocolPathDict, filteredProtocolPathDict, sysDiagFilePathDict, txDiagfilePathDict):
@@ -2385,7 +2261,7 @@ def antPatTableLEditParse(inputString):
 
 qt.antPatHeaderNameLEdit.setText('Antenna_Pattern_Tables')
 qt.antPatHeaderNameLEdit.setEnabled(False)
-
+            parseData.parseFile(txAntDiag, antSysDiag.plotSetup['useSensorMuster'], antSysDiag.plotSetup['sensorMusterList'])
 qt.antPatHeaderIdentifierLEdit.setText('36')
 qt.antPatHeaderIdentifierLEdit.setEnabled(False)
 
