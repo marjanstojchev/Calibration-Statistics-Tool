@@ -9,7 +9,7 @@ myLogger = log.mainLoadDataLogger.logger
 
 
 # absPath=r'C:\Arbeit\ProtokollBsp\UMRR-11.00.04-0002B4ED'
-absPath=r'C:\Arbeit\ProtokollBsp'
+# absPath=r'C:\Arbeit\ProtokollBsp'
 
 # Search path meta data
 class SearchPath(enum.Enum):
@@ -79,12 +79,18 @@ class LoadData:
             pathError = 0
             lookFurther = 0
             self.searchPath = SearchPath.Protocol
-            for item in os.listdir(pathParts[0]):
+            try:
+                dirContents = os.listdir(pathParts[0])
+            except OSError as err:
+                myLogger.error('Could not list directory "' + pathParts[0] + '": ' + str(err))
+                pathError = 1
+                dirContents = []
+            for item in dirContents:
                 if item.endswith(pathParts[1]):
                     lookFurther = 1
 
             if lookFurther == 1:
-                for item in os.listdir(pathParts[0]):
+                for item in dirContents:
                     if item.endswith(ptu2PathEnd):
                         if 'Diff' not in item and 'NotOk' not in item:
                             # Set path to current file
@@ -150,6 +156,10 @@ class LoadData:
 
     # Load parsed data for a specific search path
     def loadData(self, absPath) -> None:
+        if not absPath:
+            self.invalidPath = 1
+            self.invalidPathString = 'No path provided.' + self.invalidPathString
+            return
 
         absPathType=AbsPathType.Path
 

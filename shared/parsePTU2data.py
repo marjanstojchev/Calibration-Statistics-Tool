@@ -292,8 +292,12 @@ def parseFile(fileNamePath: str, ptu2ParseData: PTU2ParseData) -> PTU2ParseData:
     ptu2ParseData.fileNamePath = fileNamePath
     interpretData(fileNamePath,ptu2ParseData)
     if len(ptu2ParseData.errorList) == 0:
-        ptu2ParseData.bDataValid = True
-        ptu2ParseData.buildArrays()
+        try:
+            ptu2ParseData.bDataValid = True
+            ptu2ParseData.buildArrays()
+        except Exception as err:
+            ptu2ParseData.bDataValid = False
+            ptu2ParseData.errorList.append(fileNamePath + ' Error building data arrays: ' + str(err))
     else:
         ptu2ParseData.bDataValid = False
     return ptu2ParseData
@@ -321,125 +325,128 @@ def interpretData(fileNamePath: str, ptu2ParseData: PTU2ParseData) -> None:
     chirpCounter = 0
 
     # Try to read the file
+    if not os.path.isfile(fileNamePath):
+        ptu2ParseData.errorList.append(strMeasName + ' File does not exist! Insert a valid file path.')
+        return
     try:
-        f = io.open(fileNamePath, encoding='utf-8')
-    except (IOError, UnicodeDecodeError) as err:
-        try:
-            f = io.open(fileNamePath, encoding='windows-1252')
-        except IOError as ioErr:
-            # errorString='try reading: ' +fileNamePath+ ' Exception = ' + str(ioErr)
-            errorString = strMeasName + ' File does not exist! Insert a valid file path.'
-            ptu2ParseData.errorList.append(errorString)
-    else:
-        # Read the lines of the file and remove all white spaces
-        with f:
+        with io.open(fileNamePath, encoding='utf-8') as f:
             content = f.readlines()
-        content = [line.strip() for line in content]
+    except UnicodeDecodeError:
+        try:
+            with io.open(fileNamePath, encoding='windows-1252') as f:
+                content = f.readlines()
+        except (IOError, OSError) as err:
+            ptu2ParseData.errorList.append(strMeasName + ' Could not read file: ' + str(err))
+            return
+    except (IOError, OSError) as err:
+        ptu2ParseData.errorList.append(strMeasName + ' Could not open file: ' + str(err))
+        return
+    content = [line.strip() for line in content]
 
-        # Traverse through every line of the content
-        for line in content:
-            # Note: File; lines have been removed from PTU files directly
-            # Measurement setup info lookup
-            if measSetupLineIndicator0 in line:
-                rest = line[len(measSetupLineIndicator0):]
-                rest = rest.replace(',', '.')
-                if sp.checkDecimal(rest):
-                    ptu2ParseData.measSetupInfo.phyDoppGenDist = float(rest)
-                    ptu2ParseData.measSetupInfo.phyDoppGenDistFound = 1
-                else:
-                    ptu2ParseData.measSetupInfo.phyDoppGenDistFound = 0
-            elif measSetupLineIndicator1 in line:
-                rest = line.strip(measSetupLineIndicator1)
-                rest = rest.replace(',', '.')
-                if sp.checkDecimal(rest):
-                    ptu2ParseData.measSetupInfo.doppGenHeightPtuZero = float(rest)
-                    ptu2ParseData.measSetupInfo.doppGenHeightPtuZeroFound = 1
-                else:
-                    ptu2ParseData.measSetupInfo.doppGenHeightPtuZeroFound = 0
-            elif measSetupLineIndicator2 in line:
-                rest = line.strip(measSetupLineIndicator2)
-                rest = rest.replace(',', '.')
-                if sp.checkDecimal(rest):
-                    ptu2ParseData.measSetupInfo.rfBoardMidHeightPtuZero = float(rest)
-                    ptu2ParseData.measSetupInfo.rfBoardMidHeightPtuZeroFound = 1
-                else:
-                    ptu2ParseData.measSetupInfo.rfBoardMidHeightPtuZeroFound = 0
-            elif measSetupLineIndicator3 in line:
-                l = len(line)
-                c = line[l-1]
-                if sp.checkInt(c):
-                    ptu2ParseData.measSetupInfo.sensorUpsideDown = int(c)
-                    ptu2ParseData.measSetupInfo.sensorUpsideDownFound = 1
-                else:
-                    ptu2ParseData.measSetupInfo.sensorUpsideDownFound = 0
-            elif measSetupLineIndicator4 in line:
-                rest = line.replace(measSetupLineIndicator4, '').strip()
-                if ('Az' in rest) or ('El' in rest):
-                    ptu2ParseData.measSetupInfo.antennaDiagramType = rest
-                    ptu2ParseData.measSetupInfo.antennaDiagramTypeFound = 1
-                else:
-                    ptu2ParseData.measSetupInfo.antennaDiagramTypeFound = 0
-            elif measSetupLineIndicator5 in line:
-                rest = line[len(measSetupLineIndicator5):]
-                rest = rest.replace(',', '.')
-                if sp.checkInt(rest):
-                    ptu2ParseData.measSetupInfo.oppositeToPanAngle = int(rest)
-                    ptu2ParseData.measSetupInfo.oppositeToPanAngleFound = 1
-                else:
-                    ptu2ParseData.measSetupInfo.oppositeToPanAngleFound = 0
-
-            # Swich to header lookup
+    # Traverse through every line of the content
+    for line in content:
+        # Note: File; lines have been removed from PTU files directly
+        # Measurement setup info lookup
+        if measSetupLineIndicator0 in line:
+            rest = line[len(measSetupLineIndicator0):]
+            rest = rest.replace(',', '.')
+            if sp.checkDecimal(rest):
+                ptu2ParseData.measSetupInfo.phyDoppGenDist = float(rest)
+                ptu2ParseData.measSetupInfo.phyDoppGenDistFound = 1
             else:
-                lineArray = line.split(';')
-                if (headerLineIndicator0 in lineArray[0]):
-                    headerFound += 1
-                    currentPart = searchParts.Header
+                ptu2ParseData.measSetupInfo.phyDoppGenDistFound = 0
+        elif measSetupLineIndicator1 in line:
+            rest = line.strip(measSetupLineIndicator1)
+            rest = rest.replace(',', '.')
+            if sp.checkDecimal(rest):
+                ptu2ParseData.measSetupInfo.doppGenHeightPtuZero = float(rest)
+                ptu2ParseData.measSetupInfo.doppGenHeightPtuZeroFound = 1
+            else:
+                ptu2ParseData.measSetupInfo.doppGenHeightPtuZeroFound = 0
+        elif measSetupLineIndicator2 in line:
+            rest = line.strip(measSetupLineIndicator2)
+            rest = rest.replace(',', '.')
+            if sp.checkDecimal(rest):
+                ptu2ParseData.measSetupInfo.rfBoardMidHeightPtuZero = float(rest)
+                ptu2ParseData.measSetupInfo.rfBoardMidHeightPtuZeroFound = 1
+            else:
+                ptu2ParseData.measSetupInfo.rfBoardMidHeightPtuZeroFound = 0
+        elif measSetupLineIndicator3 in line:
+            l = len(line)
+            c = line[l-1]
+            if sp.checkInt(c):
+                ptu2ParseData.measSetupInfo.sensorUpsideDown = int(c)
+                ptu2ParseData.measSetupInfo.sensorUpsideDownFound = 1
+            else:
+                ptu2ParseData.measSetupInfo.sensorUpsideDownFound = 0
+        elif measSetupLineIndicator4 in line:
+            rest = line.replace(measSetupLineIndicator4, '').strip()
+            if ('Az' in rest) or ('El' in rest):
+                ptu2ParseData.measSetupInfo.antennaDiagramType = rest
+                ptu2ParseData.measSetupInfo.antennaDiagramTypeFound = 1
+            else:
+                ptu2ParseData.measSetupInfo.antennaDiagramTypeFound = 0
+        elif measSetupLineIndicator5 in line:
+            rest = line[len(measSetupLineIndicator5):]
+            rest = rest.replace(',', '.')
+            if sp.checkInt(rest):
+                ptu2ParseData.measSetupInfo.oppositeToPanAngle = int(rest)
+                ptu2ParseData.measSetupInfo.oppositeToPanAngleFound = 1
+            else:
+                ptu2ParseData.measSetupInfo.oppositeToPanAngleFound = 0
 
-            # Header lookup
-            if currentPart == searchParts.Header:
-                if headerFound == 1:
-                    currentPart = searchParts.AntennaData
+        # Swich to header lookup
+        else:
+            lineArray = line.split(';')
+            if (headerLineIndicator0 in lineArray[0]):
+                headerFound += 1
+                currentPart = searchParts.Header
 
-            # Antenna info lookup
-            elif currentPart == searchParts.AntennaData:
-                if antennaDataFound == 0:
-                    if len(lineArray) > 3:
-                        antennaDataFound += 1
-                if antennaDataFound > 0:
-                    if not getAntennaData(lineArray, ptu2ParseData):
-                        return
-                    currentPart = searchParts.ChirpData
-                    ptu2ParseData.chirpInfoList = []
+        # Header lookup
+        if currentPart == searchParts.Header:
+            if headerFound == 1:
+                currentPart = searchParts.AntennaData
 
-            # Chirp info lookup
-            elif currentPart == searchParts.ChirpData:
-                if chirpCounter < PTU2ParseData.MAX_CHIRP:
-                    if len(lineArray) == 3 + ptu2ParseData.antennaInfo.getNofAntennaDiffValues():
-                        if not readChirpData(lineArray,ptu2ParseData,chirpCounter):
-                            return
-                        chirpCounter += 1
-                if  chirpCounter == PTU2ParseData.MAX_CHIRP:
-                    currentPart = searchParts.PtuPosData
-                    ptu2ParseData.ptuPosDataList = []
-
-            # PTU position lookup
-            elif currentPart == searchParts.PtuPosData:
-                if not readPosPtuData(lineArray,ptu2ParseData):
+        # Antenna info lookup
+        elif currentPart == searchParts.AntennaData:
+            if antennaDataFound == 0:
+                if len(lineArray) > 3:
+                    antennaDataFound += 1
+            if antennaDataFound > 0:
+                if not getAntennaData(lineArray, ptu2ParseData):
                     return
-                else:
-                    ptuPosDataFound += 1
+                currentPart = searchParts.ChirpData
+                ptu2ParseData.chirpInfoList = []
 
-        # Setup error list
-        if headerFound == 0:
-            ptu2ParseData.errorList.append(strMeasName + ' could not find header in file, no meas. data loaded')
-        if headerFound > 1:
-            ptu2ParseData.errorList.append(strMeasName + ' found header more than once in file, loaded meas. data probably incorrect')
-        if antennaDataFound == 0:
-            ptu2ParseData.errorList.append(strMeasName + ' could not find antenna data in file, no measdata loaded')
-        if antennaDataFound > 1:
-            ptu2ParseData.errorList.append(strMeasName + ' found antenna data more than once in file, loaded measdata probably incorrect')
-        if chirpCounter != ptu2ParseData.MAX_CHIRP:
-            ptu2ParseData.errorList.append(strMeasName + ' found (only) ' + str(chirpCounter)+ ' Chirp data of ' + str(ptu2ParseData.MAX_CHIRP) + ' Chirps')
+        # Chirp info lookup
+        elif currentPart == searchParts.ChirpData:
+            if chirpCounter < PTU2ParseData.MAX_CHIRP:
+                if len(lineArray) == 3 + ptu2ParseData.antennaInfo.getNofAntennaDiffValues():
+                    if not readChirpData(lineArray,ptu2ParseData,chirpCounter):
+                        return
+                    chirpCounter += 1
+            if  chirpCounter == PTU2ParseData.MAX_CHIRP:
+                currentPart = searchParts.PtuPosData
+                ptu2ParseData.ptuPosDataList = []
+
+        # PTU position lookup
+        elif currentPart == searchParts.PtuPosData:
+            if not readPosPtuData(lineArray,ptu2ParseData):
+                return
+            else:
+                ptuPosDataFound += 1
+
+    # Setup error list
+    if headerFound == 0:
+        ptu2ParseData.errorList.append(strMeasName + ' could not find header in file, no meas. data loaded')
+    if headerFound > 1:
+        ptu2ParseData.errorList.append(strMeasName + ' found header more than once in file, loaded meas. data probably incorrect')
+    if antennaDataFound == 0:
+        ptu2ParseData.errorList.append(strMeasName + ' could not find antenna data in file, no measdata loaded')
+    if antennaDataFound > 1:
+        ptu2ParseData.errorList.append(strMeasName + ' found antenna data more than once in file, loaded measdata probably incorrect')
+    if chirpCounter != ptu2ParseData.MAX_CHIRP:
+        ptu2ParseData.errorList.append(strMeasName + ' found (only) ' + str(chirpCounter)+ ' Chirp data of ' + str(ptu2ParseData.MAX_CHIRP) + ' Chirps')
 
 # Parses the antenna info part
 def getAntennaData(lineArray: list, ptu2ParseData: PTU2ParseData) -> bool:
@@ -499,14 +506,14 @@ def getAntennaData(lineArray: list, ptu2ParseData: PTU2ParseData) -> bool:
     else:
         bRet = False
     if bRet != True:
-        errorString = ptu2ParseData.fileNamePath + ' Error 1 - Antennendaten einlesen'
+        errorString = ptu2ParseData.fileNamePath + ' Error 1: Error reading antenna data'
         ptu2ParseData.errorList.append(errorString)
     return bRet
 
 # Control wrapper for getChirpData
 def readChirpData(lineArray: list, ptu2ParseData: PTU2ParseData, chirpcounter: int) -> bool:
     if not getChirpData(lineArray,ptu2ParseData):
-        ptu2ParseData.errorList.append(str(ptu2ParseData.fileNamePath) + ' Error 2 - Chirp ' + str(chirpcounter) + ' daten einlesen')
+        ptu2ParseData.errorList.append(str(ptu2ParseData.fileNamePath) + ' Error reading chirp ' + str(chirpcounter) + ' data')
         return False
     else:
         return True
@@ -555,7 +562,7 @@ def getChirpData(lineArray: list, ptu2ParseDataClass: PTU2ParseData) -> bool:
 # Control wrapper for getMeasData
 def readPosPtuData(lineArray: list, ptu2ParseData: PTU2ParseData) -> bool:
     if not getMeasData(lineArray,ptu2ParseData):
-        ptu2ParseData.errorList.append(str(ptu2ParseData.fileNamePath) + ' Error 3 - Messdaten einlesen')
+        ptu2ParseData.errorList.append(str(ptu2ParseData.fileNamePath) + ' Error reading measurement data')
         return False
     return True
 

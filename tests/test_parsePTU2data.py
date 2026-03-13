@@ -636,3 +636,70 @@ class TestInterpretData:
             assert len(pos.chirpMeasDataList) == PTU2ParseData.MAX_CHIRP
 
 
+# ---------------------------------------------------------------------------
+# interpretData: windows-1252 encoding fallback
+# ---------------------------------------------------------------------------
+
+class TestWindows1252Fallback:
+    """
+    Appending a byte that is valid windows-1252 (0xE4 = 'ä') but not valid
+    utf-8 (it starts a 3-byte sequence but is followed by a non-continuation
+    byte) forces io.open(..., 'utf-8') to raise UnicodeDecodeError, triggering
+    the windows-1252 re-open path in interpretData().
+    """
+
+    @staticmethod
+    def _make_win1252_file(tmp_path):
+        with open(SAMPLE_PTU_FILE, 'rb') as fh:
+            sample_bytes = fh.read()
+        win1252_file = tmp_path / 'win1252_ptu2.txt'
+        # Prepend a line containing 0xE4 ('ä' in windows-1252).
+        # 0xE4 is a 3-byte utf-8 lead byte that needs two continuation bytes,
+        # so io.open(..., 'utf-8').read() raises UnicodeDecodeError, triggering
+        # the windows-1252 fallback.  Prepended (not appended) so it falls in
+        # the MeasSetupData state where unrecognised lines are simply skipped.
+        win1252_file.write_bytes(b'Note: Ger\xe4t\r\n' + sample_bytes)
+        return str(win1252_file)
+
+    def test_parses_successfully(self, tmp_path):
+        obj = PTU2ParseData()
+        obj.parseFile(self._make_win1252_file(tmp_path), 0, [])
+        assert obj.bDataValid == True
+
+    def test_no_errors_appended(self, tmp_path):
+        obj = PTU2ParseData()
+        obj.parseFile(self._make_win1252_file(tmp_path), 0, [])
+        assert obj.errorList == []
+
+    def test_data_is_populated(self, tmp_path):
+        obj = PTU2ParseData()
+        obj.parseFile(self._make_win1252_file(tmp_path), 0, [])
+        assert len(obj.ptuPosDataList) > 0
+
+
+# ---------------------------------------------------------------------------
+# parseFile (module-level): buildArrays() exception handling
+# ---------------------------------------------------------------------------
+
+class TestBuildArraysException:
+
+    def test_bDataValid_false_on_exception(self, mocker):
+        obj = PTU2ParseData()
+        mocker.patch.object(obj, 'buildArrays', side_effect=RuntimeError('mock build error'))
+        obj.parseFile(SAMPLE_PTU_FILE, 0, [])
+        assert obj.bDataValid == False
+
+    def test_error_appended_on_exception(self, mocker):
+        obj = PTU2ParseData()
+        mocker.patch.object(obj, 'buildArrays', side_effect=RuntimeError('mock build error'))
+        obj.parseFile(SAMPLE_PTU_FILE, 0, [])
+        assert len(obj.errorList) == 1
+        assert 'Error building data arrays' in obj.errorList[0]
+
+    def test_original_exception_message_included(self, mocker):
+        obj = PTU2ParseData()
+        mocker.patch.object(obj, 'buildArrays', side_effect=RuntimeError('mock build error'))
+        obj.parseFile(SAMPLE_PTU_FILE, 0, [])
+        assert 'mock build error' in obj.errorList[0]
+
+
