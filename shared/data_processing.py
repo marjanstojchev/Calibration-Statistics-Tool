@@ -405,7 +405,7 @@ def getRefAnglePoint(parseData, isTargetAngle: int, upsideDown: int) -> float:
 
 # Get the desired diagrams list, according to the diagram configuration.
 def getDesiredDiagramsList(diagramConfig: dict, diagramConfigList: list, antType: int, parseDataList: list) -> list:
-    print(f"[DEBUG] getDesiredDiagramsList called with:")
+    print("[DEBUG] getDesiredDiagramsList called with:")
     print(f"  - antType: {antType}")
     print(f"  - parseDataList length: {len(parseDataList)}")
     print(f"  - diagramConfig: {diagramConfig}")
@@ -497,14 +497,6 @@ def getValidChirp(chirpSetup: dict, parseDataList: list, pdIdx: int) -> list:
             validChirpList.append(chirpList[chirpIdx])
     return validChirpList
 
-
-# Get the actual number of Rx channels, per specific graph and a PTU2 file.
-def getNofActualRxChannels(graphList: list, graphIdx: int, parseDataList: list, parseDataIdx: int) -> int:
-    if graphList[graphIdx].endswith('evel'):
-        actualNofRxCh = parseDataList[parseDataIdx].antennaInfo.nofAntennas
-    else:
-        actualNofRxCh = parseDataList[parseDataIdx].antennaInfo.nofAntennaDiffValues
-    return actualNofRxCh
 
 # Get the actual number of Rx channels, per specific graph and a PTU2 file.
 def getNofActualRxChannels(graph: str, parseDataList: list, pdIdx: int) -> int:

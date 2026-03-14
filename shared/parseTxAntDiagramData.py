@@ -254,7 +254,6 @@ def interpretData(fileNamePath: str, txAntDiagParseData: TxAntDiagramParseData) 
     parMappingDict = dict()
 
     endOfEmptyLines = 0
-    emptyCharFound  = 0
 
     currentPart = searchParts.MaxHeader
 
@@ -263,7 +262,7 @@ def interpretData(fileNamePath: str, txAntDiagParseData: TxAntDiagramParseData) 
         f = io.open(fileNamePath)
 
     # Catch an exception
-    except IOError as ioErr:
+    except IOError:
 
         # errorString="try reading: " +fileNamePath+ " Exception = " + str(ioErr)
         errorString = strMeasName + ' File does not exist! Insert a valid file path.'

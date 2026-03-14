@@ -67,8 +67,6 @@ def getprotcols(abspath: str, LatestProtocol: bool, BurnInStart: bool, EOLError:
 
     for cpreparseinfo in acceptedprotocolslist:
         strpathonly, strfilenameonly = os.path.split(cpreparseinfo.PathName)
-        stfilenamewithout_ptu = strfilenameonly.replace('Protocol_Chip', '').replace('Protocol', '').replace('protocol', '')
-        strsplitfilenameandextension = os.path.splitext(stfilenamewithout_ptu)
         parseDataLog.info(cpreparseinfo.PathName)
 
 

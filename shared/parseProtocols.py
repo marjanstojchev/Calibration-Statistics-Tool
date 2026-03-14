@@ -609,7 +609,6 @@ class ParseProtocols():
                                         res = match.groups()
 
                                     basis  = res[0]
-                                    suffix = res[1]
 
                                 basisDict[basis] = None
 
@@ -722,7 +721,6 @@ class ParseProtocols():
 
                         protocolParseInputDict[ProtocolCategoryNameEnum.MeasurementLimits.value] = dict()
                         self.protocolParseInputDict[ProtocolCategoryNameEnum.MeasurementLimit.value] = protocolParseInputDict[ProtocolCategoryNameEnum.MeasurementLimits.value]
-                        x = 0
                     else:
 
                         log.error('Load Protocol Parse Input dict, MeasurmentLimit is not of a dict type.')
@@ -743,7 +741,6 @@ class ParseProtocols():
 
                         protocolParseInputDict[ProtocolCategoryNameEnum.AbbortCriterions.value] = dict()
                         self.protocolParseInputDict[ProtocolCategoryNameEnum, AbbortCriterions.value] = protocolParseInputDict[ProtocolCategoryNameEnum.AbbortCriterions.value]
-                        x = 0
                     else:
 
                         log.error('Load Protocol Parse Input dict, AbbortCriterions is not of a dict type.')
@@ -813,7 +810,6 @@ class ParseProtocols():
 
 
                                         basis  = res[0]
-                                        suffix = res[1]
 
 
                                     if key==basis :
@@ -1042,7 +1038,6 @@ class ParseProtocols():
                                 self.rawParsedMeasurementDurations.append(measurementDuration)
                             else:
                                 break
-                                x=0
 
                 if protocolCategory==ProtocolCategoriesEnum.MeasSettings:
 
@@ -1223,7 +1218,6 @@ class ParseProtocols():
                 elif protocolCategory==ProtocolCategoriesEnum.Measurements:
 
 
-                    bassicParamNamesFound = 0
                     basicParamNamesSearch = 0
 
                     for measTypeKey, measTypeVal in self.rawParsedMeasurements.items():
@@ -1658,7 +1652,6 @@ def generateInputLimitsFromFile(filePath: str, limExportPath: str) -> None:
 
             pairDictList=[]
             catList=[]
-            limList=[]
 
             for entry in contentList:
                 pairDict = dict()
@@ -1686,15 +1679,12 @@ def generateInputLimitsFromFile(filePath: str, limExportPath: str) -> None:
                         res = match.groups()
 
                     basis = res[0]
-                    suffix = res[1]
 
                 pairDict['limit']=basis
                 pairDict['category']=category
 
                 catList.append(category)
                 pairDictList.append(pairDict)
-
-                a=0
 
             catList=set(catList)
             catList=list(catList)

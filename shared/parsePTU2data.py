@@ -110,7 +110,6 @@ class PTU2ParseData:
 
     # Build flat NumPy arrays from ptuPosDataList for fast slicing in calcdiagram_functions
     def buildArrays(self) -> None:
-        nof_angles   = len(self.ptuPosDataList)
         nof_antennas = self.antennaInfo.nofAntennas
         nof_diff     = self.antennaInfo.getNofAntennaDiffValues()
         self.angles_array = np.array(
@@ -320,7 +319,6 @@ def interpretData(fileNamePath: str, ptu2ParseData: PTU2ParseData) -> None:
 
     headerFound = 0
     antennaDataFound = 0
-    chirpDataFound   = 0
     ptuPosDataFound  = 0
     chirpCounter = 0
 

@@ -94,7 +94,6 @@ def saveFigRx(fig, figureTitle: str, dpi: int, graph: str, isTrgLayout: int) -> 
 def getAngleData(parseDataList: list, desiredDiagList: list, plotSetup: dict) -> list:
     combDictList= []
     outputList  = []
-    outputDist  = dict()
     for pdIdx in range(len(parseDataList)):
 
         for diagIdx in range(len(desiredDiagList)):
@@ -121,11 +120,6 @@ def getAngleData(parseDataList: list, desiredDiagList: list, plotSetup: dict) ->
 
                 # angle = calc.getPtuAngVals(parseDataList)
                 refAnglePoint = round(angle[0], 1)
-
-                if parseDataList[pdIdx].measSetupInfo.antennaDiagramTypeFound==1:
-                    diagType=parseDataList[pdIdx].measSetupInfo.antennaDiagramType
-                else:
-                    diagType ='NoDiagType'
 
                 combDict.update({'nofAnglePoints': nofAnglePoints, 'angleStepSize': step,'refAnglePoint':refAnglePoint, 'angle':angle,'ptuIdx':pdIdx})
                 combDictList.append(combDict)
@@ -457,10 +451,6 @@ def plotAll(plotSetup: dict, chirpConfig: dict, allOnOneSlideGraphList: list, de
 
     angBiggerThan45=0
 
-
-    txt = None
-    graphName = ''
-
     def onclick(event):
         if isinstance(event.artist, Line2D):
 
@@ -545,16 +535,7 @@ def plotAll(plotSetup: dict, chirpConfig: dict, allOnOneSlideGraphList: list, de
         bToggleAxis = Button(btnAxis, 'ToggleAxis')
         bToggleAxis.on_clicked(toggleAxis)
 
-    angleTemp=0
-
-    angleTempPdIdxDict = {
-        'angletemp': 0,
-        'pdIdx': 0
-    }
-
-    angleList     = []
-    angleTempList = []
-    cond = 0
+    angleList = []
 
     for pdIdx in range(len(parseDataList)):
 
@@ -599,7 +580,6 @@ def plotAll(plotSetup: dict, chirpConfig: dict, allOnOneSlideGraphList: list, de
 
                         # Traverse through all rxChannels
                         for rxCh in range(nofAcctualRxCh):
-                            graphName = allOnOneSlideGraphList[graphIdx]
                             plotLabel =allOnOneSlideGraphList[graphIdx]['graphType'] + '_' +dateTimeSensorList[dtsIdx]['dateAndTime'] + '_' + dateTimeSensorList[dtsIdx]['sensor']+ ', Diag' +str(desiredDiagList[diagIdx])+ ', ' + dp.rxChStringMapping(allOnOneSlideGraphList[graphIdx]['graphType'], rxCh)
                             # plotLabel = dp.rxChStringMapping(allOnOneSlideGraphList[graphIdx], rxCh)
 
@@ -677,7 +657,6 @@ def plotAll(plotSetup: dict, chirpConfig: dict, allOnOneSlideGraphList: list, de
     figureTitle = 'all_on_one_slide'
 
     if pickradius == 0:
-        xlimits = plt.xlim()
         ylimits = plt.ylim()
         ylimtick = (ylimits[0] + ylimits[1])*0.5 + np.array((-0.5, 0.5)) * (ylimits[1] - ylimits[0]) * (1 + 0.2)
         plt.ylim(min(ylimtick), max(ylimtick))
@@ -708,8 +687,6 @@ def plotDiagram(plotSetup: dict, chirpConfig: dict, graph: str, diagramNum: int,
 
     # Create subplots and plot figure
     fig, ax1 = plt.subplots()
-
-    txt=None
 
     def onclick(event):
         if isinstance(event.artist, Line2D):
@@ -960,7 +937,6 @@ def plotDiagram(plotSetup: dict, chirpConfig: dict, graph: str, diagramNum: int,
 
     if pickradius == 0:
         if 'iff' in graph:
-            xlimits = plt.xlim()
             ylimits = plt.ylim()
             ylimtick = (ylimits[0] + ylimits[1])*0.5 + np.array((-0.5, 0.5)) * (ylimits[1] - ylimits[0]) * (1 + 0.2)
             plt.ylim(min(ylimtick), max(ylimtick))
@@ -993,8 +969,6 @@ def plotDiagramRxCh(plotSetup: dict, chirpConfig: dict, graph: str, diagramNum: 
 
     # Create subplots and plot figure
     fig, ax1 = plt.subplots()
-
-    txt=None
 
     def onclick(event):
         if isinstance(event.artist, Line2D):
@@ -1131,7 +1105,6 @@ def plotDiagramRxCh(plotSetup: dict, chirpConfig: dict, graph: str, diagramNum: 
                 validChirpList = dp.getValidChirp(chirpConfig, parseDataList, pdIdx)
 
                 # Get the num. of actual Rx channels for the diagram in question and the given PTU2 file (sensor).
-                nofAcctualRxCh = dp.getNofActualRxChannels(graph, parseDataList, pdIdx)
 
                 # Set color for the sensor specific plot lines
                 color = setColor(dateTimeSensorIdx)
@@ -1230,7 +1203,6 @@ def plotDiagramRxCh(plotSetup: dict, chirpConfig: dict, graph: str, diagramNum: 
 
     if pickradius == 0:
         if 'iff' in graph:
-            xlimits = plt.xlim()
             ylimits = plt.ylim()
             ylimtick = (ylimits[0] + ylimits[1])*0.5 + np.array((-0.5, 0.5)) * (ylimits[1] - ylimits[0]) * (1 + 0.2)
             plt.ylim(min(ylimtick), max(ylimtick))

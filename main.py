@@ -566,9 +566,9 @@ def addAndParseTxAntDiagFiles(txAntDiagParsedDataDict, separateTxAntDiagParsedDa
 
     txAntDiagFailedDataList = []
     txAntDiagParsedDataList = []
-    for txAntDiag in txAntDiagFilesList:
+    for txAntDiagPath in txAntDiagFilesList:
         parseData = parseTxAntDiag.TxAntDiagramParseData()
-        parseData.parseFile(txAntDiag, antSysDiag.plotSetup['useSensorMuster'], antSysDiag.plotSetup['sensorMusterList'])
+        parseData.parseFile(txAntDiagPath, antSysDiag.plotSetup['useSensorMuster'], antSysDiag.plotSetup['sensorMusterList'])
         if parseData.bDataValid == False:
             txAntDiagFailedDataList.append(parseData)
         else:
@@ -899,12 +899,6 @@ def fillInCertProtocolData(protocolFilesList, protocolPathDict, parsedProtDict, 
         return
 
 
-    relRowIdx = 0
-    refRowIdx = 0
-    if len(allCertProtocolPathDict['protocolPathList']) == 0:
-        # qt.parseProtSelCertProtTable.setRowCount(0)  # Removed: widget no longer exists
-        refRowIdx = 0
-
     protNonRepList = []
     for protocolFilePath in protocolFilesList:
         if protocolFilePath not in allCertProtocolPathDict['protocolPathList']:
@@ -924,8 +918,6 @@ def fillInCertProtocolData(protocolFilesList, protocolPathDict, parsedProtDict, 
             parseDataLog.info('Protocol is already parsed: ' + protNonRepList[protocolFilePathIdx])
 
 
-    protColSpanBegin = 0
-
     # Removed: parseProtSelCertProtTable and related header setup (widget no longer exists)
 
 
@@ -935,17 +927,6 @@ def fillInCertProtocolData(protocolFilesList, protocolPathDict, parsedProtDict, 
     # parseDataLog.info('Num. of  Accepted Protocols: ' + str(len(protocolPathDict['protocolPathList'])))
 
     # insert into table
-
-    for protocolFileIdx in range(len(protNonRepList)):
-
-        relRowIdx = protocolFileIdx
-        protocolPath = protNonRepList[protocolFileIdx]
-
-        rowIdx = relRowIdx +refRowIdx
-        strType ='BurnIn'
-        if protType == 'Calibration':
-            strType = 'Calibration'
-
 
 
 def clearData(protocolPathDict, acceptedProtocolPathDict, filteredProtocolPathDict, sysDiagFilePathDict, txDiagfilePathDict):

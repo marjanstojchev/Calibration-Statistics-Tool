@@ -120,9 +120,6 @@ def getPhaseDiffOffCorrCont(phaseDiffIdx, chirp, ptu2ParseData):
     zeroDegIdxUpper=0
     zeroDegIdxLower=0
 
-    medianDifference=0
-
-    tolerance=0
     HALF_TURN=180
     WHOLE_TURN=360
 
@@ -143,8 +140,6 @@ def getPhaseDiffOffCorrCont(phaseDiffIdx, chirp, ptu2ParseData):
     # phaseDiffCorr[160] =-50
     outputArray=np.zeros(len(phaseDiffCorr))
     for idx in range(zeroDegIdxUpper,len(phaseDiffCorr)):
-        current=phaseDiffCorr[idx]
-        previous=phaseDiffCorr[idx - 1]
         diff=(phaseDiffCorr[idx] - phaseDiffCorr[idx - 1])
         if (diff > HALF_TURN):
             incr -= WHOLE_TURN
@@ -157,8 +152,6 @@ def getPhaseDiffOffCorrCont(phaseDiffIdx, chirp, ptu2ParseData):
     diff = 0
     incr = 0
     for idx in range(zeroDegIdxLower, -1, -1):
-        current = phaseDiffCorr[idx]
-        previous = phaseDiffCorr[idx + 1]
         diff = (phaseDiffCorr[idx] - phaseDiffCorr[idx + 1])
         if (diff > HALF_TURN):
             incr -= WHOLE_TURN

@@ -5,7 +5,6 @@ import sys
 from abc import ABC, abstractmethod
 import os
 import numpy as np
-import sys
 
 
 # Mapping slide layouts
@@ -184,8 +183,7 @@ class Presentation:
 
         # Save location processing
         # currentDir = os.path.dirname(os.path.abspath(__file__))
-        currentDir = os.path.dirname(sys.argv[0])
-        savePath   = os.path.join(currentDir, pptxPath)
+        # currentDir = os.path.dirname(sys.argv[0])
 
         try:
             self.prt.save(pptxPath)

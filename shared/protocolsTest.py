@@ -74,7 +74,7 @@ class ProtocolInfoClass:
             f = io.open(fileNamePath, encoding='windows-1252', errors='ignore')
 
         # Catch an exception
-        except IOError as ioErr:
+        except IOError:
             # todo: den io error noch ausgeben in fehlerlist
             errorlisttemp.append('IO Error File with pathname '+ fileNamePath +  ' does not exist? / Insert a valid file path.')
         else:
@@ -203,12 +203,7 @@ class ProtocolInfoClass:
     @staticmethod
     def FilterProtocols(ProtocolPreParseInfosList, bUseFilesWithError, bUseFilesAbbortCriterion, bUseFilesWIthLimitsExceeded):
         filteredProtocolsList    = []
-        filtEmptyProtList        = []
         filteredOutProtocolsList = []
-
-        errCrit     = 0
-        abbCrit     = 0
-        fileLimCrit = 0
 
         for cProtocolPreParseInfo in ProtocolPreParseInfosList:
 
