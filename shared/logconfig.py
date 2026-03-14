@@ -144,6 +144,10 @@ mainLoadDataLogger.addConsoleHandler()
 mainLoadDataLogger.setLevel(log.DEBUG)
 mainLoadDataLogger.customLogLevel=CustomLogLevel.WarningsAndInfos
 
+# Adapter for parseProtocols — exposes the standard logging.Logger interface
+# (log.error / log.info / log.warning) expected by that module
+logAdapter_PP = mainLoadDataLogger.logger
+
  ######   ###
   #######   ##
  ######   ###

@@ -1,11 +1,13 @@
 from shared.parser_base import ParseDataBase
 from shared import parsePTU2data
 from shared import parseTxAntDiagramData
+from shared.parse_protocol_data import ProtocolParseData
 
 
 _REGISTRY: dict[str, type[ParseDataBase]] = {
     'ptu2':      parsePTU2data.PTU2ParseData,
     'txantdiag': parseTxAntDiagramData.TxAntDiagramParseData,
+    'protocol':  ProtocolParseData,
 }
 
 
