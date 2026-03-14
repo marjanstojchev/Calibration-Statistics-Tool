@@ -1,5 +1,5 @@
 import os
-import parseTxAntDiagramData as pd
+from shared import parseTxAntDiagramData as pd
 import enum
 import logconfig as log
 

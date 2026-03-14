@@ -10,6 +10,7 @@ for _subdir in ['shared', 'ui', 'system_diagrams', 'tx_diagrams', 'antenna_patte
 import loaddata as ld
 import parsePTU2data as parsePtu2
 import parseTxAntDiagramData as parseTxAntDiag
+from shared.parser_factory import ParserFactory
 import logconfig
 import data_processing as dp
 from shared import safeparse as sp
@@ -502,7 +503,7 @@ def addAndParsePtu2Files(sysDiagParsedDataDict, separatePtu2ParsedDataDict, sepa
     ptu2FailedDataList = []
     ptu2ParsedDataList = []
     for ptu2 in ptu2FilesList:
-        parseData = parsePtu2.PTU2ParseData()
+        parseData = ParserFactory.create('ptu2')
         parseData.parseFile(ptu2,antSysDiag.plotSetup['useSensorMuster'],antSysDiag.plotSetup['sensorMusterList'])
         if parseData.bDataValid == False:
             ptu2FailedDataList.append(parseData)
@@ -567,7 +568,7 @@ def addAndParseTxAntDiagFiles(txAntDiagParsedDataDict, separateTxAntDiagParsedDa
     txAntDiagFailedDataList = []
     txAntDiagParsedDataList = []
     for txAntDiagPath in txAntDiagFilesList:
-        parseData = parseTxAntDiag.TxAntDiagramParseData()
+        parseData = ParserFactory.create('txantdiag')
         parseData.parseFile(txAntDiagPath, antSysDiag.plotSetup['useSensorMuster'], antSysDiag.plotSetup['sensorMusterList'])
         if parseData.bDataValid == False:
             txAntDiagFailedDataList.append(parseData)

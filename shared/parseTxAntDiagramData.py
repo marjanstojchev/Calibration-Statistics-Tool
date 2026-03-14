@@ -3,6 +3,7 @@ import os
 from enum import Enum
 import io
 from shared import safeparse as sp
+from shared.parser_base import ParseDataBase
 import logconfig as log
 
 myLogger=log.mainLoadDataLogger.logger
@@ -23,12 +24,10 @@ class PtuPosMeasData:
 
 
 # Data from the parsed TxAnt diagram file, containing meaurements data for each ptu position
-class TxAntDiagramParseData:
+class TxAntDiagramParseData(ParseDataBase):
 
     def __init__(self) -> None:
-        self.bDataValid = False
-        self.fileNamePath = ''
-        self.errorList = []
+        super().__init__()
         self.ptuMaxSpecHeaderData = 0
         self.chirp = 0
         self.ptuPosDataList = [] # Messdaten an der jeweiligen ptu position

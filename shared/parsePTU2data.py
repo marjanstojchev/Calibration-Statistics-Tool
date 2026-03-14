@@ -4,6 +4,7 @@ from enum import Enum
 import io
 import numpy as np
 from shared import safeparse as sp
+from shared.parser_base import ParseDataBase
 
 ## Parse data module ##
 
@@ -89,12 +90,10 @@ class MeasSetupInfo:
         self.oppositeToPanAngleFound = 0
 
 # Data from the parsed PTU2 file, containing antenna info, chirp info list, and meaurements data for each ptu position
-class PTU2ParseData:
+class PTU2ParseData(ParseDataBase):
     MAX_CHIRP = 4
     def __init__(self) -> None:
-        self.bDataValid     = False
-        self.fileNamePath   = ''
-        self.errorList      = []
+        super().__init__()
         self.antennaInfo    = AntennaInfo()
         self.chirpInfoList  = []
         self.ptuPosDataList = [] # Messdaten an der jeweiligen ptu position
