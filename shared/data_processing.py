@@ -1,5 +1,6 @@
 from __future__ import annotations
 import calcdiagram_functions as calc
+import calculation_strategy as strat
 import logconfig as log
 from shared import safeparse as sp
 
@@ -517,38 +518,11 @@ def getMaxNofRxCh(graph: str, parseDataList: list) -> int:
 
 # Get the data for the actual graph for specific graph, chirp, rx channel, and PTU2 file
 def getActualGraphData(graph: str, rxChannel: int, chirp: int, parseDataList: list, pdIdx: int):
-    actualDiagramData = 0
-    if graph == "level":
-        actualDiagramData = calc.getAntLevel(rxChannel, chirp, parseDataList[pdIdx])
-
-    elif graph == "avgLevel":  # Average power level of chirps [dB].
-        actualDiagramData = calc.getAvgAntLevel(rxChannel, parseDataList[pdIdx])
-
-    elif graph == "normLevel":  # Normalised power level [dB].
-        actualDiagramData = calc.getNormAntLevel(rxChannel, chirp, parseDataList[pdIdx])
-
-    elif graph == "avgNormLevel":  # Average of normalised power levels of all chirps [dB].
-        actualDiagramData = calc.getAvgNormAntLevel(rxChannel, parseDataList[pdIdx])
-
-    # Phase difference diagrams
-    elif graph == "phaseDiff":  # Phase difference [°].
-        actualDiagramData = calc.getPhaseDiff(rxChannel, chirp, parseDataList[pdIdx])
-
-    elif graph == "avgPhaseDiff":  # Average of the phase differences of all chirps[°].
-        actualDiagramData = calc.getAvgPhaseDiff(rxChannel, parseDataList[pdIdx])
-
-    elif graph == "idealPhaseDiff":  # Ideal phase difference [°].
-        actualDiagramData = calc.getIdealPhaseDiff(rxChannel, chirp, parseDataList[pdIdx])
-
-    elif graph == "diffPhaseDiff":  # Difference between one phase difference and the ideal one [°].
-        actualDiagramData = calc.getPhaseDiffDiff(rxChannel, chirp, parseDataList[pdIdx])
-
-    elif graph == "avgDiffPhaseDiff":  # Average difference of between the phase differences and the ideal one of all chirps[°].
-        actualDiagramData = calc.getAvgPhaseDiffDiff(rxChannel, parseDataList[pdIdx])
-
-    elif graph == "corrPhaseDiff":
-        actualDiagramData = calc.getPhaseDiffOffCorr(rxChannel, chirp, parseDataList[pdIdx])
-    return actualDiagramData
+    strategy = strat.STRATEGY_REGISTRY.get(graph)
+    if strategy is None:
+        return 0
+    context = strat.CalculationContext(strategy)
+    return context.execute(rxChannel, chirp, parseDataList[pdIdx])
 
 
 #     upperMarginList = []

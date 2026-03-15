@@ -8,6 +8,7 @@ from matplotlib.widgets import Button
 from matplotlib.ticker import (MaxNLocator, AutoMinorLocator)
 import gc
 import calcdiagram_functions as calc
+import calculation_strategy as strat
 import logconfig as log
 import data_processing as dp
 import auxiliary as aux
@@ -244,38 +245,11 @@ def getUpsideDown(plotSetup: dict) -> bool:
 
 # Get the data for the actual graph for specific graph, chirp, rx channel, and PTU2 file
 def getActualGraphData(graph: str, rxChannel: int, chirp: int, parseDataList: list, parseDataIdx: int) -> np.ndarray:
-    actualDiagramData = 0
-    if graph == 'level':
-        actualDiagramData = calc.getAntLevel(rxChannel, chirp, parseDataList[parseDataIdx])
-
-    elif graph == 'avgLevel':  # Average power level of chirps [dB].
-        actualDiagramData = calc.getAvgAntLevel(rxChannel, parseDataList[parseDataIdx])
-
-    elif graph == 'normLevel':  # Normalised power level [dB].
-        actualDiagramData = calc.getNormAntLevel(rxChannel, chirp, parseDataList[parseDataIdx])
-
-    elif graph == 'avgNormLevel':  # Average of normalised power levels of all chirps [dB].
-        actualDiagramData = calc.getAvgNormAntLevel(rxChannel, parseDataList[parseDataIdx])
-
-    # Phase difference diagrams
-    elif graph == 'phaseDiff':  # Phase difference [°].
-        actualDiagramData = calc.getPhaseDiff(rxChannel, chirp, parseDataList[parseDataIdx])
-
-    elif graph == 'avgPhaseDiff':  # Average of the phase differences of all chirps[°].
-        actualDiagramData = calc.getAvgPhaseDiff(rxChannel, parseDataList[parseDataIdx])
-
-    elif graph == 'idealPhaseDiff':  # Ideal phase difference [°].
-        actualDiagramData = calc.getIdealPhaseDiff(rxChannel, chirp, parseDataList[parseDataIdx])
-
-    elif graph == 'diffPhaseDiff':  # Difference between one phase difference and the ideal one [°].
-        actualDiagramData = calc.getPhaseDiffDiff(rxChannel, chirp, parseDataList[parseDataIdx])
-
-    elif graph == 'avgDiffPhaseDiff':  # Average difference of between the phase differences and the ideal one of all chirps[°].
-        actualDiagramData = calc.getAvgPhaseDiffDiff(rxChannel, parseDataList[parseDataIdx])
-
-    elif graph == 'corrPhaseDiff':
-        actualDiagramData = calc.getPhaseDiffOffCorr(rxChannel, chirp, parseDataList[parseDataIdx])
-    return actualDiagramData
+    strategy = strat.STRATEGY_REGISTRY.get(graph)
+    if strategy is None:
+        return 0
+    context = strat.CalculationContext(strategy)
+    return context.execute(rxChannel, chirp, parseDataList[parseDataIdx])
 
 # Set plot collor for each sensor
 def setColor(combIdx: int) -> str:
