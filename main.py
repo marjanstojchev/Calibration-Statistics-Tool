@@ -11,6 +11,7 @@ import loaddata as ld
 import parsePTU2data as parsePtu2
 import parseTxAntDiagramData as parseTxAntDiag
 from shared.parser_factory import ParserFactory
+from shared.parse_controller import ParseController
 import logconfig
 import data_processing as dp
 from shared import safeparse as sp
@@ -72,58 +73,25 @@ if errorStatus == 1:
 logconfig.antPatLogger.addTableHandler(qt.mainLogTableHandler)
 
 
-sysDiagFilePathDict = {
-    'filePathList':[]
-}
-txDiagfilePathDict = {
-    'filePathList': []
-}
+# Instantiate the ParseController — owns all parsing state and business logic
+pc = ParseController()
 
-
-protocolPathDict={
-    'protocolPathTypeDictList':[],
-}
-acceptedProtocolPathDict={
-    'emptyProtList':[],
-    'errorProtList':[],
-    'abbortCritProtList':[],
-    'limitExceededProtList':[]
-}
-filteredProtocolPathDict = {
-    'protocolPathList': [],
-}
-parsedProtDict = {
-    'protocolPathTypeDictList':[],
-}
-protToBeParsedDict = {
-    'protocolPathTypeDictList':[],
-}
-sysDiagParsedDataDict={
-    'parsedDataList':[]
-}
-separatePtu2ParsedDataDict={
-    'parsedDataList': []
-}
-separatePtu2FailedDataDict={
-    'parsedDataList': []
-}
-txAntDiagParsedDataDict={
-    'parsedDataList': []
-}
-separateTxAntDiagParsedDataDict={
-    'parsedDataList': []
-}
-separateTxAntDiagFailedDataDict={
-    'parsedDataList': []
-}
-
-
-burnInProtocolPathDict={
-    'protocolPathList':[]
-}
-calProtocolPathDict = {
-    'protocolPathList': []
-}
+# Aliases so existing code that passes these as arguments continues to work
+sysDiagFilePathDict          = pc.sysDiagFilePathDict
+txDiagfilePathDict           = pc.txDiagfilePathDict
+protocolPathDict             = pc.protocolPathDict
+acceptedProtocolPathDict     = pc.acceptedProtocolPathDict
+filteredProtocolPathDict     = pc.filteredProtocolPathDict
+parsedProtDict               = pc.parsedProtDict
+protToBeParsedDict           = pc.protToBeParsedDict
+sysDiagParsedDataDict        = pc.sysDiagParsedDataDict
+separatePtu2ParsedDataDict   = pc.separatePtu2ParsedDataDict
+separatePtu2FailedDataDict   = pc.separatePtu2FailedDataDict
+txAntDiagParsedDataDict      = pc.txAntDiagParsedDataDict
+separateTxAntDiagParsedDataDict = pc.separateTxAntDiagParsedDataDict
+separateTxAntDiagFailedDataDict = pc.separateTxAntDiagFailedDataDict
+burnInProtocolPathDict       = pc.burnInProtocolPathDict
+calProtocolPathDict          = pc.calProtocolPathDict
 
 ##########
 
@@ -219,87 +187,12 @@ def importProtocolsFileList(protocolPathDict, acceptedProtocolPathDict, filtered
 
 
 def getProtPathTypeDictList(protocolPathList):
-
-    outputList = []
-
-    for protocol in protocolPathList:
-        if qt.parseProtBurnInCalGroup.checkedId() == 0:
-            typeMuster   = 'Gen26_UseBurnInMeas[1]'
-            filterMuster = '(12a) BurnIn Start Check results:'
-            tempDict = dict()
-            tempDict['protocolPath'] = protocol
-            tempDict['type'] = 'Unclear'
-            filterProt = False
-            try:
-                with open(protocol, 'r') as protocolFile:
-
-                    content = protocolFile.readlines()
-
-                    lineNr = 0
-
-                    for line in content:
-                        lineNr += 1
-                        line = line.strip()
-
-                        if line.startswith(typeMuster):
-                            line = line.replace(' ','')
-                            linePartsList = line.split(';')
-
-                            if linePartsList[0] == typeMuster:
-                                tempVal = -1
-                                
-                                if sp.checkInt(linePartsList[1]):
-
-                                    tempVal = int(linePartsList[1])
-
-                                else:
-                                    parseDataLog.error('Invalid value for protocol BurnIn/Calibration auto-recognition: '+linePartsList[1]+'.')
-
-                                if tempVal == 0:
-
-                                    tempDict['type'] = 'Calibration'
-
-                                elif tempVal == 3:
-
-                                    tempDict['type'] = 'BurnIn'
-
-                                else:
-                                    tempDict['type'] = 'Unclear'
-
-                            else:
-                                tempDict['type'] = 'Unclear'
-                        
-                        if line == filterMuster:
-                            filterProt = True
-                            break
-                
-                if not qt.parseProtBurnStartCheckBox.isChecked():
-                    if tempDict['type'] == 'BurnIn':
-                        if not filterProt:
-                            outputList.append(tempDict)
-                    else:
-                        outputList.append(tempDict)
-                else:
-                    outputList.append(tempDict)
-
-            except Exception as e:
-                parseDataLog.error('Opening protocol file: ' + str(e) + '.')
-
-        elif qt.parseProtBurnInCalGroup.checkedId() == 1:
-
-            tempDict = dict()
-            tempDict['protocolPath'] = protocol
-            tempDict['type'] = 'BurnIn'
-            outputList.append(tempDict)
-
-        elif qt.parseProtBurnInCalGroup.checkedId() == 2:
-
-            tempDict = dict()
-            tempDict['protocolPath'] = protocol
-            tempDict['type'] = 'Calibration'
-            outputList.append(tempDict)
-
-    return outputList
+    """Thin Qt-aware wrapper: reads UI state and delegates to ParseController."""
+    return pc.build_prot_path_type_list(
+        protocolPathList,
+        burn_in_cal_mode=qt.parseProtBurnInCalGroup.checkedId(),
+        include_burn_in_start=qt.parseProtBurnStartCheckBox.isChecked(),
+    )
 
 
 def _update_protocol_dicts(
@@ -489,7 +382,6 @@ def fillInProtocolData(
 
 
 def addAndParsePtu2Files(sysDiagParsedDataDict, separatePtu2ParsedDataDict, separatePtu2FailedDataDict):
-
     qt.parseProtTableTabWidget.setCurrentIndex(2)
 
     ptu2FilesList = []
@@ -497,126 +389,53 @@ def addAndParsePtu2Files(sysDiagParsedDataDict, separatePtu2ParsedDataDict, sepa
         ptu2FilesList = qt.parseProtAddAndParsePtu2FDialog.selectedFiles()
         ptu2FilesList.sort()
 
-    for item in ptu2FilesList:
-        parseDataLog.info(item)
+    # Business logic delegated to controller
+    parsed, failed = pc.parse_ptu2_files(
+        ptu2FilesList,
+        antSysDiag.plotSetup['useSensorMuster'],
+        antSysDiag.plotSetup['sensorMusterList'],
+    )
+    pc.add_ptu2_to_state(parsed, failed)
 
-    ptu2FailedDataList = []
-    ptu2ParsedDataList = []
-    for ptu2 in ptu2FilesList:
-        parseData = ParserFactory.create('ptu2')
-        parseData.parseFile(ptu2,antSysDiag.plotSetup['useSensorMuster'],antSysDiag.plotSetup['sensorMusterList'])
-        if parseData.bDataValid == False:
-            ptu2FailedDataList.append(parseData)
-        else:
-            ptu2ParsedDataList.append(parseData)
-
-
-    for ptu2FromList in ptu2FailedDataList:
-        notInDict=1
-
-        for ptu2FromDict in separatePtu2FailedDataDict['parsedDataList']:
-            if ptu2FromList.fileTitle.fileNamePath ==  ptu2FromDict.fileTitle.fileNamePath:
-                notInDict = 0
-        if notInDict == 1:
-            separatePtu2FailedDataDict['parsedDataList'].append(ptu2FromList)
-
-    for ptu2FromList in ptu2ParsedDataList:
-        notInDict = 1
-
-        for ptu2FromDict in separatePtu2ParsedDataDict['parsedDataList']:
-            if ptu2FromList.fileTitle.fileNamePath == ptu2FromDict.fileTitle.fileNamePath:
-                notInDict = 0
-        if notInDict == 1:
-            separatePtu2ParsedDataDict['parsedDataList'].append(ptu2FromList)
-
-    for ptu2FromList in ptu2ParsedDataList:
-        notInDict = 1
-
-        for ptu2FromDict in sysDiagParsedDataDict['parsedDataList']:
-            if ptu2FromList.fileTitle.fileNamePath == ptu2FromDict.fileTitle.fileNamePath:
-                notInDict = 0
-        if notInDict == 1:
-            sysDiagParsedDataDict['parsedDataList'].append(ptu2FromList)
-
+    # Qt widget updates
     clearTable(qt.parseProtAddPtu2ParsedTable)
-
-    for ptu2FileIdx in range(len(separatePtu2ParsedDataDict['parsedDataList'])):
-
-        qt.parseProtAddPtu2ParsedTable.insertRow(ptu2FileIdx)
-        qt.parseProtAddPtu2ParsedTable.setItem(ptu2FileIdx, 0, QTableWidgetItem(separatePtu2ParsedDataDict['parsedDataList'][ptu2FileIdx].fileTitle.fileNamePath))
-
-    qt.parseProtSepParPtu2FilesLabel.setText(qt.parseProtSepParPtu2FilesStr + str(len(separatePtu2ParsedDataDict['parsedDataList'])))
+    for idx, item in enumerate(pc.separatePtu2ParsedDataDict['parsedDataList']):
+        qt.parseProtAddPtu2ParsedTable.insertRow(idx)
+        qt.parseProtAddPtu2ParsedTable.setItem(idx, 0, QTableWidgetItem(item.fileTitle.fileNamePath))
+    qt.parseProtSepParPtu2FilesLabel.setText(qt.parseProtSepParPtu2FilesStr + str(pc.ptu2_parsed_count()))
 
     clearTable(qt.parseProtAddPtu2FailedTable)
-
-    for ptu2FileIdx in range(len(separatePtu2FailedDataDict['parsedDataList'])):
-        qt.parseProtAddPtu2FailedTable.insertRow(ptu2FileIdx)
-        qt.parseProtAddPtu2FailedTable.setItem(ptu2FileIdx, 0, QTableWidgetItem(separatePtu2FailedDataDict['parsedDataList'][ptu2FileIdx].fileTitle.fileNamePath))
+    for idx, item in enumerate(pc.separatePtu2FailedDataDict['parsedDataList']):
+        qt.parseProtAddPtu2FailedTable.insertRow(idx)
+        qt.parseProtAddPtu2FailedTable.setItem(idx, 0, QTableWidgetItem(item.fileTitle.fileNamePath))
 
 
 def addAndParseTxAntDiagFiles(txAntDiagParsedDataDict, separateTxAntDiagParsedDataDict, separateTxAntDiagFailedDataDict):
-
     qt.parseProtTableTabWidget.setCurrentIndex(3)
 
     txAntDiagFilesList = []
     if qt.parseProtAddAndParseTxAntDiagFDialog.exec_():
         txAntDiagFilesList = qt.parseProtAddAndParseTxAntDiagFDialog.selectedFiles()
 
-    for item in txAntDiagFilesList:
-        parseDataLog.info(item)
+    # Business logic delegated to controller
+    parsed, failed = pc.parse_tx_ant_diag_files(
+        txAntDiagFilesList,
+        antSysDiag.plotSetup['useSensorMuster'],
+        antSysDiag.plotSetup['sensorMusterList'],
+    )
+    pc.add_tx_ant_diag_to_state(parsed, failed)
 
-    txAntDiagFailedDataList = []
-    txAntDiagParsedDataList = []
-    for txAntDiagPath in txAntDiagFilesList:
-        parseData = ParserFactory.create('txantdiag')
-        parseData.parseFile(txAntDiagPath, antSysDiag.plotSetup['useSensorMuster'], antSysDiag.plotSetup['sensorMusterList'])
-        if parseData.bDataValid == False:
-            txAntDiagFailedDataList.append(parseData)
-        else:
-            txAntDiagParsedDataList.append(parseData)
-
-    for txAntDiagFromList in txAntDiagFailedDataList:
-        notInDict = 1
-
-        for txAntDiagFromDict in separateTxAntDiagFailedDataDict['parsedDataList']:
-            if txAntDiagFromList.fileTitle.fileNamePath == txAntDiagFromDict.fileTitle.fileNamePath:
-                notInDict = 0
-        if notInDict == 1:
-            separateTxAntDiagFailedDataDict['parsedDataList'].append(txAntDiagFromList)
-
-    for txAntDiagFromList in txAntDiagParsedDataList:
-        notInDict = 1
-
-        for txAntDiagFromDict in separateTxAntDiagParsedDataDict['parsedDataList']:
-            if txAntDiagFromList.fileTitle.fileNamePath == txAntDiagFromDict.fileTitle.fileNamePath:
-                notInDict = 0
-        if notInDict == 1:
-            separateTxAntDiagParsedDataDict['parsedDataList'].append(txAntDiagFromList)
-
-    for txAntDiagFromList in txAntDiagParsedDataList:
-        notInDict = 1
-
-        for txAntDiagFromDict in txAntDiagParsedDataDict['parsedDataList']:
-            if txAntDiagFromList.fileTitle.fileNamePath == txAntDiagFromDict.fileTitle.fileNamePath:
-                notInDict = 0
-        if notInDict == 1:
-            txAntDiagParsedDataDict['parsedDataList'].append(txAntDiagFromList)
-
+    # Qt widget updates
     clearTable(qt.parseProtAddTxAntDiagParsedTable)
-
-    for txAntDiagFileIdx in range(len(separateTxAntDiagParsedDataDict['parsedDataList'])):
-        qt.parseProtAddTxAntDiagParsedTable.insertRow(txAntDiagFileIdx)
-        qt.parseProtAddTxAntDiagParsedTable.setItem(txAntDiagFileIdx, 0, QTableWidgetItem(
-            separateTxAntDiagParsedDataDict['parsedDataList'][txAntDiagFileIdx].fileTitle.fileNamePath))
-
-    qt.parseProtSepParTxAntDiagFilesLabel.setText(qt.parseProtSepParTxAntDiagFilesStr + str(len(separateTxAntDiagParsedDataDict['parsedDataList'])))
+    for idx, item in enumerate(pc.separateTxAntDiagParsedDataDict['parsedDataList']):
+        qt.parseProtAddTxAntDiagParsedTable.insertRow(idx)
+        qt.parseProtAddTxAntDiagParsedTable.setItem(idx, 0, QTableWidgetItem(item.fileTitle.fileNamePath))
+    qt.parseProtSepParTxAntDiagFilesLabel.setText(qt.parseProtSepParTxAntDiagFilesStr + str(pc.tx_ant_diag_parsed_count()))
 
     clearTable(qt.parseProtAddTxAntDiagFailedTable)
-
-    for txAntDiagFileIdx in range(len(separateTxAntDiagFailedDataDict['parsedDataList'])):
-        qt.parseProtAddTxAntDiagFailedTable.insertRow(txAntDiagFileIdx)
-        qt.parseProtAddTxAntDiagFailedTable.setItem(txAntDiagFileIdx, 0, QTableWidgetItem(
-            separateTxAntDiagFailedDataDict['parsedDataList'][txAntDiagFileIdx].fileTitle.fileNamePath))
+    for idx, item in enumerate(pc.separateTxAntDiagFailedDataDict['parsedDataList']):
+        qt.parseProtAddTxAntDiagFailedTable.insertRow(idx)
+        qt.parseProtAddTxAntDiagFailedTable.setItem(idx, 0, QTableWidgetItem(item.fileTitle.fileNamePath))
 
 
 
@@ -931,25 +750,8 @@ def fillInCertProtocolData(protocolFilesList, protocolPathDict, parsedProtDict, 
 
 
 def clearData(protocolPathDict, acceptedProtocolPathDict, filteredProtocolPathDict, sysDiagFilePathDict, txDiagfilePathDict):
-    protocolPathDict['protocolPathTypeDictList']   = []
-    sysDiagFilePathDict['filePathList']            = []
-    txDiagfilePathDict['filePathList']             = []
-    parsedProtDict['protocolPathTypeDictList']     = []
-    protToBeParsedDict['protocolPathTypeDictList'] = []
-    filteredProtocolPathDict['protocolPathList']   = []
-
-    sysDiagParsedDataDict['parsedDataList']      = []
-    separatePtu2ParsedDataDict['parsedDataList'] = []
-    separatePtu2FailedDataDict['parsedDataList'] = []
-
-    txAntDiagParsedDataDict['parsedDataList']         = []
-    separateTxAntDiagParsedDataDict['parsedDataList'] = []
-    separateTxAntDiagFailedDataDict['parsedDataList'] = []
-
-    acceptedProtocolPathDict['emptyProtList'] = []
-    acceptedProtocolPathDict['errorProtList'] = []
-    acceptedProtocolPathDict['abbortCritProtList']    = []
-    acceptedProtocolPathDict['limitExceededProtList'] = []
+    # Business logic delegated to controller
+    pc.clear_state()
 
     qt.parseProtParsedLoadedProtLabel.setText(qt.parseProtParsedLoadedProtStr + '0')
     qt.parseProtPtu2FilesLabel.setText(qt.parseProtPtu2FilesStr + '0')
