@@ -12,6 +12,8 @@ import calculation_strategy as strat
 import logconfig as log
 import data_processing as dp
 import auxiliary as aux
+from shared.models import GraphData
+
 myLogger = log.antSysDiagLogger.logger
 
 # Basic directory path
@@ -22,29 +24,6 @@ outputDir = os.path.join(basicDir,'output')
 
 # legend name
 legFigTitle = 'legend.png'
-
-# Graph meta data
-class GraphData:
-    def __init__(self) -> None:
-        self.graphTitle        = ''
-        self.txAnt             = 0
-        self.rxCh              = 0
-        self.sensorId          = ''
-        self.diagramNr         = 0
-        self.figureTitle       = ''
-        self.figureTitle3graph = ''
-        self.antennaType       = ''
-        self.nofRxCh           = 0
-        self.seqNum            = 0
-        self.dateAndTime       = ''
-        self.frequency         = 0
-
-        self.phyDoppGenDist          = 0
-        self.doppGenHeightPtuZero    = 0
-        self.rfBoardMidHeightPtuZero = 0
-        self.sensorUpsideDown        = 0
-        self.antennaDiagramType      = ''
-        self.oppositeToPanAngle      = 0
 
 
 # Save the plotted graph figure with a given title.

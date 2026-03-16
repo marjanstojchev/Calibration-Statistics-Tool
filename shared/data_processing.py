@@ -3,172 +3,27 @@ import calcdiagram_functions as calc
 import calculation_strategy as strat
 import logconfig as log
 from shared import safeparse as sp
+from shared.models import (
+    ImportedProtcolsData,
+    ProtocolData,
+    PTU2Data,
+    TxAntDiagData,
+    ProtocolsTableData,
+)
 
 myLogger = log.antSysDiagLogger.logger
 
-class ImportedProtcolsData():
-    def __init__(self) -> None:
-        self.protocolDataList=[]
-
-class ProtocolData():
-    def __init__(self) -> None:
-        self.protocolPath=''
-        self.ptu2DataList=[]
-        self.txAntDiagDataList=[]
-
-class PTU2Data():
-    def __init__(self) -> None:
-        self.filesList=[]
-        self.protocolPath=''
-
-
-class TxAntDiagData():
-    def __init__(self) -> None:
-        self.filesList=[]
-        self.protocolPath=''
-
-
-class ProtocolsTableData():
-    def __init__(self,protocolPath: str,sysDiagFilePathList: list,txAntDiagFilePathList: list) -> None:
-        self.protocolPath=protocolPath
-        self.sysDiagFilePathShapedList=[]
-        self.txAntDiagFilePathShapedList=[]
-        self.biggerListLength=0
-        self.smallerListLength=0
-        self.smallerListColIdx=0
-        self.smallerListRowSpanList=[]
-
-
-        if len(sysDiagFilePathList) >= len(txAntDiagFilePathList):
-            if len(txAntDiagFilePathList)!=0:
-                ratio = int(len(sysDiagFilePathList) / len(txAntDiagFilePathList))
-                res=len(sysDiagFilePathList) % len(txAntDiagFilePathList)
-
-                self.smallerListColIdx=3
-                self.biggerListLength=len(sysDiagFilePathList)
-                self.smallerListLength=len(txAntDiagFilePathList)
-
-                self.sysDiagFilePathShapedList=sysDiagFilePathList
-
-                for sysDiagIdx in range(len(sysDiagFilePathList)):
-
-
-                    entry=''
-
-                    for txAntDiagIdx in range(len(txAntDiagFilePathList)):
-
-                        if ratio * txAntDiagIdx ==sysDiagIdx:
-                            entry=txAntDiagFilePathList[txAntDiagIdx]
-
-                    self.txAntDiagFilePathShapedList.append(entry)
-
-                size=0
-
-                for txAntDiagIdx in range(len(txAntDiagFilePathList)):
-
-                    tempDict = {
-                        'spanStart': 0,
-                        'spanCount': 0
-                    }
-
-                    tempDict['spanStart']= txAntDiagIdx * ratio
+# Re-exported for backward compatibility (e.g. dp.ProtocolsTableData in main.py)
+__all__ = [
+    'ImportedProtcolsData',
+    'ProtocolData',
+    'PTU2Data',
+    'TxAntDiagData',
+    'ProtocolsTableData',
+]
 
 
 
-                    if txAntDiagIdx ==len(txAntDiagFilePathList)-1:
-                        if res != 0:
-                            tempDict['spanCount']=self.biggerListLength - size
-                        else:
-                            tempDict['spanCount']=ratio
-
-                    else:
-                        tempDict['spanCount']=ratio
-                        size=ratio* (txAntDiagIdx +1)
-
-                    self.smallerListRowSpanList.append(tempDict)
-
-            else:
-
-                self.smallerListColIdx = 3
-                self.biggerListLength = len(sysDiagFilePathList)
-
-                self.sysDiagFilePathShapedList = sysDiagFilePathList
-
-                for sysDiagIdx in range(len(sysDiagFilePathList)):
-
-                    entry = ''
-
-                    self.txAntDiagFilePathShapedList.append(entry)
-
-
-                tempDict = {
-                    'spanStart': 0,
-                    'spanCount': self.biggerListLength
-                }
-
-                self.smallerListRowSpanList.append(tempDict)
-        else:
-            if len(sysDiagFilePathList)!=0:
-
-                ratio = int(len(txAntDiagFilePathList) / len(sysDiagFilePathList))
-                res=len(txAntDiagFilePathList) % len(sysDiagFilePathList)
-
-                self.smallerListColIdx=2
-                self.biggerListLength=len(txAntDiagFilePathList)
-                self.smallerListLength = len(sysDiagFilePathList)
-
-                self.txAntDiagFilePathShapedList=txAntDiagFilePathList
-
-                for txAntDiagIdx in range(len(txAntDiagFilePathList)):
-
-                    entry=''
-
-                    for sysDiagIdx in range(len(sysDiagFilePathList)):
-
-                        if ratio * sysDiagIdx ==txAntDiagIdx:
-                            entry = sysDiagFilePathList[sysDiagIdx]
-
-                    self.sysDiagFilePathShapedList.append(entry)
-
-                size=0
-                for sysDiagIdx in range(len(sysDiagFilePathList)):
-                    tempDict={
-                        'spanStart':0,
-                        'spanCount':0
-                    }
-
-                    tempDict['spanStart']=sysDiagIdx * ratio
-
-                    if sysDiagIdx ==len(sysDiagFilePathList)-1:
-                        if res != 0:
-                            tempDict['spanCount'] =self.biggerListLength - size
-                        else:
-                            tempDict['spanCount'] = ratio
-                    else:
-                        tempDict['spanCount']=ratio
-                        size = ratio * (sysDiagIdx +1)
-
-                    self.smallerListRowSpanList.append(tempDict)
-            else:
-
-                self.smallerListColIdx = 2
-                self.biggerListLength = len(txAntDiagFilePathList)
-
-                self.txAntDiagFilePathShapedList = txAntDiagFilePathList
-
-                for txAntDiagIdx in range(len(txAntDiagFilePathList)):
-
-                    entry = ''
-
-                    self.sysDiagFilePathShapedList.append(entry)
-
-
-                tempDict = {
-                    'spanStart': 0,
-                    'spanCount': self.biggerListLength
-                }
-
-                self.smallerListRowSpanList.append(tempDict)
 
 
 def parsePlotWindowString(plotWindowStr: str) -> dict:
