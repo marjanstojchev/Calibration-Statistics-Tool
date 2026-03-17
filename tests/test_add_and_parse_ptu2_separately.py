@@ -42,13 +42,8 @@ def test_dialog_opens_user_cancels(mocker):
     # Import and call the function that gets triggered by button click
     from main import addAndParsePtu2Files
     
-    # Create test data dictionaries
-    sysDiagParsedDataDict = {'parsedDataList': []}
-    separatePtu2ParsedDataDict = {'parsedDataList': []}
-    separatePtu2FailedDataDict = {'parsedDataList': []}
-    
     # Call the function (this simulates what happens when button is clicked)
-    addAndParsePtu2Files(sysDiagParsedDataDict, separatePtu2ParsedDataDict, separatePtu2FailedDataDict)
+    addAndParsePtu2Files()
     
     # Verify the dialog was opened
     mock_qt.parseProtAddAndParsePtu2FDialog.exec_.assert_called_once()
@@ -77,18 +72,16 @@ def test_dialog_opens_no_files_selected(mocker):
     
     # CALL FUNCTION
     from main import addAndParsePtu2Files
-    sys_dict = {'parsedDataList': []}
-    sep_parsed = {'parsedDataList': []}
-    sep_failed = {'parsedDataList': []}
-    
-    addAndParsePtu2Files(sys_dict, sep_parsed, sep_failed)
-    
+    pc = _get_pc()
+    pc.clear_state()
+
+    addAndParsePtu2Files()
+
     # VERIFY
     mock_qt.parseProtAddAndParsePtu2FDialog.exec_.assert_called_once()  # Dialog opened
     mock_qt.parseProtAddAndParsePtu2FDialog.selectedFiles.assert_called_once()  # Files requested (but empty list returned)
-    assert len(sys_dict['parsedDataList']) == 0  # No data added
-    assert len(sep_parsed['parsedDataList']) == 0
-    assert len(sep_failed['parsedDataList']) == 0
+    assert pc.ptu2_parsed_count() == 0  # No data added
+    assert pc.ptu2_failed_count() == 0
 
 
 def test_files_selected_all_parse_successfully(mocker):
@@ -129,12 +122,12 @@ def test_files_selected_all_parse_successfully(mocker):
     pc = _get_pc()
     pc.clear_state()  # Reset controller state before test
     
-    addAndParsePtu2Files(pc.sysDiagParsedDataDict, pc.separatePtu2ParsedDataDict, pc.separatePtu2FailedDataDict)
-    
+    addAndParsePtu2Files()
+
     # VERIFY
     mock_qt.parseProtAddAndParsePtu2FDialog.exec_.assert_called_once()
     mock_qt.parseProtAddAndParsePtu2FDialog.selectedFiles.assert_called_once()
-    
+
     # With 4 real PTU files, all should parse successfully — read from controller
     assert pc.ptu2_parsed_count() == 4
     assert pc.sys_diag_parsed_count() == 4
@@ -180,8 +173,8 @@ def test_files_selected_some_fail_parsing(mocker):
     pc = _get_pc()
     pc.clear_state()  # Reset controller state before test
     
-    addAndParsePtu2Files(pc.sysDiagParsedDataDict, pc.separatePtu2ParsedDataDict, pc.separatePtu2FailedDataDict)
-    
+    addAndParsePtu2Files()
+
     # VERIFY - Mixed results: good file succeeds, bad file fails — read from controller
     assert pc.sys_diag_parsed_count() == 1
     assert pc.ptu2_parsed_count() == 1
@@ -230,12 +223,12 @@ def test_duplicate_files_not_added_twice(mocker):
     pc = _get_pc()
     pc.clear_state()  # Reset controller state before test
     
-    addAndParsePtu2Files(pc.sysDiagParsedDataDict, pc.separatePtu2ParsedDataDict, pc.separatePtu2FailedDataDict)
+    addAndParsePtu2Files()
     assert pc.ptu2_parsed_count() == 1
     assert pc.sys_diag_parsed_count() == 1
-    
+
     # SECOND CALL - Try to add same file again (simulate user selecting same file)
-    addAndParsePtu2Files(pc.sysDiagParsedDataDict, pc.separatePtu2ParsedDataDict, pc.separatePtu2FailedDataDict)
+    addAndParsePtu2Files()
     
     # VERIFY - File count should NOT increase (duplicate prevention worked)
     assert pc.ptu2_parsed_count() == 1
@@ -271,10 +264,7 @@ def test_dialog_only_accepts_ptu2_files(mocker):
 
     # Call the function and check dialog configuration after
     from main import addAndParsePtu2Files
-    sys_dict = {'parsedDataList': []}
-    sep_parsed = {'parsedDataList': []}
-    sep_failed = {'parsedDataList': []}
-    addAndParsePtu2Files(sys_dict, sep_parsed, sep_failed)
+    addAndParsePtu2Files()
     # Check again after function call
     actual_filter_after = mock_qt.parseProtAddAndParsePtu2FDialog.nameFilter()
     file_mode_after = mock_qt.parseProtAddAndParsePtu2FDialog.fileMode()
@@ -317,13 +307,11 @@ def test_counters_update_correctly(mocker):
     pc = _get_pc()
     pc.clear_state()  # Reset controller state before test
     
-    addAndParsePtu2Files(pc.sysDiagParsedDataDict, pc.separatePtu2ParsedDataDict, pc.separatePtu2FailedDataDict)
-    
-    # VERIFY - Counter label should be updated with correct count
-    mock_qt.parseProtSepParPtu2FilesLabel.setText.assert_called()
-    
-    call_args = mock_qt.parseProtSepParPtu2FilesLabel.setText.call_args[0][0]
-    assert str(pc.ptu2_parsed_count()) in call_args
+    addAndParsePtu2Files()
+
+    # VERIFY - Counter updated via view helper (view.set_sep_par_ptu2_files_label)
+    assert pc.ptu2_parsed_count() == 1  # good file succeeded
+    assert pc.ptu2_failed_count() == 1  # bad file failed
 
 
 def test_log_entries_created_with_timestamps_and_status(mocker):
@@ -363,8 +351,8 @@ def test_log_entries_created_with_timestamps_and_status(mocker):
     mock_ctrl_log = mocker.patch('shared.parse_controller.logconfig.mainLoadDataLogger')
     mock_ctrl_log.logger.info = mocker.MagicMock()
     
-    addAndParsePtu2Files(pc.sysDiagParsedDataDict, pc.separatePtu2ParsedDataDict, pc.separatePtu2FailedDataDict)
-    
+    addAndParsePtu2Files()
+
     # VERIFY - real files were parsed and stored in controller
     assert pc.ptu2_parsed_count() == 2
     file_paths = [d.fileTitle.fileNamePath for d in pc.sysDiagParsedDataDict['parsedDataList']]

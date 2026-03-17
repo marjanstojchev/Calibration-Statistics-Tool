@@ -78,22 +78,7 @@ logconfig.antPatLogger.addTableHandler(qt.mainLogTableHandler)
 # Instantiate the ParseController — owns all parsing state and business logic
 pc = ParseController()
 
-# Aliases so existing code that passes these as arguments continues to work
-sysDiagFilePathDict          = pc.sysDiagFilePathDict
-txDiagfilePathDict           = pc.txDiagfilePathDict
-protocolPathDict             = pc.protocolPathDict
-acceptedProtocolPathDict     = pc.acceptedProtocolPathDict
-filteredProtocolPathDict     = pc.filteredProtocolPathDict
-parsedProtDict               = pc.parsedProtDict
-protToBeParsedDict           = pc.protToBeParsedDict
-sysDiagParsedDataDict        = pc.sysDiagParsedDataDict
-separatePtu2ParsedDataDict   = pc.separatePtu2ParsedDataDict
-separatePtu2FailedDataDict   = pc.separatePtu2FailedDataDict
-txAntDiagParsedDataDict      = pc.txAntDiagParsedDataDict
-separateTxAntDiagParsedDataDict = pc.separateTxAntDiagParsedDataDict
-separateTxAntDiagFailedDataDict = pc.separateTxAntDiagFailedDataDict
-burnInProtocolPathDict       = pc.burnInProtocolPathDict
-calProtocolPathDict          = pc.calProtocolPathDict
+# ParseController owns all parsing state — access via pc.*
 
 ##########
 
@@ -165,7 +150,7 @@ qt.parseProtProtDataLimGroupsBurnInPushBtn.clicked.connect(lambda: loadBurnInLim
 qt.parseProtProtDataLimGroupsCalPushBtn.clicked.connect(lambda : loadCalLimitsGroupsFile())
 
 
-def importProtocolsDirPath(protocolPathDict, acceptedProtocolPathDict, filteredProtocolPathDict, sysDiagFilePathDict, txDiagfilePathDict, parsedProtDict, protToBeParsedDict, parseProtSysDiagCheckBox, parseProtTxAntDiagCheckBox):
+def importProtocolsDirPath():
     protocolDirPath = ''
     if qt.parseProtImportProtDirPathFDialog.exec_():
         protocolDirPath = qt.parseProtImportProtDirPathFDialog.selectedFiles()[0]
@@ -176,24 +161,24 @@ def importProtocolsDirPath(protocolPathDict, acceptedProtocolPathDict, filteredP
         protocolFilesList[protFileIdx]=protocolFilesList[protFileIdx].replace('\\', '/')
 
 
-    fillInProtocolData(protocolFilesList, acceptedProtocolPathDict, filteredProtocolPathDict, protocolPathDict, sysDiagFilePathDict, txDiagfilePathDict, parsedProtDict, protToBeParsedDict, parseProtSysDiagCheckBox, parseProtTxAntDiagCheckBox)
+    fillInProtocolData(protocolFilesList)
 
 
-def importProtocolsFileList(protocolPathDict, acceptedProtocolPathDict, filteredProtocolPathDict, sysDiagFilePathDict, txDiagfilePathDict, parsedProtDict, protToBeParsedDict, parseProtSysDiagCheckBox, parseProtTxAntDiagCheckBox):
+def importProtocolsFileList():
 
     protocolFilesList = []
     if qt.parseProtImportProtFListFDialog.exec_():
         protocolFilesList = qt.parseProtImportProtFListFDialog.selectedFiles()
 
-    fillInProtocolData(protocolFilesList, acceptedProtocolPathDict, filteredProtocolPathDict, protocolPathDict, sysDiagFilePathDict, txDiagfilePathDict, parsedProtDict, protToBeParsedDict, parseProtSysDiagCheckBox, parseProtTxAntDiagCheckBox)
+    fillInProtocolData(protocolFilesList)
 
 
 def getProtPathTypeDictList(protocolPathList):
-    """Thin Qt-aware wrapper: reads UI state and delegates to ParseController."""
+    """Thin Qt-aware wrapper: reads UI state via view and delegates to ParseController."""
     return pc.build_prot_path_type_list(
         protocolPathList,
-        burn_in_cal_mode=qt.parseProtBurnInCalGroup.checkedId(),
-        include_burn_in_start=qt.parseProtBurnStartCheckBox.isChecked(),
+        burn_in_cal_mode=view.get_burn_in_cal_mode(),
+        include_burn_in_start=view.get_include_burn_in_start(),
     )
 
 
@@ -205,39 +190,34 @@ def _update_protocol_dicts(
     acc_error_prot_list: list,
     acc_abort_crit_prot_list: list,
     acc_limit_exceeded_prot_list: list,
-    accepted_protocol_path_dict: dict,
-    filtered_protocol_path_dict: dict,
-    protocol_path_dict: dict,
-    parsed_prot_dict: dict,
-    prot_to_be_parsed_dict: dict,
 ) -> list:
-    """Merge getprotcols results into the shared state dicts.
+    """Merge getprotcols results into the shared state dicts via ParseController.
 
     Updates accepted/filtered/parsed dicts and returns the list of protocol
     path-type dicts that still need to be parsed.
     """
-    accepted_protocol_path_dict['errorProtList']         += acc_error_prot_list
-    accepted_protocol_path_dict['abbortCritProtList']    += acc_abort_crit_prot_list
-    accepted_protocol_path_dict['limitExceededProtList'] += acc_limit_exceeded_prot_list
+    pc.acceptedProtocolPathDict['errorProtList']         += acc_error_prot_list
+    pc.acceptedProtocolPathDict['abbortCritProtList']    += acc_abort_crit_prot_list
+    pc.acceptedProtocolPathDict['limitExceededProtList'] += acc_limit_exceeded_prot_list
 
     accepted_prot_path_type_dict_list = getProtPathTypeDictList(accepted_crit_prot_list)
 
-    protocol_path_dict['protocolPathTypeDictList'] += accepted_prot_path_type_dict_list
+    pc.protocolPathDict['protocolPathTypeDictList'] += accepted_prot_path_type_dict_list
 
-    accepted_path_set = {d['protocolPath'] for d in protocol_path_dict['protocolPathTypeDictList']}
-    update_filtered_protocol_list(filtered_protocol_list, filtered_protocol_path_dict, accepted_path_set)
+    accepted_path_set = {d['protocolPath'] for d in pc.protocolPathDict['protocolPathTypeDictList']}
+    update_filtered_protocol_list(filtered_protocol_list, pc.filteredProtocolPathDict, accepted_path_set)
 
     parseDataLog.info('Filtered Protocol List:')
-    for elem in filtered_protocol_path_dict['protocolPathList']:
+    for elem in pc.filteredProtocolPathDict['protocolPathList']:
         parseDataLog.info(elem)
 
     already_parsed = collect_unparsed_protocols(
-        accepted_prot_path_type_dict_list, parsed_prot_dict, prot_to_be_parsed_dict
+        accepted_prot_path_type_dict_list, pc.parsedProtDict, pc.protToBeParsedDict
     )
     for path in already_parsed:
         parseDataLog.info('Protocol is already parsed: ' + path)
 
-    parseDataLog.info('Num. of Total Accepted Protocols: ' + str(len(protocol_path_dict['protocolPathTypeDictList'])))
+    parseDataLog.info('Num. of Total Accepted Protocols: ' + str(len(pc.protocolPathDict['protocolPathTypeDictList'])))
     parseDataLog.info('Num. of System Diagram Files: ' + str(len(sys_diag_file_path_dict_temp)))
 
     return accepted_prot_path_type_dict_list
@@ -296,94 +276,81 @@ def _populate_sel_prot_table(
             qt.parseProtSelProtTable.setItem(row_idx, 1, QTableWidgetItem(protocol_type))
 
 
-def fillInProtocolData(
-    protocolFilesList: list,
-    acceptedProtocolPathDict: dict,
-    filteredProtocolPathDict: dict,
-    protocolPathDict: dict,
-    sysDiagFilePathDict: dict,
-    txDiagfilePathDict: dict,
-    parsedProtDict: dict,
-    protToBeParsedDict: dict,
-    parseProtSysDiagCheckBox,
-    parseProtTxAntDiagCheckBox,
-) -> None:
+def fillInProtocolData(protocolFilesList: list) -> None:
     """Load and validate new protocol files; update all state dicts and the UI table."""
     qt.parseProtTableTabWidget.setCurrentIndex(0)
 
     if not protocolFilesList:
         return
 
-    qt.parseProtProgresLabel.setText('Loading...')
+    view.set_progress_label('Loading...')
     qt.parseProtProgresBar.reset()
 
-    if not protocolPathDict['protocolPathTypeDictList']:
+    if not pc.protocolPathDict['protocolPathTypeDictList']:
         qt.parseProtSelProtTable.setRowCount(0)
 
     protNonRepList = deduplicate_protocol_list(
-        protocolFilesList, protocolPathDict['protocolPathTypeDictList']
+        protocolFilesList, pc.protocolPathDict['protocolPathTypeDictList']
     )
     for p in set(protocolFilesList) - set(protNonRepList):
         parseDataLog.info('Protocol is already imported: ' + p)
 
     sysDiagFilePathDictTemp, txDiagfilePathDictTemp, acceptedCritProtList, accErrorProtList, accAbbortCritProtList, accLimitExceededProtList, filteredProtocolList = getprotcols(
-        protNonRepList, parseProtSysDiagCheckBox.isChecked(), parseProtTxAntDiagCheckBox.isChecked()
+        protNonRepList, qt.parseProtSysDiagCheckBox.isChecked(), qt.parseProtTxAntDiagCheckBox.isChecked()
     )
 
     if sysDiagFilePathDictTemp:
-        sysDiagFilePathDict['filePathList'] += sysDiagFilePathDictTemp
+        pc.sysDiagFilePathDict['filePathList'] += sysDiagFilePathDictTemp
     if txDiagfilePathDictTemp:
-        txDiagfilePathDict['filePathList'] += txDiagfilePathDictTemp
+        pc.txDiagfilePathDict['filePathList'] += txDiagfilePathDictTemp
 
     acceptedProtPathTypeDictList = _update_protocol_dicts(
         acceptedCritProtList,
         sysDiagFilePathDictTemp, txDiagfilePathDictTemp,
         filteredProtocolList,
         accErrorProtList, accAbbortCritProtList, accLimitExceededProtList,
-        acceptedProtocolPathDict, filteredProtocolPathDict,
-        protocolPathDict, parsedProtDict, protToBeParsedDict,
     )
 
     _populate_sel_prot_table(acceptedProtPathTypeDictList, sysDiagFilePathDictTemp, txDiagfilePathDictTemp)
 
-    if protToBeParsedDict['protocolPathTypeDictList']:
-        qt.parseProtProgresBar.setRange(0, len(protToBeParsedDict['protocolPathTypeDictList']))
+    if pc.protToBeParsedDict['protocolPathTypeDictList']:
+        qt.parseProtProgresBar.setRange(0, len(pc.protToBeParsedDict['protocolPathTypeDictList']))
         qt.parseProtProgresBar.setValue(0)
         qt.parseProtProgresBar.setFormat(
-            f'{qt.parseProtProgresBar.value()} / {len(protToBeParsedDict["protocolPathTypeDictList"])}'
+            f'{qt.parseProtProgresBar.value()} / {len(pc.protToBeParsedDict["protocolPathTypeDictList"])}'
         )
         progBarLabelStr = (
-            f'Protocols to be parsed: {len(protToBeParsedDict["protocolPathTypeDictList"])}'
-            f' / {len(protocolPathDict["protocolPathTypeDictList"])}. '
+            f'Protocols to be parsed: {len(pc.protToBeParsedDict["protocolPathTypeDictList"])}'
+            f' / {len(pc.protocolPathDict["protocolPathTypeDictList"])}. '
         )
-        qt.parseProtProgresLabel.setText(progBarLabelStr)
+        view.set_progress_label(progBarLabelStr)
     else:
-        qt.parseProtProgresLabel.setText('No new protocols Loaded.')
+        view.set_progress_label('No new protocols Loaded.')
 
-    total = len(protocolPathDict['protocolPathTypeDictList'])
+    total = len(pc.protocolPathDict['protocolPathTypeDictList'])
     qt.parseProtLoadedProtLabel.setText(
         qt.parseProtLoadedProtStr
-        + f'{total} / {len(filteredProtocolPathDict["protocolPathList"]) + total}'
+        + f'{total} / {len(pc.filteredProtocolPathDict["protocolPathList"]) + total}'
     )
     qt.parseProtEolErrorLabel.setText(
         qt.parseProtEolErrorStr
-        + f'{len(acceptedProtocolPathDict["errorProtList"])} / {total}'
+        + f'{len(pc.acceptedProtocolPathDict["errorProtList"])} / {total}'
     )
     qt.parseProtAbbortCritLabel.setText(
         qt.parseProtAbbortCritStr
-        + f'{len(acceptedProtocolPathDict["abbortCritProtList"])} / {total}'
+        + f'{len(pc.acceptedProtocolPathDict["abbortCritProtList"])} / {total}'
     )
     qt.parseProtMeasLimitsExcLabel.setText(
         qt.parseProtMeasLimitsExcStr
-        + f'{len(acceptedProtocolPathDict["limitExceededProtList"])} / {total}'
+        + f'{len(pc.acceptedProtocolPathDict["limitExceededProtList"])} / {total}'
     )
     qt.parseProtParsedLoadedProtLabel.setText(
         qt.parseProtParsedLoadedProtStr
-        + f'{len(parsedProtDict["protocolPathTypeDictList"])} / {total}'
+        + f'{len(pc.parsedProtDict["protocolPathTypeDictList"])} / {total}'
     )
 
 
-def addAndParsePtu2Files(sysDiagParsedDataDict, separatePtu2ParsedDataDict, separatePtu2FailedDataDict):
+def addAndParsePtu2Files():
     qt.parseProtTableTabWidget.setCurrentIndex(2)
 
     ptu2FilesList = []
@@ -404,7 +371,7 @@ def addAndParsePtu2Files(sysDiagParsedDataDict, separatePtu2ParsedDataDict, sepa
     for idx, item in enumerate(pc.separatePtu2ParsedDataDict['parsedDataList']):
         qt.parseProtAddPtu2ParsedTable.insertRow(idx)
         qt.parseProtAddPtu2ParsedTable.setItem(idx, 0, QTableWidgetItem(item.fileTitle.fileNamePath))
-    qt.parseProtSepParPtu2FilesLabel.setText(qt.parseProtSepParPtu2FilesStr + str(pc.ptu2_parsed_count()))
+    view.set_sep_par_ptu2_files_label(pc.ptu2_parsed_count())
 
     clearTable(qt.parseProtAddPtu2FailedTable)
     for idx, item in enumerate(pc.separatePtu2FailedDataDict['parsedDataList']):
@@ -412,7 +379,7 @@ def addAndParsePtu2Files(sysDiagParsedDataDict, separatePtu2ParsedDataDict, sepa
         qt.parseProtAddPtu2FailedTable.setItem(idx, 0, QTableWidgetItem(item.fileTitle.fileNamePath))
 
 
-def addAndParseTxAntDiagFiles(txAntDiagParsedDataDict, separateTxAntDiagParsedDataDict, separateTxAntDiagFailedDataDict):
+def addAndParseTxAntDiagFiles():
     qt.parseProtTableTabWidget.setCurrentIndex(3)
 
     txAntDiagFilesList = []
@@ -432,7 +399,7 @@ def addAndParseTxAntDiagFiles(txAntDiagParsedDataDict, separateTxAntDiagParsedDa
     for idx, item in enumerate(pc.separateTxAntDiagParsedDataDict['parsedDataList']):
         qt.parseProtAddTxAntDiagParsedTable.insertRow(idx)
         qt.parseProtAddTxAntDiagParsedTable.setItem(idx, 0, QTableWidgetItem(item.fileTitle.fileNamePath))
-    qt.parseProtSepParTxAntDiagFilesLabel.setText(qt.parseProtSepParTxAntDiagFilesStr + str(pc.tx_ant_diag_parsed_count()))
+    view.set_sep_par_tx_ant_diag_files_label(pc.tx_ant_diag_parsed_count())
 
     clearTable(qt.parseProtAddTxAntDiagFailedTable)
     for idx, item in enumerate(pc.separateTxAntDiagFailedDataDict['parsedDataList']):
@@ -506,7 +473,7 @@ def setup_progress_bar(protToBeParsedDict: dict, protocolPathDict: dict) -> tupl
     if len(protToBeParsedDict['protocolPathTypeDictList']) != 0:
         qt.parseProtProgresBar.setRange(0, len(protToBeParsedDict['protocolPathTypeDictList']))
         progBarLabelStr = f'Protocols to be parsed: {len(protToBeParsedDict["protocolPathTypeDictList"])} / {len(protocolPathDict["protocolPathTypeDictList"])}. '
-        qt.parseProtProgresLabel.setText(progBarLabelStr)
+        view.set_progress_label(progBarLabelStr)
         qt.parseProtProgresBar.setValue(0)
         qt.parseProtProgresBar.setFormat(f'{qt.parseProtProgresBar.value()} / {protToBeParsedListLen}')
     return progBarLabelStr, protToBeParsedListLen
@@ -573,7 +540,7 @@ def _load_protocol_data(
                 _, tail = os.path.split(
                     protToBeParsedDict['protocolPathTypeDictList'][protFileIdx]['protocolPath']
                 )
-                qt.parseProtProgresLabel.setText(progBarLabelStr + 'Protocol: ' + tail)
+                view.set_progress_label(progBarLabelStr + 'Protocol: ' + tail)
                 if int(idx / twentyPercent) < 5:
                     qt.parseProtProgresBar.setValue(idx)
                 else:
@@ -584,7 +551,7 @@ def _load_protocol_data(
             _, tail = os.path.split(
                 protToBeParsedDict['protocolPathTypeDictList'][protFileIdx]['protocolPath']
             )
-            qt.parseProtProgresLabel.setText(progBarLabelStr + 'Protocol: ' + tail)
+            view.set_progress_label(progBarLabelStr + 'Protocol: ' + tail)
             qt.parseProtProgresBar.setValue(idx)
 
         idx += 1
@@ -644,134 +611,89 @@ def _populate_accepted_protocols_table(
         refRowIdx += protTableData.biggerListLength
 
 
-def parseData(
-    protocolPathDict: dict,
-    protToBeParsedDict: dict,
-    parsedProtDict: dict,
-    sysDiagFilePathDict: dict,
-    txDiagfilePathDict: dict,
-    sysDiagParsedDataDict: dict,
-    txAntDiagParsedDataDict: dict,
-) -> None:
+def parseData() -> None:
     """Orchestrate protocol parsing: filter → load → merge → update UI."""
     qt.parseProtTableTabWidget.setCurrentIndex(1)
 
-    if not protToBeParsedDict['protocolPathTypeDictList']:
-        qt.parseProtProgresLabel.setText('No protocols to be parsed.')
+    if not pc.protToBeParsedDict['protocolPathTypeDictList']:
+        view.set_progress_label('No protocols to be parsed.')
         return
 
-    if not parsedProtDict['protocolPathTypeDictList']:
+    if not pc.parsedProtDict['protocolPathTypeDictList']:
         qt.parseProtAccProtTable.setRowCount(0)
 
     filteredSysDiagList, filteredTxAntDiagList = filter_protocol_file_lists(
-        protToBeParsedDict, sysDiagFilePathDict, txDiagfilePathDict, parsedProtDict
+        pc.protToBeParsedDict, pc.sysDiagFilePathDict, pc.txDiagfilePathDict, pc.parsedProtDict
     )
 
-    progBarLabelStr, protToBeParsedListLen = setup_progress_bar(protToBeParsedDict, protocolPathDict)
+    progBarLabelStr, protToBeParsedListLen = setup_progress_bar(pc.protToBeParsedDict, pc.protocolPathDict)
 
     sysDiagDataList, txAntDiagDataList, sysDiagParsedDataList, txAntDiagParsedDataList = _load_protocol_data(
         filteredSysDiagList, filteredTxAntDiagList,
-        protToBeParsedDict, progBarLabelStr, protToBeParsedListLen,
+        pc.protToBeParsedDict, progBarLabelStr, protToBeParsedListLen,
     )
 
     merge_into_parsed_dicts(
         sysDiagParsedDataList, txAntDiagParsedDataList,
-        sysDiagParsedDataDict, txAntDiagParsedDataDict,
+        pc.sysDiagParsedDataDict, pc.txAntDiagParsedDataDict,
     )
 
     qt.parseProtParsedLoadedProtLabel.setText(
         qt.parseProtParsedLoadedProtStr
-        + f'{len(parsedProtDict["protocolPathTypeDictList"])} / {len(protocolPathDict["protocolPathTypeDictList"])}'
+        + f'{len(pc.parsedProtDict["protocolPathTypeDictList"])} / {len(pc.protocolPathDict["protocolPathTypeDictList"])}'
     )
-    qt.parseProtPtu2FilesLabel.setText(qt.parseProtPtu2FilesStr + str(len(sysDiagParsedDataDict['parsedDataList'])))
-    qt.parseProtTxAntDiagFilesLabel.setText(qt.parseProtTxAntDiagFilesStr + str(len(txAntDiagParsedDataDict['parsedDataList'])))
+    view.set_ptu2_files_label(len(pc.sysDiagParsedDataDict['parsedDataList']))
+    view.set_tx_ant_diag_files_label(len(pc.txAntDiagParsedDataDict['parsedDataList']))
 
-    _populate_accepted_protocols_table(protToBeParsedDict, sysDiagDataList, txAntDiagDataList)
+    _populate_accepted_protocols_table(pc.protToBeParsedDict, sysDiagDataList, txAntDiagDataList)
 
-    qt.parseProtProgresLabel.setText(
-        f'Parsing finished. Protocols parsed: {len(protToBeParsedDict["protocolPathTypeDictList"])}.'
+    view.set_progress_label(
+        f'Parsing finished. Protocols parsed: {len(pc.protToBeParsedDict["protocolPathTypeDictList"])}.'
     )
-    protToBeParsedDict['protocolPathTypeDictList'][:] = []
+    pc.protToBeParsedDict['protocolPathTypeDictList'][:] = []
 
 
-def importDbProtocolsList(burnInProtocolPathDict, burnInParsedProtDict, burnInProtToBeParsedDict, calProtocolPathDict, calParsedProtDict, calProtToBeParsedDict, allCertProtocolPathDict, downloadBurnIn, downloadCal):
+def importDbProtocolsList():
     # cert module removed - function disabled
     parseDataLog.warning('Database protocol import not available - CT_DataCollector module removed')
     pass
 
 
-def importBurnInProtocolsList(burnInProtocolPathDict, burnInParsedProtDict, burnInProtToBeParsedDict, allCertProtocolPathDict):
+def importBurnInProtocolsList():
     # cert module removed - using simplified version without cert.importData
-    burnInProtocolFilesList = []
-    fillInCertProtocolData(burnInProtocolFilesList, burnInProtocolPathDict, burnInParsedProtDict, burnInProtToBeParsedDict, allCertProtocolPathDict, 'BurnIn')
+    fillInCertProtocolData([], 'BurnIn')
 
 
-def importCalProtocolsList(calProtocolPathDict, calParsedProtDict, calProtToBeParsedDict, allCertProtocolPathDict):
+def importCalProtocolsList():
     # cert module removed - using simplified version without cert.importData
-    calProtocolFilesList = []
-    fillInCertProtocolData(calProtocolFilesList, calProtocolPathDict, calParsedProtDict, calProtToBeParsedDict, allCertProtocolPathDict, 'Calibration')
+    fillInCertProtocolData([], 'Calibration')
 
 
-def fillInCertProtocolData(protocolFilesList, protocolPathDict, parsedProtDict, protToBeParsedDict, allCertProtocolPathDict, protType):
-
+def fillInCertProtocolData(protocolFilesList: list, protType: str) -> None:
+    # cert module removed - no-op until cert support is restored
     qt.mainTabWidget.setCurrentIndex(0)
     qt.parseProtTableTabWidget.setCurrentIndex(4)
 
-    if len(protocolFilesList) == 0:
-        return
 
-
-    protNonRepList = []
-    for protocolFilePath in protocolFilesList:
-        if protocolFilePath not in allCertProtocolPathDict['protocolPathList']:
-            protNonRepList.append(protocolFilePath)
-        else:
-            parseDataLog.info('Protocol is already imported: ' + protocolFilePath)
-
-    protocolPathDict['protocolPathList'] += protNonRepList
-    allCertProtocolPathDict['protocolPathList'] += protNonRepList
-
-    # check if loaded protocols are already parsed
-    for protocolFilePathIdx in range(len(protNonRepList)):
-
-        if protNonRepList[protocolFilePathIdx] not in parsedProtDict['protocolPathList']:
-            protToBeParsedDict['protocolPathList'].append(protNonRepList[protocolFilePathIdx])
-        else:
-            parseDataLog.info('Protocol is already parsed: ' + protNonRepList[protocolFilePathIdx])
-
-
-    # Removed: parseProtSelCertProtTable and related header setup (widget no longer exists)
-
-
-    # refRowIdx=qt.parseProtSelCertProtTable.rowCount()  # Removed: widget no longer exists
-
-
-    # parseDataLog.info('Num. of  Accepted Protocols: ' + str(len(protocolPathDict['protocolPathList'])))
-
-    # insert into table
-
-
-def clearData(protocolPathDict, acceptedProtocolPathDict, filteredProtocolPathDict, sysDiagFilePathDict, txDiagfilePathDict):
+def clearData():
     # Business logic delegated to controller
     pc.clear_state()
 
     qt.parseProtParsedLoadedProtLabel.setText(qt.parseProtParsedLoadedProtStr + '0')
-    qt.parseProtPtu2FilesLabel.setText(qt.parseProtPtu2FilesStr + '0')
-    qt.parseProtTxAntDiagFilesLabel.setText(qt.parseProtTxAntDiagFilesStr + '0')
-
-    qt.parseProtLoadedProtLabel.setText(qt.parseProtLoadedProtStr + '0')
+    view.set_ptu2_files_label(0)
+    view.set_tx_ant_diag_files_label(0)
+    view.set_loaded_protocols_label(0)
     qt.parseProtEolErrorLabel.setText(qt.parseProtEolErrorStr + '0')
     qt.parseProtAbbortCritLabel.setText(qt.parseProtAbbortCritStr + '0')
     qt.parseProtMeasLimitsExcLabel.setText(qt.parseProtMeasLimitsExcStr + '0')
-
-    qt.parseProtSepParPtu2FilesLabel.setText(qt.parseProtSepParPtu2FilesStr + '0')
-    qt.parseProtSepParTxAntDiagFilesLabel.setText(qt.parseProtSepParTxAntDiagFilesStr + '0')
+    view.set_sep_par_ptu2_files_label(0)
+    view.set_sep_par_tx_ant_diag_files_label(0)
 
     # qt.parseProtProgresBar.setRange(0, len(protocolPathDict['protocolPathList']))
     # qt.parseProtProgresBar.setValue(0)
     qt.parseProtProgresBar.reset()
     qt.parseProtProgresBar.setFormat('')
-    qt.parseProtProgresLabel.setText('No protocols loaded.')
+    view.set_progress_label('No protocols loaded.')
 
     clearTable(qt.parseProtSelProtTable)
     clearTable(qt.parseProtAccProtTable)
@@ -841,12 +763,12 @@ errmsg = 'Error!'
 
 
 
-qt.parseProtImportProtFListPushBtn.clicked.connect(lambda: importProtocolsFileList(protocolPathDict, acceptedProtocolPathDict, filteredProtocolPathDict, sysDiagFilePathDict, txDiagfilePathDict, parsedProtDict, protToBeParsedDict, qt.parseProtSysDiagCheckBox, qt.parseProtTxAntDiagCheckBox))
-qt.parseProtImportProtDirPathPushBtn.clicked.connect(lambda: importProtocolsDirPath(protocolPathDict, acceptedProtocolPathDict, filteredProtocolPathDict, sysDiagFilePathDict, txDiagfilePathDict, parsedProtDict, protToBeParsedDict, qt.parseProtSysDiagCheckBox, qt.parseProtTxAntDiagCheckBox))
-qt.parseProtClearDataPushBtn.clicked.connect(lambda: clearData(protocolPathDict, acceptedProtocolPathDict, filteredProtocolPathDict, sysDiagFilePathDict, txDiagfilePathDict))
-qt.parseProtParseDataPushBtn.clicked.connect(lambda: parseData(protocolPathDict, protToBeParsedDict, parsedProtDict, sysDiagFilePathDict, txDiagfilePathDict, sysDiagParsedDataDict, txAntDiagParsedDataDict))
-qt.parseProtAddAndParsePtu2PushBtn.clicked.connect(lambda: addAndParsePtu2Files(sysDiagParsedDataDict, separatePtu2ParsedDataDict, separatePtu2FailedDataDict))
-qt.parseProtAddAndParseTxAntDiagPushBtn.clicked.connect(lambda: addAndParseTxAntDiagFiles(txAntDiagParsedDataDict, separateTxAntDiagParsedDataDict, separateTxAntDiagFailedDataDict))
+qt.parseProtImportProtFListPushBtn.clicked.connect(importProtocolsFileList)
+qt.parseProtImportProtDirPathPushBtn.clicked.connect(importProtocolsDirPath)
+qt.parseProtClearDataPushBtn.clicked.connect(clearData)
+qt.parseProtParseDataPushBtn.clicked.connect(parseData)
+qt.parseProtAddAndParsePtu2PushBtn.clicked.connect(addAndParsePtu2Files)
+qt.parseProtAddAndParseTxAntDiagPushBtn.clicked.connect(addAndParseTxAntDiagFiles)
 
 
 def clearLogTable():
