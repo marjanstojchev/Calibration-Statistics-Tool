@@ -83,8 +83,7 @@ pc = ParseController()
 ##########
 
 qt.parseProtSensorMusterCheckBox.setChecked(False)
-qt.parseProtSensorMusterLEdit.setEnabled(False)
-qt.parseProtSensorMusterLabel.setEnabled(False)
+view.set_sensor_muster_enabled(False)
 
 antSysDiag.plotSetup['useSensorMuster'] = 0
 antPat1.setup['useSensorMuster'] = 0
@@ -93,15 +92,12 @@ txAntDiag.plotSetup['useSensorMuster'] = 0
 
 def parseProtSensorMusterClick():
     state = qt.parseProtSensorMusterCheckBox.isChecked()
+    view.set_sensor_muster_enabled(state == 1)
     if state == 1:
-        qt.parseProtSensorMusterLEdit.setEnabled(True)
-        qt.parseProtSensorMusterLabel.setEnabled(True)
         antSysDiag.plotSetup['useSensorMuster'] = 1
         antPat1.setup['useSensorMuster'] = 1
         txAntDiag.plotSetup['useSensorMuster'] = 1
     else:
-        qt.parseProtSensorMusterLEdit.setEnabled(False)
-        qt.parseProtSensorMusterLabel.setEnabled(False)
         antSysDiag.plotSetup['useSensorMuster'] = 0
         antPat1.setup['useSensorMuster'] = 0
         txAntDiag.plotSetup['useSensorMuster'] = 0
@@ -125,24 +121,11 @@ qt.parseProtProtDataCalInclCheckBox.setChecked(True)
 qt.parseProtProtDataCalExtCheckBox.setChecked(False)
 
 
-qt.parseProtProtDataInFileBurnInLabel.setToolTip(aux.burnInLimitsFilePath)
-qt.parseProtProtDataInFileBurnInLabel.setText(aux.burnInLimitsFilePath)
-
-
-qt.parseProtProtDataInFileCalLabel.setToolTip(aux.calLimitsFilePath)
-qt.parseProtProtDataInFileCalLabel.setText(aux.calLimitsFilePath)
-
-
-qt.parseProtProtDataLimGroupsBurnInLabel.setToolTip(aux.burnInLimGroupsFilePath)
-qt.parseProtProtDataLimGroupsBurnInLabel.setText(aux.burnInLimGroupsFilePath)
-
-
-qt.parseProtProtDataLimGroupsCalLabel.setToolTip(aux.calLimGroupsFilePath)
-qt.parseProtProtDataLimGroupsCalLabel.setText(aux.calLimGroupsFilePath)
-
-
-qt.statsInputConfPathLabel.setText(aux.statsinputconffilepath)
-qt.statsInputConfPathLabel.setToolTip(aux.statsinputconffilepath)
+view.set_burn_in_limits_file(aux.burnInLimitsFilePath)
+view.set_cal_limits_file(aux.calLimitsFilePath)
+view.set_burn_in_lim_groups_file(aux.burnInLimGroupsFilePath)
+view.set_cal_lim_groups_file(aux.calLimGroupsFilePath)
+view.set_stats_input_conf_path(aux.statsinputconffilepath)
 
 qt.parseProtProtDataInFileBurnInPushBtn.clicked.connect(lambda: loadBurnInInputLimitsFile())
 qt.parseProtProtDataInFileCalPushBtn.clicked.connect(lambda : loadCalInputLimitsFile())
@@ -284,7 +267,7 @@ def fillInProtocolData(protocolFilesList: list) -> None:
         return
 
     view.set_progress_label('Loading...')
-    qt.parseProtProgresBar.reset()
+    view.reset_progress_bar()
 
     if not pc.protocolPathDict['protocolPathTypeDictList']:
         qt.parseProtSelProtTable.setRowCount(0)
@@ -314,10 +297,10 @@ def fillInProtocolData(protocolFilesList: list) -> None:
     _populate_sel_prot_table(acceptedProtPathTypeDictList, sysDiagFilePathDictTemp, txDiagfilePathDictTemp)
 
     if pc.protToBeParsedDict['protocolPathTypeDictList']:
-        qt.parseProtProgresBar.setRange(0, len(pc.protToBeParsedDict['protocolPathTypeDictList']))
-        qt.parseProtProgresBar.setValue(0)
-        qt.parseProtProgresBar.setFormat(
-            f'{qt.parseProtProgresBar.value()} / {len(pc.protToBeParsedDict["protocolPathTypeDictList"])}'
+        view.set_progress_bar_range(len(pc.protToBeParsedDict['protocolPathTypeDictList']))
+        view.set_progress_bar(0)
+        view.set_progress_bar_format(
+            f'{view.get_progress_bar_value()} / {len(pc.protToBeParsedDict["protocolPathTypeDictList"])}'
         )
         progBarLabelStr = (
             f'Protocols to be parsed: {len(pc.protToBeParsedDict["protocolPathTypeDictList"])}'
@@ -328,26 +311,11 @@ def fillInProtocolData(protocolFilesList: list) -> None:
         view.set_progress_label('No new protocols Loaded.')
 
     total = len(pc.protocolPathDict['protocolPathTypeDictList'])
-    qt.parseProtLoadedProtLabel.setText(
-        qt.parseProtLoadedProtStr
-        + f'{total} / {len(pc.filteredProtocolPathDict["protocolPathList"]) + total}'
-    )
-    qt.parseProtEolErrorLabel.setText(
-        qt.parseProtEolErrorStr
-        + f'{len(pc.acceptedProtocolPathDict["errorProtList"])} / {total}'
-    )
-    qt.parseProtAbbortCritLabel.setText(
-        qt.parseProtAbbortCritStr
-        + f'{len(pc.acceptedProtocolPathDict["abbortCritProtList"])} / {total}'
-    )
-    qt.parseProtMeasLimitsExcLabel.setText(
-        qt.parseProtMeasLimitsExcStr
-        + f'{len(pc.acceptedProtocolPathDict["limitExceededProtList"])} / {total}'
-    )
-    qt.parseProtParsedLoadedProtLabel.setText(
-        qt.parseProtParsedLoadedProtStr
-        + f'{len(pc.parsedProtDict["protocolPathTypeDictList"])} / {total}'
-    )
+    view.set_loaded_prot_ratio_label(total, len(pc.filteredProtocolPathDict['protocolPathList']))
+    view.set_eol_error_label(len(pc.acceptedProtocolPathDict['errorProtList']), total)
+    view.set_abort_crit_label(len(pc.acceptedProtocolPathDict['abbortCritProtList']), total)
+    view.set_meas_limits_label(len(pc.acceptedProtocolPathDict['limitExceededProtList']), total)
+    view.set_parsed_loaded_label(len(pc.parsedProtDict['protocolPathTypeDictList']), total)
 
 
 def addAndParsePtu2Files():
@@ -419,8 +387,7 @@ def loadCalInputLimitsFile():
 
     else:
         filePath=aux.calLimitsFilePath
-    qt.parseProtProtDataInFileCalLabel.setText(filePath)
-    qt.parseProtProtDataInFileCalLabel.setToolTip(filePath)
+    view.set_cal_limits_file(filePath)
 
 
 def loadBurnInInputLimitsFile():
@@ -433,8 +400,7 @@ def loadBurnInInputLimitsFile():
         filePath = filePath.replace('\\', '/')
     else:
         filePath = aux.burnInLimitsFilePath
-    qt.parseProtProtDataInFileBurnInLabel.setText(filePath)
-    qt.parseProtProtDataInFileBurnInLabel.setToolTip(filePath)
+    view.set_burn_in_limits_file(filePath)
 
 
 def loadBurnInLimitsGroupsFile():
@@ -447,8 +413,7 @@ def loadBurnInLimitsGroupsFile():
         filePath = filePath.replace('\\', '/')
     else:
         filePath = aux.burnInLimGroupsFilePath
-    qt.parseProtProtDataLimGroupsBurnInLabel.setText(filePath)
-    qt.parseProtProtDataLimGroupsBurnInLabel.setToolTip(filePath)
+    view.set_burn_in_lim_groups_file(filePath)
 
 
 def loadCalLimitsGroupsFile():
@@ -461,21 +426,20 @@ def loadCalLimitsGroupsFile():
         filePath = filePath.replace('\\', '/')
     else:
         filePath = aux.calLimGroupsFilePath
-    qt.parseProtProtDataLimGroupsCalLabel.setText(filePath)
-    qt.parseProtProtDataLimGroupsCalLabel.setToolTip(filePath)
+    view.set_cal_lim_groups_file(filePath)
 
 
 def setup_progress_bar(protToBeParsedDict: dict, protocolPathDict: dict) -> tuple[str, int]:
     """Setup the progress bar for protocol parsing."""
-    qt.parseProtProgresBar.reset()
+    view.reset_progress_bar()
     protToBeParsedListLen = len(protToBeParsedDict['protocolPathTypeDictList'])
     progBarLabelStr = ''
     if len(protToBeParsedDict['protocolPathTypeDictList']) != 0:
-        qt.parseProtProgresBar.setRange(0, len(protToBeParsedDict['protocolPathTypeDictList']))
+        view.set_progress_bar_range(len(protToBeParsedDict['protocolPathTypeDictList']))
         progBarLabelStr = f'Protocols to be parsed: {len(protToBeParsedDict["protocolPathTypeDictList"])} / {len(protocolPathDict["protocolPathTypeDictList"])}. '
         view.set_progress_label(progBarLabelStr)
-        qt.parseProtProgresBar.setValue(0)
-        qt.parseProtProgresBar.setFormat(f'{qt.parseProtProgresBar.value()} / {protToBeParsedListLen}')
+        view.set_progress_bar(0)
+        view.set_progress_bar_format(f'{view.get_progress_bar_value()} / {protToBeParsedListLen}')
     return progBarLabelStr, protToBeParsedListLen
 
 
@@ -531,9 +495,9 @@ def _load_protocol_data(
 
         # --- update progress bar ---
         if setFinal:
-            qt.parseProtProgresBar.setFormat(f'{final} / {protToBeParsedListLen}')
+            view.set_progress_bar_format(f'{final} / {protToBeParsedListLen}')
         else:
-            qt.parseProtProgresBar.setFormat(f'{idx} / {protToBeParsedListLen}')
+            view.set_progress_bar_format(f'{idx} / {protToBeParsedListLen}')
 
         if twentyPercent != 0:
             if idx % twentyPercent == 0:
@@ -542,17 +506,17 @@ def _load_protocol_data(
                 )
                 view.set_progress_label(progBarLabelStr + 'Protocol: ' + tail)
                 if int(idx / twentyPercent) < 5:
-                    qt.parseProtProgresBar.setValue(idx)
+                    view.set_progress_bar(idx)
                 else:
                     setFinal = True
                     final    = idx + twentyPercRes
-                    qt.parseProtProgresBar.setValue(final)
+                    view.set_progress_bar(final)
         else:
             _, tail = os.path.split(
                 protToBeParsedDict['protocolPathTypeDictList'][protFileIdx]['protocolPath']
             )
             view.set_progress_label(progBarLabelStr + 'Protocol: ' + tail)
-            qt.parseProtProgresBar.setValue(idx)
+            view.set_progress_bar(idx)
 
         idx += 1
 
@@ -638,9 +602,9 @@ def parseData() -> None:
         pc.sysDiagParsedDataDict, pc.txAntDiagParsedDataDict,
     )
 
-    qt.parseProtParsedLoadedProtLabel.setText(
-        qt.parseProtParsedLoadedProtStr
-        + f'{len(pc.parsedProtDict["protocolPathTypeDictList"])} / {len(pc.protocolPathDict["protocolPathTypeDictList"])}'
+    view.set_parsed_loaded_label(
+        len(pc.parsedProtDict['protocolPathTypeDictList']),
+        len(pc.protocolPathDict['protocolPathTypeDictList']),
     )
     view.set_ptu2_files_label(len(pc.sysDiagParsedDataDict['parsedDataList']))
     view.set_tx_ant_diag_files_label(len(pc.txAntDiagParsedDataDict['parsedDataList']))
@@ -679,20 +643,20 @@ def clearData():
     # Business logic delegated to controller
     pc.clear_state()
 
-    qt.parseProtParsedLoadedProtLabel.setText(qt.parseProtParsedLoadedProtStr + '0')
+    view.set_parsed_loaded_label(0)
     view.set_ptu2_files_label(0)
     view.set_tx_ant_diag_files_label(0)
     view.set_loaded_protocols_label(0)
-    qt.parseProtEolErrorLabel.setText(qt.parseProtEolErrorStr + '0')
-    qt.parseProtAbbortCritLabel.setText(qt.parseProtAbbortCritStr + '0')
-    qt.parseProtMeasLimitsExcLabel.setText(qt.parseProtMeasLimitsExcStr + '0')
+    view.set_eol_error_label(0)
+    view.set_abort_crit_label(0)
+    view.set_meas_limits_label(0)
     view.set_sep_par_ptu2_files_label(0)
     view.set_sep_par_tx_ant_diag_files_label(0)
 
     # qt.parseProtProgresBar.setRange(0, len(protocolPathDict['protocolPathList']))
     # qt.parseProtProgresBar.setValue(0)
-    qt.parseProtProgresBar.reset()
-    qt.parseProtProgresBar.setFormat('')
+    view.reset_progress_bar()
+    view.set_progress_bar_format('')
     view.set_progress_label('No protocols loaded.')
 
     clearTable(qt.parseProtSelProtTable)

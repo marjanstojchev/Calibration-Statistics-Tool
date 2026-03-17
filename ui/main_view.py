@@ -164,3 +164,79 @@ class MainView:
 
     def get_ideal_phase_diff(self) -> bool:
         return self._qt.sysDiagPlotSetupGraphConfIdealCurveCheckBox.isChecked()
+
+    # ------------------------------------------------------------------ #
+    # Sensor muster enable / disable
+    # ------------------------------------------------------------------ #
+
+    def set_sensor_muster_enabled(self, enabled: bool) -> None:
+        self._qt.parseProtSensorMusterLEdit.setEnabled(enabled)
+        self._qt.parseProtSensorMusterLabel.setEnabled(enabled)
+
+    # ------------------------------------------------------------------ #
+    # Parse-protocol stats counter labels (ratio format)
+    # ------------------------------------------------------------------ #
+
+    def set_loaded_prot_ratio_label(self, accepted: int, filtered: int) -> None:
+        """Display accepted / (accepted + filtered) for the loaded protocols label."""
+        self._qt.parseProtLoadedProtLabel.setText(
+            self._qt.parseProtLoadedProtStr + f'{accepted} / {accepted + filtered}'
+        )
+
+    def set_eol_error_label(self, count, total=None) -> None:
+        suffix = str(count) if total is None else f'{count} / {total}'
+        self._qt.parseProtEolErrorLabel.setText(self._qt.parseProtEolErrorStr + suffix)
+
+    def set_abort_crit_label(self, count, total=None) -> None:
+        suffix = str(count) if total is None else f'{count} / {total}'
+        self._qt.parseProtAbbortCritLabel.setText(self._qt.parseProtAbbortCritStr + suffix)
+
+    def set_meas_limits_label(self, count, total=None) -> None:
+        suffix = str(count) if total is None else f'{count} / {total}'
+        self._qt.parseProtMeasLimitsExcLabel.setText(self._qt.parseProtMeasLimitsExcStr + suffix)
+
+    def set_parsed_loaded_label(self, parsed, total=None) -> None:
+        suffix = str(parsed) if total is None else f'{parsed} / {total}'
+        self._qt.parseProtParsedLoadedProtLabel.setText(
+            self._qt.parseProtParsedLoadedProtStr + suffix
+        )
+
+    # ------------------------------------------------------------------ #
+    # Progress bar operations
+    # ------------------------------------------------------------------ #
+
+    def reset_progress_bar(self) -> None:
+        self._qt.parseProtProgresBar.reset()
+
+    def set_progress_bar_range(self, max_val: int) -> None:
+        self._qt.parseProtProgresBar.setRange(0, max_val)
+
+    def set_progress_bar_format(self, fmt: str) -> None:
+        self._qt.parseProtProgresBar.setFormat(fmt)
+
+    def get_progress_bar_value(self) -> int:
+        return self._qt.parseProtProgresBar.value()
+
+    # ------------------------------------------------------------------ #
+    # File path label helpers (sets both text and tooltip)
+    # ------------------------------------------------------------------ #
+
+    def set_burn_in_limits_file(self, path: str) -> None:
+        self._qt.parseProtProtDataInFileBurnInLabel.setText(path)
+        self._qt.parseProtProtDataInFileBurnInLabel.setToolTip(path)
+
+    def set_cal_limits_file(self, path: str) -> None:
+        self._qt.parseProtProtDataInFileCalLabel.setText(path)
+        self._qt.parseProtProtDataInFileCalLabel.setToolTip(path)
+
+    def set_burn_in_lim_groups_file(self, path: str) -> None:
+        self._qt.parseProtProtDataLimGroupsBurnInLabel.setText(path)
+        self._qt.parseProtProtDataLimGroupsBurnInLabel.setToolTip(path)
+
+    def set_cal_lim_groups_file(self, path: str) -> None:
+        self._qt.parseProtProtDataLimGroupsCalLabel.setText(path)
+        self._qt.parseProtProtDataLimGroupsCalLabel.setToolTip(path)
+
+    def set_stats_input_conf_path(self, path: str) -> None:
+        self._qt.statsInputConfPathLabel.setText(path)
+        self._qt.statsInputConfPathLabel.setToolTip(path)
