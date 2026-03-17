@@ -35,7 +35,9 @@ plugin_path = os.path.join(dirname, 'plugins', 'platforms')
 print(plugin_path)
 os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = plugin_path
 
-import pyside_qtgui as qt
+from ui.main_view import MainView as _MainView
+view = _MainView()
+qt = view  # backward-compatible alias: all qt.<widget> calls delegate to MainView
 from PySide6.QtWidgets import QTableWidgetItem
 import AntennaSystemDiagrams as antSysDiag
 import TxAntDiagrams as txAntDiag
