@@ -72,6 +72,12 @@ class PlotController:
         }
         self.diagramConfigList: list = [1, 2, 3, 4]
 
+        # Runtime accumulation lists — rebuilt on each evaluation run
+        self.twoGraphSetupList:      list = []
+        self.threeGraphSetupList:    list = []
+        self.fourGraphSetupList:     list = []
+        self.allOnOneSlideGraphList: list = []
+
         # ------------------------------------------------------------------ #
         # Slide layout confs — two/three/four-graph and all-on-one-slide
         # ------------------------------------------------------------------ #
