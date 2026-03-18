@@ -281,3 +281,29 @@ class PlotController:
 
     def get_all_on_one_slide_list(self) -> list[dict]:
         return [self.AllGraphsConf1, self.AllGraphsConf2, self.AllGraphsConf3]
+
+    # ====================================================================== #
+    # Input setup
+    # ====================================================================== #
+
+    def set_target_angle(self, btn_id: int) -> None:
+        """btn_id 0 = use target angle, 1 = use measured angle."""
+        self.plotSetup['targetAngle'] = 1 if btn_id == 0 else 0
+
+    def set_upside_down(self, btn_id: int) -> None:
+        """btn_id 0 = normal orientation, 1 = upside down."""
+        self.plotSetup['upsideDown'] = 1 if btn_id == 1 else 0
+
+    def set_chirp_key(self, key: str, enabled: bool) -> None:
+        if key in self.chirpConfig:
+            self.chirpConfig[key] = 1 if enabled else 0
+
+    def set_diagram_select_mode(self, btn_id: int) -> None:
+        """btn_id 0 = all, 1 = by list, 2 = by range."""
+        self.diagramConfig['selectDiagrams'] = btn_id
+
+    def set_diagram_odd_even(self, btn_id: int) -> None:
+        self.diagramConfig['oddOrEven'] = btn_id
+
+    def set_sensor_muster_enabled(self, enabled: bool) -> None:
+        self.plotSetup['useSensorMuster'] = 1 if enabled else 0

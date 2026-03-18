@@ -12,6 +12,7 @@ import parsePTU2data as parsePtu2
 import parseTxAntDiagramData as parseTxAntDiag
 from shared.parser_factory import ParserFactory
 from shared.parse_controller import ParseController
+from shared.plot_controller import PlotController
 import logconfig
 import data_processing as dp
 from shared import safeparse as sp
@@ -78,6 +79,28 @@ logconfig.antPatLogger.addTableHandler(qt.mainLogTableHandler)
 # Instantiate the ParseController — owns all parsing state and business logic
 pc = ParseController()
 
+# Instantiate the PlotController — owns all plot configuration state
+plc = PlotController()
+
+# Bind antSysDiag state dicts to plc's shared dict objects so that
+# plc.set_*() mutations and antSysDiag reads/writes operate on the same data.
+antSysDiag.plotSetup      = plc.plotSetup
+antSysDiag.graphConfig    = plc.graphConfig
+antSysDiag.chirpConfig    = plc.chirpConfig
+antSysDiag.diagramConfig  = plc.diagramConfig
+antSysDiag.twoGraphConf1   = plc.twoGraphConf1
+antSysDiag.twoGraphConf2   = plc.twoGraphConf2
+antSysDiag.threeGraphConf1 = plc.threeGraphConf1
+antSysDiag.threeGraphConf2 = plc.threeGraphConf2
+antSysDiag.threeGraphConf3 = plc.threeGraphConf3
+antSysDiag.fourGraphConf1  = plc.fourGraphConf1
+antSysDiag.fourGraphConf2  = plc.fourGraphConf2
+antSysDiag.fourGraphConf3  = plc.fourGraphConf3
+antSysDiag.AllGraphsConf1  = plc.AllGraphsConf1
+antSysDiag.AllGraphsConf2  = plc.AllGraphsConf2
+antSysDiag.AllGraphsConf3  = plc.AllGraphsConf3
+antSysDiag.plotWindowConfig = plc.plotWindowConfig
+
 # ParseController owns all parsing state — access via pc.*
 
 ##########
@@ -93,15 +116,10 @@ txAntDiag.plotSetup['useSensorMuster'] = 0
 def parseProtSensorMusterClick():
     state = qt.parseProtSensorMusterCheckBox.isChecked()
     view.set_sensor_muster_enabled(state == 1)
-    if state == 1:
-        antSysDiag.plotSetup['useSensorMuster'] = 1
-        antPat1.setup['useSensorMuster'] = 1
-        txAntDiag.plotSetup['useSensorMuster'] = 1
-    else:
-        antSysDiag.plotSetup['useSensorMuster'] = 0
-        antPat1.setup['useSensorMuster'] = 0
-        txAntDiag.plotSetup['useSensorMuster'] = 0
-    parseDataLog.debug('plotSetp: ' + str(antSysDiag.plotSetup))
+    plc.set_sensor_muster_enabled(state == 1)
+    antPat1.setup['useSensorMuster'] = 1 if state == 1 else 0
+    txAntDiag.plotSetup['useSensorMuster'] = 1 if state == 1 else 0
+    parseDataLog.debug('plotSetp: ' + str(plc.plotSetup))
 
 
 qt.parseProtSensorMusterCheckBox.stateChanged.connect(parseProtSensorMusterClick)
@@ -756,12 +774,8 @@ antSysDiag.plotSetup['targetAngle'] = 1
 
 def sysDiagInputSetupAngleGroupClick():
     btnId = qt.sysDiagInputSetupAngleGroup.checkedId()
-    if btnId == 0:
-        antSysDiag.plotSetup['targetAngle'] = 1
-        parseDataLog.debug('plotSetup: ' + str(antSysDiag.plotSetup))
-    elif btnId == 1:
-        antSysDiag.plotSetup['targetAngle'] = 0
-        parseDataLog.debug('plotSetup: ' + str(antSysDiag.plotSetup))
+    plc.set_target_angle(btnId)
+    parseDataLog.debug('plotSetup: ' + str(plc.plotSetup))
 
 
 qt.sysDiagInputSetupSensorOrientRadio1.setChecked(True)
@@ -771,12 +785,8 @@ antSysDiag.plotSetup['upsideDown'] = 0
 
 def sysDiagInputSetupSensorOrientGroupClick():
     btnId = qt.sysDiagInputSetupSensorOrientGroup.checkedId()
-    if btnId == 0:
-        antSysDiag.plotSetup['upsideDown'] = 0
-        parseDataLog.debug('plotSetup: ' + str(antSysDiag.plotSetup))
-    elif btnId == 1:
-        antSysDiag.plotSetup['upsideDown'] = 1
-        parseDataLog.debug('plotSetup: ' + str(antSysDiag.plotSetup))
+    plc.set_upside_down(btnId)
+    parseDataLog.debug('plotSetup: ' + str(plc.plotSetup))
 
 
 qt.sysDiagInputSetupChirp0CheckBox.setChecked(True)
@@ -792,15 +802,11 @@ antSysDiag.chirpConfig['chirp3'] = 0
 
 def sysDiagInputSetupChirpClick(btn):
     btnId = qt.sysDiagInputSetupChirpGroup.id(btn)
-    # if btnId==0:
     chBox = qt.sysDiagInputSetupChirpGroup.button(btnId)
     state = chBox.isChecked()
-    dictKey = 'chirp'+str(btnId)
-    if state == 1:
-        antSysDiag.chirpConfig[dictKey] = 1
-    else:
-        antSysDiag.chirpConfig[dictKey] = 0
-    parseDataLog.debug('chirpConfig: ' + str(antSysDiag.chirpConfig))
+    dictKey = 'chirp' + str(btnId)
+    plc.set_chirp_key(dictKey, state)
+    parseDataLog.debug('chirpConfig: ' + str(plc.chirpConfig))
 
 
 # 'allOnOneSlide': 1, #Genrate all on one slide: all diagrams, all sensors, all RxAnt, graphs by choice.
@@ -816,15 +822,8 @@ antSysDiag.diagramConfig['selectDiagrams']=0
 
 def sysDiagInputSetupDiagConfigInputModeClick():
     btnId = qt.sysDiagInputSetupDiagConfGroup.checkedId()
-    if btnId == 0:
-        antSysDiag.diagramConfig['selectDiagrams'] = 0
-        parseDataLog.debug('diagramConfig: ' + str(antSysDiag.diagramConfig))
-    elif btnId == 1:
-        antSysDiag.diagramConfig['selectDiagrams'] = 1
-        parseDataLog.debug('diagramConfig: ' + str(antSysDiag.diagramConfig))
-    elif btnId == 2:
-        antSysDiag.diagramConfig['selectDiagrams'] = 2
-        parseDataLog.debug('diagramConfig: ' + str(antSysDiag.diagramConfig))
+    plc.set_diagram_select_mode(btnId)
+    parseDataLog.debug('diagramConfig: ' + str(plc.diagramConfig))
 
 #
 # desDiagListString = qt.sysDiagInputSetupDiagConfigDesListLEdit.text()
@@ -850,15 +849,8 @@ antSysDiag.diagramConfig['oddOrEven']=0
 
 def sysDiagInputSetupDiagConfOddEvenClick():
     btnId = qt.sysDiagInputSetupDiagConfOddEvenGroup.checkedId()
-    if btnId == 0:
-        antSysDiag.diagramConfig['oddOrEven'] = 0
-        parseDataLog.debug('diagramConfig: ' + str(antSysDiag.diagramConfig))
-    elif btnId == 1:
-        antSysDiag.diagramConfig['oddOrEven'] = 1
-        parseDataLog.debug('diagramConfig: ' + str(antSysDiag.diagramConfig))
-    elif btnId == 2:
-        antSysDiag.diagramConfig['oddOrEven'] = 2
-        parseDataLog.debug('diagramConfig: ' + str(antSysDiag.diagramConfig))
+    plc.set_diagram_odd_even(btnId)
+    parseDataLog.debug('diagramConfig: ' + str(plc.diagramConfig))
 
 
 qt.sysDiagPlotSetupImgGenRadio1.setChecked(True)
@@ -868,16 +860,14 @@ antSysDiag.plotSetup['SeparateRxCh'] = 1
 
 def sysDiagPlotSetupImgGenClick():
     btnId = qt.sysDiagPlotSetupImgGenGroup.checkedId()
+    plc.set_img_gen_mode(btnId)
     if btnId == 0:
-        antSysDiag.plotSetup['SeparateRxCh'] = 1
-
         qt.sysDiagSlideConfTwoGraphCheckBox1.setChecked(False)
         qt.sysDiagSlideConfTwoGraphCheckBox2.setChecked(False)
         qt.sysDiagSlideConfFourGraphFrame.setEnabled(True)
 
         qt.sysDiagPlotSetup3GraphLayoutImgCheckBox.setChecked(True)
         qt.sysDiagPlotSetup3GraphLayoutImgCheckBox.setEnabled(True)
-        antSysDiag.plotSetup['threeGraphLayout'] = 1
 
         qt.sysDiagSlideConfThreeGraphFrame.setEnabled(True)
 
@@ -889,18 +879,14 @@ def sysDiagPlotSetupImgGenClick():
         qt.sysDiagSlideConfFourGraphCheckBox2.setChecked(False)
         qt.sysDiagSlideConfFourGraphCheckBox3.setChecked(False)
 
-
-        parseDataLog.debug('plotSetup: ' + str(antSysDiag.plotSetup))
+        parseDataLog.debug('plotSetup: ' + str(plc.plotSetup))
     elif btnId == 1:
-        antSysDiag.plotSetup['SeparateRxCh'] = 0
-
         qt.sysDiagSlideConfTwoGraphCheckBox1.setChecked(True)
         qt.sysDiagSlideConfTwoGraphCheckBox2.setChecked(True)
         qt.sysDiagSlideConfFourGraphFrame.setEnabled(False)
 
         qt.sysDiagPlotSetup3GraphLayoutImgCheckBox.setChecked(False)
         qt.sysDiagPlotSetup3GraphLayoutImgCheckBox.setEnabled(False)
-        antSysDiag.plotSetup['threeGraphLayout'] = 0
 
         qt.sysDiagSlideConfThreeGraphFrame.setEnabled(False)
 
@@ -912,7 +898,7 @@ def sysDiagPlotSetupImgGenClick():
         qt.sysDiagSlideConfFourGraphCheckBox2.setChecked(False)
         qt.sysDiagSlideConfFourGraphCheckBox3.setChecked(False)
 
-        parseDataLog.debug('plotSetup: ' + str(antSysDiag.plotSetup))
+        parseDataLog.debug('plotSetup: ' + str(plc.plotSetup))
 
 
 qt.sysDiagPlotSetup3GraphLayoutImgCheckBox.setChecked(True)
@@ -921,9 +907,8 @@ antSysDiag.plotSetup['threeGraphLayout'] = 1
 
 def sysDiagPlotSetup3GraphLayoutImgClick():
     state = qt.sysDiagPlotSetup3GraphLayoutImgCheckBox.isChecked()
+    plc.set_three_graph_layout(state)
     if state == 1:
-        antSysDiag.plotSetup['threeGraphLayout'] = 1
-
         qt.sysDiagSlideConfThreeGraphFrame.setEnabled(True)
 
         qt.sysDiagSlideConfThreeGraphCheckBox1.setChecked(True)
@@ -932,8 +917,6 @@ def sysDiagPlotSetup3GraphLayoutImgClick():
 
         qt.sysDiagSlideConfTwoGraphCheckBox2.setChecked(False)
     else:
-        antSysDiag.plotSetup['threeGraphLayout'] = 0
-
         qt.sysDiagSlideConfThreeGraphFrame.setEnabled(False)
 
         qt.sysDiagSlideConfThreeGraphCheckBox1.setChecked(False)
@@ -941,7 +924,7 @@ def sysDiagPlotSetup3GraphLayoutImgClick():
         qt.sysDiagSlideConfThreeGraphCheckBox3.setChecked(False)
 
         qt.sysDiagSlideConfTwoGraphCheckBox2.setChecked(True)
-    parseDataLog.debug('plotSetup: ' + str(antSysDiag.plotSetup))
+    parseDataLog.debug('plotSetup: ' + str(plc.plotSetup))
 
 
 qt.sysDiagPlotSetupImageDpiLEdit.setText('220')
@@ -952,11 +935,8 @@ qt.sysDiagPlotSetupScalingAutoCheckBox.setChecked(False)
 antSysDiag.plotSetup['xScaleSizeAuto'] = 0
 def sysDiagPlotSetupScalingAutoClick():
     state = qt.sysDiagPlotSetupScalingAutoCheckBox.isChecked()
-    if state == 1:
-        antSysDiag.plotSetup['xScaleSizeAuto'] = 1
-    else:
-        antSysDiag.plotSetup['xScaleSizeAuto'] = 0
-    parseDataLog.debug('plotSetup: ' + str(antSysDiag.plotSetup))
+    plc.set_x_scale_auto(state)
+    parseDataLog.debug('plotSetup: ' + str(plc.plotSetup))
 
 qt.sysDiagPlotSetupScalingXScaleAzLEdit.setText('90')
 qt.sysDiagPlotSetupScalingXScaleElLEdit.setText('45')
@@ -974,12 +954,8 @@ antSysDiag.plotSetup['yLimitsAntTypeSeparately'] = 1
 
 def sysDiagPlotSetupScalingYLimitsClick():
     btnId = qt.sysDiagPlotSetupScalingYLimitsGroup.checkedId()
-    if btnId == 0:
-        antSysDiag.plotSetup['yLimitsAntTypeSeparately'] = 1
-        parseDataLog.debug('plotSetup: ' + str(antSysDiag.plotSetup))
-    elif btnId == 1:
-        antSysDiag.plotSetup['yLimitsAntTypeSeparately'] = 0
-        parseDataLog.debug('plotSetup: ' + str(antSysDiag.plotSetup))
+    plc.set_y_limits_mode(btnId)
+    parseDataLog.debug('plotSetup: ' + str(plc.plotSetup))
 
 qt.sysDiagPlotSetupScalingDiffPhDiffLEdit.setText('1.5')
 
@@ -993,11 +969,8 @@ antSysDiag.plotSetup['idealPhaseDiff'] = 1
 
 def sysDiagPlotSetupGraphConfIdealCurveClick():
     state = qt.sysDiagPlotSetupGraphConfIdealCurveCheckBox.isChecked()
-    if state == 1:
-        antSysDiag.plotSetup['idealPhaseDiff'] = 1
-    else:
-        antSysDiag.plotSetup['idealPhaseDiff'] = 0
-    parseDataLog.debug('plotSetup: ' + str(antSysDiag.plotSetup))
+    plc.set_ideal_phase_diff(state)
+    parseDataLog.debug('plotSetup: ' + str(plc.plotSetup))
 
 graphId = 0
 for key,val in antSysDiag.graphConfig.items():
@@ -1031,21 +1004,21 @@ def sysDiagPlotSetupGraphConfClick(btn):
             break
 
         i = i + 1
-    antSysDiag.graphConfig[setKey] = qt.boolMapping(state)
+    plc.set_graph_conf_key(setKey, state)
 
-    sysDiagSlideConfComboAddItems(qt.sysDiagSlideConfTwoGraphComboBox11, antSysDiag.graphConfig)
-    sysDiagSlideConfComboAddItems(qt.sysDiagSlideConfTwoGraphComboBox12, antSysDiag.graphConfig)
-    sysDiagSlideConfComboAddItems(qt.sysDiagSlideConfTwoGraphComboBox21, antSysDiag.graphConfig)
-    sysDiagSlideConfComboAddItems(qt.sysDiagSlideConfTwoGraphComboBox22, antSysDiag.graphConfig)
+    sysDiagSlideConfComboAddItems(qt.sysDiagSlideConfTwoGraphComboBox11, plc.graphConfig)
+    sysDiagSlideConfComboAddItems(qt.sysDiagSlideConfTwoGraphComboBox12, plc.graphConfig)
+    sysDiagSlideConfComboAddItems(qt.sysDiagSlideConfTwoGraphComboBox21, plc.graphConfig)
+    sysDiagSlideConfComboAddItems(qt.sysDiagSlideConfTwoGraphComboBox22, plc.graphConfig)
 
-    sysDiagSlideConfComboAddItems(qt.sysDiagSlideConfFourGraphComboBox1, antSysDiag.graphConfig)
-    sysDiagSlideConfComboAddItems(qt.sysDiagSlideConfFourGraphComboBox2, antSysDiag.graphConfig)
-    sysDiagSlideConfComboAddItems(qt.sysDiagSlideConfFourGraphComboBox3, antSysDiag.graphConfig)
+    sysDiagSlideConfComboAddItems(qt.sysDiagSlideConfFourGraphComboBox1, plc.graphConfig)
+    sysDiagSlideConfComboAddItems(qt.sysDiagSlideConfFourGraphComboBox2, plc.graphConfig)
+    sysDiagSlideConfComboAddItems(qt.sysDiagSlideConfFourGraphComboBox3, plc.graphConfig)
 
-    sysDiagSlideConfThreeGraphComboAddItems(qt.sysDiagSlideConfThreeGraphComboBox1, antSysDiag.graphConfig)
-    sysDiagSlideConfThreeGraphComboAddItems(qt.sysDiagSlideConfThreeGraphComboBox2, antSysDiag.graphConfig)
-    sysDiagSlideConfThreeGraphComboAddItems(qt.sysDiagSlideConfThreeGraphComboBox3, antSysDiag.graphConfig)
-    parseDataLog.debug('graphConfig: ' + str(antSysDiag.graphConfig))
+    sysDiagSlideConfThreeGraphComboAddItems(qt.sysDiagSlideConfThreeGraphComboBox1, plc.graphConfig)
+    sysDiagSlideConfThreeGraphComboAddItems(qt.sysDiagSlideConfThreeGraphComboBox2, plc.graphConfig)
+    sysDiagSlideConfThreeGraphComboAddItems(qt.sysDiagSlideConfThreeGraphComboBox3, plc.graphConfig)
+    parseDataLog.debug('graphConfig: ' + str(plc.graphConfig))
 
 
 def sysDiagSlideConfComboAddItems(comboBox, graphConfig):
@@ -1067,23 +1040,23 @@ def sysDiagSlideConfThreeGraphComboAddItems(comboBox, graphConfig):
 
 
 def sysDiagSlideConfTwoGraphComboBox11Click(idx):
-    antSysDiag.twoGraphConf1['primGraph'] = qt.sysDiagSlideConfTwoGraphComboBox11.itemText(idx)
-    parseDataLog.debug('twoGraphConf1: ' + str(antSysDiag.twoGraphConf1))
+    plc.set_two_graph_conf1_prim(qt.sysDiagSlideConfTwoGraphComboBox11.itemText(idx))
+    parseDataLog.debug('twoGraphConf1: ' + str(plc.twoGraphConf1))
 
 
 def sysDiagSlideConfTwoGraphComboBox12Click(idx):
-    antSysDiag.twoGraphConf1['secGraph'] = qt.sysDiagSlideConfTwoGraphComboBox12.itemText(idx)
-    parseDataLog.debug('twoGraphConf1: ' + str(antSysDiag.twoGraphConf1))
+    plc.set_two_graph_conf1_sec(qt.sysDiagSlideConfTwoGraphComboBox12.itemText(idx))
+    parseDataLog.debug('twoGraphConf1: ' + str(plc.twoGraphConf1))
 
 
 def sysDiagSlideConfTwoGraphComboBox21Click(idx):
-    antSysDiag.twoGraphConf2['primGraph'] = qt.sysDiagSlideConfTwoGraphComboBox21.itemText(idx)
-    parseDataLog.debug('twoGraphConf2: ' + str(antSysDiag.twoGraphConf2))
+    plc.set_two_graph_conf2_prim(qt.sysDiagSlideConfTwoGraphComboBox21.itemText(idx))
+    parseDataLog.debug('twoGraphConf2: ' + str(plc.twoGraphConf2))
 
 
 def sysDiagSlideConfTwoGraphComboBox22Click(idx):
-    antSysDiag.twoGraphConf2['secGraph'] = qt.sysDiagSlideConfTwoGraphComboBox22.itemText(idx)
-    parseDataLog.debug('twoGraphConf2: ' + str(antSysDiag.twoGraphConf2))
+    plc.set_two_graph_conf2_sec(qt.sysDiagSlideConfTwoGraphComboBox22.itemText(idx))
+    parseDataLog.debug('twoGraphConf2: ' + str(plc.twoGraphConf2))
 
 # if qt.sysDiagPlotSetupImgGenRadio1.isChecked()==True:
     # twoGraphState='normal'
@@ -1163,18 +1136,18 @@ else:
 
 
 def sysDiagSlideConfFourGraphComboBox1Click(idx):
-    antSysDiag.fourGraphConf1['graphType'] = qt.sysDiagSlideConfFourGraphComboBox1.itemText(idx)
-    parseDataLog.debug('fourGraphConf1: ' + str(antSysDiag.fourGraphConf1))
+    plc.set_four_graph_conf1(qt.sysDiagSlideConfFourGraphComboBox1.itemText(idx))
+    parseDataLog.debug('fourGraphConf1: ' + str(plc.fourGraphConf1))
 
 
 def sysDiagSlideConfFourGraphComboBox2Click(idx):
-    antSysDiag.fourGraphConf2['graphType'] = qt.sysDiagSlideConfFourGraphComboBox2.itemText(idx)
-    parseDataLog.debug('fourGraphConf2: ' + str(antSysDiag.fourGraphConf2))
+    plc.set_four_graph_conf2(qt.sysDiagSlideConfFourGraphComboBox2.itemText(idx))
+    parseDataLog.debug('fourGraphConf2: ' + str(plc.fourGraphConf2))
 
 
 def sysDiagSlideConfFourGraphComboBox3Click(idx):
-    antSysDiag.fourGraphConf3['graphType'] = qt.sysDiagSlideConfFourGraphComboBox3.itemText(idx)
-    parseDataLog.debug('fourGraphConf3: ' + str(antSysDiag.fourGraphConf3))
+    plc.set_four_graph_conf3(qt.sysDiagSlideConfFourGraphComboBox3.itemText(idx))
+    parseDataLog.debug('fourGraphConf3: ' + str(plc.fourGraphConf3))
 
 
 sysDiagSlideConfComboAddItems(qt.sysDiagSlideConfFourGraphComboBox1, antSysDiag.graphConfig)
@@ -1190,18 +1163,18 @@ antSysDiag.fourGraphConf3['graphType'] = 'diffPhaseDiff'
 
 
 def sysDiagSlideConfThreeGraphComboBox1Click(idx):
-    antSysDiag.threeGraphConf1['graphType'] = qt.sysDiagSlideConfThreeGraphComboBox1.itemText(idx)
-    parseDataLog.debug('threeGraphConf1: ' + str(antSysDiag.threeGraphConf1))
+    plc.set_three_graph_conf1(qt.sysDiagSlideConfThreeGraphComboBox1.itemText(idx))
+    parseDataLog.debug('threeGraphConf1: ' + str(plc.threeGraphConf1))
 
 
 def sysDiagSlideConfThreeGraphComboBox2Click(idx):
-    antSysDiag.threeGraphConf2['graphType'] = qt.sysDiagSlideConfThreeGraphComboBox2.itemText(idx)
-    parseDataLog.debug('threeGraphConf2: ' + str(antSysDiag.threeGraphConf2))
+    plc.set_three_graph_conf2(qt.sysDiagSlideConfThreeGraphComboBox2.itemText(idx))
+    parseDataLog.debug('threeGraphConf2: ' + str(plc.threeGraphConf2))
 
 
 def sysDiagSlideConfThreeGraphComboBox3Click(idx):
-    antSysDiag.threeGraphConf3['graphType'] = qt.sysDiagSlideConfThreeGraphComboBox3.itemText(idx)
-    parseDataLog.debug('threeGraphConf3: ' + str(antSysDiag.threeGraphConf3))
+    plc.set_three_graph_conf3(qt.sysDiagSlideConfThreeGraphComboBox3.itemText(idx))
+    parseDataLog.debug('threeGraphConf3: ' + str(plc.threeGraphConf3))
 
 sysDiagSlideConfThreeGraphComboAddItems(qt.sysDiagSlideConfThreeGraphComboBox1, antSysDiag.graphConfig)
 sysDiagSlideConfThreeGraphComboAddItems(qt.sysDiagSlideConfThreeGraphComboBox2, antSysDiag.graphConfig)
@@ -1240,9 +1213,8 @@ else:
 
 def sysDiagSlideConfGeneralAllGraphsSlideClick():
     state = qt.sysDiagSlideConfGeneralAllGraphsSlideCheckBox.isChecked()
+    plc.set_all_on_one_slide(state)
     if state == True:
-        antSysDiag.plotSetup['allOnOneSlide'] = 1
-
         qt.sysDiagSlideConfGeneralAllSlidesCheckBox1.setChecked(True)
         qt.sysDiagSlideConfGeneralAllSlidesCheckBox1.setEnabled(True)
         qt.sysDiagSlideConfGeneralAllSlidesCheckBox2.setChecked(True)
@@ -1255,7 +1227,6 @@ def sysDiagSlideConfGeneralAllGraphsSlideClick():
         qt.sysDiagSlideConfGeneralAllSlidesComboBox3.setEnabled(True)
 
     else:
-        antSysDiag.plotSetup['allOnOneSlide'] = 0
         qt.sysDiagSlideConfGeneralAllSlidesCheckBox1.setChecked(False)
         qt.sysDiagSlideConfGeneralAllSlidesCheckBox1.setEnabled(False)
         qt.sysDiagSlideConfGeneralAllSlidesCheckBox2.setChecked(False)
@@ -1267,7 +1238,7 @@ def sysDiagSlideConfGeneralAllGraphsSlideClick():
         qt.sysDiagSlideConfGeneralAllSlidesComboBox2.setEnabled(False)
         qt.sysDiagSlideConfGeneralAllSlidesComboBox3.setEnabled(False)
 
-    parseDataLog.debug('plotSetup: ' + str(antSysDiag.plotSetup))
+    parseDataLog.debug('plotSetup: ' + str(plc.plotSetup))
 
 
 qt.sysDiagSlideConfGeneralAllSlidesComboBox1.setCurrentIndex(0)
@@ -1280,18 +1251,18 @@ antSysDiag.AllGraphsConf3['graphType'] = 'diffPhaseDiff'
 
 
 def sysDiagSlideConfGeneralAllSlidesComboBox1Click(idx):
-    antSysDiag.AllGraphsConf1['graphType'] = qt.sysDiagSlideConfGeneralAllSlidesComboBox1.itemText(idx)
-    parseDataLog.debug('AllGraphsConf1: ' + str(antSysDiag.AllGraphsConf1))
+    plc.set_all_graphs_conf1(qt.sysDiagSlideConfGeneralAllSlidesComboBox1.itemText(idx))
+    parseDataLog.debug('AllGraphsConf1: ' + str(plc.AllGraphsConf1))
 
 
 def sysDiagSlideConfGeneralAllSlidesComboBox2Click(idx):
-    antSysDiag.AllGraphsConf2['graphType'] = qt.sysDiagSlideConfGeneralAllSlidesComboBox2.itemText(idx)
-    parseDataLog.debug('AllGraphsConf2: ' + str(antSysDiag.AllGraphsConf2))
+    plc.set_all_graphs_conf2(qt.sysDiagSlideConfGeneralAllSlidesComboBox2.itemText(idx))
+    parseDataLog.debug('AllGraphsConf2: ' + str(plc.AllGraphsConf2))
 
 
 def sysDiagSlideConfGeneralAllSlidesComboBox3Click(idx):
-    antSysDiag.AllGraphsConf3['graphType'] = qt.sysDiagSlideConfGeneralAllSlidesComboBox3.itemText(idx)
-    parseDataLog.debug('AllGraphsConf3: ' + str(antSysDiag.AllGraphsConf3))
+    plc.set_all_graphs_conf3(qt.sysDiagSlideConfGeneralAllSlidesComboBox3.itemText(idx))
+    parseDataLog.debug('AllGraphsConf3: ' + str(plc.AllGraphsConf3))
 
 qt.sysDiagPlotSetupScriptModeRadio1.setChecked(True)
 qt.sysDiagPlotSetupScriptModeRadio2.setChecked(False)
@@ -1302,8 +1273,8 @@ qt.sysDiagSlideConfGroupBox.setEnabled(True)
 
 def sysDiagPlotSetupScriptModeGroupClick():
     btnId = qt.sysDiagPlotSetupScriptModeGroup.checkedId()
+    plc.set_script_mode(btnId)
     if btnId == 0:
-        antSysDiag.plotSetup['ShowCertainPlotWindow'] = 0
         qt.sysDiagPlotWindowGroupBox.setEnabled(False)
         qt.sysDiagSlideConfGroupBox.setEnabled(True)
 
@@ -1324,9 +1295,8 @@ def sysDiagPlotSetupScriptModeGroupClick():
         qt.sysDiagPlotWindowAllGraphsComboBox2.setEnabled(False)
         qt.sysDiagPlotWindowAllGraphsComboBox3.setEnabled(False)
 
-        parseDataLog.debug('plotSetup: ' + str(antSysDiag.plotSetup))
+        parseDataLog.debug('plotSetup: ' + str(plc.plotSetup))
     elif btnId == 1:
-        antSysDiag.plotSetup['ShowCertainPlotWindow'] = 1
         qt.sysDiagPlotWindowGroupBox.setEnabled(True)
         qt.sysDiagSlideConfGroupBox.setEnabled(False)
 
@@ -1345,7 +1315,7 @@ def sysDiagPlotSetupScriptModeGroupClick():
         qt.sysDiagPlotWindowAllGraphsComboBox2.setEnabled(False)
         qt.sysDiagPlotWindowAllGraphsComboBox3.setEnabled(False)
 
-        parseDataLog.debug('plotSetup: ' + str(antSysDiag.plotSetup))
+        parseDataLog.debug('plotSetup: ' + str(plc.plotSetup))
 
 #####
 qt.sysDiagPlotWindowInputModeRadio1.setChecked(True)
@@ -1356,15 +1326,9 @@ qt.sysDiagPlotWindowInputModeLEdit.setEnabled(False)
 
 def sysDiagPlotWindowInputModeClick():
     btnId = qt.sysDiagPlotWindowInputModeGroup.checkedId()
-    if btnId == 0:
-        antSysDiag.plotWindowConfig['inputMode']=1
-        qt.sysDiagPlotWindowInputModeLEdit.setEnabled(False)
-
-    elif btnId == 1:
-        antSysDiag.plotWindowConfig['inputMode']=0
-        qt.sysDiagPlotWindowInputModeLEdit.setEnabled(True)
-
-    parseDataLog.debug('plotWindowConfig: ' + str(antSysDiag.plotWindowConfig))
+    plc.set_plot_window_input_mode(btnId)
+    qt.sysDiagPlotWindowInputModeLEdit.setEnabled(btnId == 1)
+    parseDataLog.debug('plotWindowConfig: ' + str(plc.plotWindowConfig))
 
 
 antSysDiag.plotWindowConfig['string'] = ''
@@ -1388,8 +1352,8 @@ antSysDiag.plotWindowConfig['rxCh'] = 0
 
 
 def sysDiagPlotWindowGraphTypeComboBoxClick(idx):
-    antSysDiag.plotWindowConfig['graph'] = qt.sysDiagPlotWindowGraphTypeComboBox.itemText(idx)
-    parseDataLog.debug('plotWindowConfig: ' + str(antSysDiag.plotWindowConfig))
+    plc.set_plot_window_graph(qt.sysDiagPlotWindowGraphTypeComboBox.itemText(idx))
+    parseDataLog.debug('plotWindowConfig: ' + str(plc.plotWindowConfig))
 
 antSysDiag.plotWindowConfig['graph'] = 'level'
 
@@ -1404,24 +1368,24 @@ qt.sysDiagPlotWindowAllGraphsComboBox3.setCurrentIndex(6)
 
 
 def sysDiagPlotWindowAllGraphsComboBox1Click(idx):
-    antSysDiag.AllGraphsConf1['graphType'] = qt.sysDiagPlotWindowAllGraphsComboBox1.itemText(idx)
-    parseDataLog.debug('AllGraphsConf1: ' + str(antSysDiag.AllGraphsConf1))
+    plc.set_all_graphs_conf1(qt.sysDiagPlotWindowAllGraphsComboBox1.itemText(idx))
+    parseDataLog.debug('AllGraphsConf1: ' + str(plc.AllGraphsConf1))
 
 
 def sysDiagPlotWindowAllGraphsComboBox2Click(idx):
-    antSysDiag.AllGraphsConf2['graphType'] = qt.sysDiagPlotWindowAllGraphsComboBox2.itemText(idx)
-    parseDataLog.debug('AllGraphsConf2: ' + str(antSysDiag.AllGraphsConf2))
+    plc.set_all_graphs_conf2(qt.sysDiagPlotWindowAllGraphsComboBox2.itemText(idx))
+    parseDataLog.debug('AllGraphsConf2: ' + str(plc.AllGraphsConf2))
 
 
 def sysDiagPlotWindowAllGraphsComboBox3Click(idx):
-    antSysDiag.AllGraphsConf3['graphType'] = qt.sysDiagPlotWindowAllGraphsComboBox3.itemText(idx)
-    parseDataLog.debug('AllGraphsConf3: ' + str(antSysDiag.AllGraphsConf3))
+    plc.set_all_graphs_conf3(qt.sysDiagPlotWindowAllGraphsComboBox3.itemText(idx))
+    parseDataLog.debug('AllGraphsConf3: ' + str(plc.AllGraphsConf3))
 
 
 def sysDiagPlotWindowAllGraphsClick():
     state = qt.sysDiagPlotWindowAllGraphsCheckBox.isChecked()
+    plc.set_plot_window_all_graphs_mode(state)
     if state == 1:
-        antSysDiag.plotWindowConfig['showPlotAllMode'] = 1
         qt.sysDiagPlotWindowAllGraphsCheckBox1.setEnabled(True)
         qt.sysDiagPlotWindowAllGraphsCheckBox2.setEnabled(True)
         qt.sysDiagPlotWindowAllGraphsCheckBox3.setEnabled(True)
@@ -1434,7 +1398,6 @@ def sysDiagPlotWindowAllGraphsClick():
         qt.sysDiagPlotWindowAllGraphsComboBox3.setEnabled(True)
         # qt.sysDiagSlideConfGroupBox.setEnabled(True)
     else:
-        antSysDiag.plotWindowConfig['showPlotAllMode'] = 0
         qt.sysDiagPlotWindowAllGraphsCheckBox1.setEnabled(False)
         qt.sysDiagPlotWindowAllGraphsCheckBox2.setEnabled(False)
         qt.sysDiagPlotWindowAllGraphsCheckBox3.setEnabled(False)
