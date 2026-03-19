@@ -36,10 +36,13 @@ parseDataLog = logconfig.mainLoadDataLogger.logger
 # ---------------------------------------------------------------------------
 
 def parseProtSensorMusterClick(ctx: "AppContext") -> None:
+    import antpat_v5_main_v3 as _antPat1  # noqa: PLC0415
+    import TxAntDiagrams as _txAntDiag    # noqa: PLC0415
     state = ctx.qt.parseProtSensorMusterCheckBox.isChecked()
     ctx.mv.set_sensor_muster_enabled(state == 1)
     ctx.plc.set_sensor_muster_enabled(state == 1)
-    # antPat1 and txAntDiag updates are done in main.py (they are not in ctx)
+    _antPat1.setup["useSensorMuster"] = 1 if state else 0
+    _txAntDiag.plotSetup["useSensorMuster"] = 1 if state else 0
     parseDataLog.debug("plotSetup: " + str(ctx.plc.plotSetup))
 
 
@@ -614,6 +617,41 @@ def getprotcols(
     )
 
     return ptu2FilesList, txAntDiagList, accProtList, accErrorProtList, accAbbortCritProtList, accLimitExceededProtList, filteredProtocolsList
+
+
+# ---------------------------------------------------------------------------
+# Widget initialisation
+# ---------------------------------------------------------------------------
+
+def init_widgets(ctx: "AppContext") -> None:
+    """Set default widget states for the parse tab (PST-66)."""
+    import antpat_v5_main_v3 as _antPat1  # noqa: PLC0415
+    import TxAntDiagrams as _txAntDiag    # noqa: PLC0415
+
+    # Sensor muster
+    ctx.qt.parseProtSensorMusterCheckBox.setChecked(False)
+    ctx.mv.set_sensor_muster_enabled(False)
+    ctx.plc.plotSetup["useSensorMuster"] = 0
+    _antPat1.setup["useSensorMuster"] = 0
+    _txAntDiag.plotSetup["useSensorMuster"] = 0
+
+    # Burn-in / calibration radio buttons
+    ctx.qt.parseProtBurnInCalGroupRadio1.setChecked(True)
+    ctx.qt.parseProtBurnInCalGroupRadio2.setChecked(False)
+    ctx.qt.parseProtBurnInCalGroupRadio3.setChecked(False)
+
+    # Protocol data include/exclude checkboxes
+    ctx.qt.parseProtProtDataBurnInInclCheckBox.setChecked(True)
+    ctx.qt.parseProtProtDataBurnInExtCheckBox.setChecked(False)
+    ctx.qt.parseProtProtDataCalInclCheckBox.setChecked(True)
+    ctx.qt.parseProtProtDataCalExtCheckBox.setChecked(False)
+
+    # Limits-file path labels
+    ctx.mv.set_burn_in_limits_file(aux.burnInLimitsFilePath)
+    ctx.mv.set_cal_limits_file(aux.calLimitsFilePath)
+    ctx.mv.set_burn_in_lim_groups_file(aux.burnInLimGroupsFilePath)
+    ctx.mv.set_cal_lim_groups_file(aux.calLimGroupsFilePath)
+    ctx.mv.set_stats_input_conf_path(aux.statsinputconffilepath)
 
 
 # ---------------------------------------------------------------------------
