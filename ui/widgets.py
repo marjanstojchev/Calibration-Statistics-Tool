@@ -236,8 +236,9 @@ class LimitsGroupsSaveDialog(QDialog):
 # ---------------------------------------------------------------------------
 
 class PlotFrame(QFrame):
-    def __init__(self):
+    def __init__(self, on_cursor_select=None):
         super().__init__()
+        self._on_cursor_select = on_cursor_select or (lambda name: print(name))
         self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
 
         self.layout = QGridLayout(self)
@@ -280,7 +281,7 @@ class PlotFrame(QFrame):
                 def on_add(sel):
                     sel.annotation.arrow_patch.set(arrowstyle="simple", alpha=.00000005)
                     sel.annotation.set_text('')
-                    print(sensornameList[round(sel.target.index)])
+                    self._on_cursor_select(sensornameList[round(sel.target.index)])
                 mplcursors.cursor(self.ax1).connect('add', show_datapoints)
         else:
             if plot_dat:
@@ -291,7 +292,7 @@ class PlotFrame(QFrame):
                 def on_add(sel):
                     sel.annotation.arrow_patch.set(arrowstyle="simple", alpha=.00000005)
                     sel.annotation.set_text('')
-                    print(sensornameList[round(sel.target.index)])
+                    self._on_cursor_select(sensornameList[round(sel.target.index)])
                 mplcursors.cursor(self.ax2).connect('add', show_datapoints)
 
         for lineIndex in range(len(self.ax1.lines)):
@@ -336,8 +337,9 @@ class PlotFrame(QFrame):
 # ---------------------------------------------------------------------------
 
 class PlotFrameSysDia(QFrame):
-    def __init__(self):
+    def __init__(self, on_cursor_select=None):
         super().__init__()
+        self._on_cursor_select = on_cursor_select or (lambda name: print(name))
         self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
 
         self.layout = QGridLayout(self)
@@ -381,7 +383,7 @@ class PlotFrameSysDia(QFrame):
                     PTUlabel = PTU[0]
                     sel.annotation.arrow_patch.set(arrowstyle='simple', alpha=.00000005)
                     sel.annotation.set_text('')
-                    print(str(PTUlabel) + '.txt')
+                    self._on_cursor_select(str(PTUlabel) + '.txt')
                 c2 = mplcursors.cursor(scatter1)
                 @c2.connect("add")
                 def on_add(sel):
@@ -401,7 +403,7 @@ class PlotFrameSysDia(QFrame):
                     PTUlabel = PTU[0]
                     sel.annotation.arrow_patch.set(arrowstyle='simple', alpha=.00000005)
                     sel.annotation.set_text('')
-                    print(str(PTUlabel) + '.txt')
+                    self._on_cursor_select(str(PTUlabel) + '.txt')
                 c2 = mplcursors.cursor(scatter2)
                 @c2.connect("add")
                 def on_add(sel):
