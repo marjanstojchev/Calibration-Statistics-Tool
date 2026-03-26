@@ -692,7 +692,7 @@ sysDiagPlotWindowGeneralLayout.addWidget(sysDiagPlotWindowRxChLabel, stretch=1)
 sysDiagPlotWindowRxChValidator = QIntValidator()
 sysDiagPlotWindowRxChValidator.setRange(0, 11)
 sysDiagPlotWindowRxChLEdit = QLineEdit()
-sysDiagPlotWindowRxChLEdit.setValidator(sysDiagPlotSetupImageDpiIntValidator)
+sysDiagPlotWindowRxChLEdit.setValidator(sysDiagPlotWindowRxChValidator)
 sysDiagPlotWindowRxChLEdit.setMaxLength(2)
 sysDiagPlotWindowRxChLEdit.setFixedSize(LEDIT_BTN_H_SIZE, LEDIT_BTN_V_SIZE)
 sysDiagPlotWindowRxChLEdit.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
@@ -821,11 +821,13 @@ sysDiagSlideConfTwoGraphSubFrame1Layout.addWidget(sysDiagSlideConfTwoGraphCheckB
 
 sysDiagSlideConfTwoGraphComboBox11 = QComboBox()
 sysDiagSlideConfTwoGraphSubFrame1Layout.addWidget(sysDiagSlideConfTwoGraphComboBox11, stretch=1)
-sysDiagSlideConfTwoGraphComboBox11.setEditText(plotWindowConfigGraphList[2])
+sysDiagSlideConfTwoGraphComboBox11.addItems(plotWindowConfigGraphList)
+sysDiagSlideConfTwoGraphComboBox11.setCurrentIndex(2)
 
 sysDiagSlideConfTwoGraphComboBox12 = QComboBox()
 sysDiagSlideConfTwoGraphSubFrame1Layout.addWidget(sysDiagSlideConfTwoGraphComboBox12, stretch=1)
-sysDiagSlideConfTwoGraphComboBox12.setEditText(plotWindowConfigGraphList[2])
+sysDiagSlideConfTwoGraphComboBox12.addItems(plotWindowConfigGraphList)
+sysDiagSlideConfTwoGraphComboBox12.setCurrentIndex(2)
 
 sysDiagSlideConfTwoGraphCheckBox2 = QCheckBox('Configuration 2')
 sysDiagSlideConfTwoGraphCheckBox2.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
@@ -834,11 +836,13 @@ sysDiagSlideConfTwoGraphSubFrame1Layout.addWidget(sysDiagSlideConfTwoGraphCheckB
 
 sysDiagSlideConfTwoGraphComboBox21 = QComboBox()
 sysDiagSlideConfTwoGraphSubFrame1Layout.addWidget(sysDiagSlideConfTwoGraphComboBox21)
-sysDiagSlideConfTwoGraphComboBox21.setEditText(plotWindowConfigGraphList[2])
+sysDiagSlideConfTwoGraphComboBox21.addItems(plotWindowConfigGraphList)
+sysDiagSlideConfTwoGraphComboBox21.setCurrentIndex(2)
 
 sysDiagSlideConfTwoGraphComboBox22 = QComboBox()
 sysDiagSlideConfTwoGraphSubFrame1Layout.addWidget(sysDiagSlideConfTwoGraphComboBox22, stretch=1)
-sysDiagSlideConfTwoGraphComboBox22.setEditText(plotWindowConfigGraphList[2])
+sysDiagSlideConfTwoGraphComboBox22.addItems(plotWindowConfigGraphList)
+sysDiagSlideConfTwoGraphComboBox22.setCurrentIndex(2)
 
 
 ####
@@ -1088,7 +1092,7 @@ sysDiagSlideConfGeneralSensorNumSlideLabel = QLabel('Num. of Sensors:')
 sysDiagSlideConfGeneralSubFrame1Layout.addWidget(sysDiagSlideConfGeneralSensorNumSlideLabel)
 
 sysDiagSlideConfGeneralSensorNumSlideLEdit = QLineEdit()
-sysDiagSlideConfGeneralSensorNumSlideLEdit.setValidator(sysDiagPlotSetupImageDpiIntValidator)
+sysDiagSlideConfGeneralSensorNumSlideLEdit.setValidator(sysDiagSlideConfGeneralSensorNumSlideIntValidator)
 sysDiagSlideConfGeneralSensorNumSlideLEdit.setMaxLength(3)
 sysDiagSlideConfGeneralSensorNumSlideLEdit.setFixedSize(LEDIT_BTN_H_SIZE, LEDIT_BTN_V_SIZE)
 sysDiagSlideConfGeneralSensorNumSlideLEdit.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
