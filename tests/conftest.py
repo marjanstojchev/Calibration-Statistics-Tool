@@ -7,6 +7,21 @@ import os
 import pytest
 import numpy as np
 
+# Must be set before PySide6 / Qt widgets are imported anywhere
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _qapp_session():
+    """Ensure a single QApplication exists for the entire test session.
+
+    Session-scoped and autouse so it is created before any Qt widget is
+    instantiated, including module-level widget creation in sys_diag_tab.py.
+    """
+    from PySide6.QtWidgets import QApplication
+    app = QApplication.instance() or QApplication([])
+    yield app
+
 # Add project root and shared to path
 _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 for _subdir in ['shared', 'system_diagrams', 'tx_diagrams', 'antenna_patterns']:

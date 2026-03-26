@@ -15,16 +15,6 @@ _REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")
 if _REPO_ROOT not in sys.path:
     sys.path.insert(0, _REPO_ROOT)
 
-os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-
-from PySide6.QtWidgets import QApplication
-
-
-@pytest.fixture(scope="session", autouse=True)
-def _qapp():
-    app = QApplication.instance() or QApplication([])
-    yield app
-
 
 @pytest.fixture(scope="session")
 def mod():
