@@ -50,7 +50,7 @@ from widgets import (
 
 
 
-app = QApplication(sys.argv)
+app = QApplication.instance() or QApplication(sys.argv)
 # app.setStyleSheet(QSS)
 #Main Tab Widget
 setCurvesInputConfPathLabel = QLabel()
