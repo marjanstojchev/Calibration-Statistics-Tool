@@ -10,6 +10,15 @@ import numpy as np
 # Must be set before PySide6 / Qt widgets are imported anywhere
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+# Import PySide6 at module level so test_handlers.py's
+# ``sys.modules.setdefault("PySide6", mock)`` is a no-op (already present).
+# conftest.py is collected first by pytest, so this guarantees the real
+# PySide6 package is in sys.modules before any test module runs its
+# module-level code.
+from PySide6.QtWidgets import QApplication as _QApplication  # noqa: F401
+from PySide6.QtGui import QFont as _QFont                    # noqa: F401
+from PySide6.QtCore import Qt as _Qt                         # noqa: F401
+
 
 @pytest.fixture(scope="session", autouse=True)
 def _qapp_session():
@@ -21,6 +30,23 @@ def _qapp_session():
     from PySide6.QtWidgets import QApplication
     app = QApplication.instance() or QApplication([])
     yield app
+
+
+@pytest.fixture(scope="session")
+def shared_main_view(_qapp_session):
+    """Single MainView instance shared across the entire test session.
+
+    Import is deferred here (not at module level) so that test_handlers.py's
+    module-level PySide6 setdefault mock does not interfere during collection.
+    The _qapp_session parameter guarantees a real QApplication exists first.
+    """
+    _root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    _ui_path = os.path.join(_root_dir, 'ui')
+    if _ui_path not in sys.path:
+        sys.path.insert(0, _ui_path)
+    from ui.main_view import MainView
+    v = MainView()
+    yield v
 
 # Add project root and shared to path
 _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

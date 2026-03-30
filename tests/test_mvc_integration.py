@@ -71,15 +71,9 @@ def _make_mock_qt():
 
 
 @pytest.fixture
-def view():
-    mock_qt = _make_mock_qt()
-    with patch.dict('sys.modules', {'pyside_qtgui': mock_qt}):
-        if 'ui.main_view' in sys.modules:
-            del sys.modules['ui.main_view']
-        from ui.main_view import MainView
-        v = MainView()
-        v._qt = mock_qt
-        yield v, mock_qt
+def view(shared_main_view):
+    """Real MainView shared from conftest.py — used to test Section 6 helpers."""
+    return shared_main_view, shared_main_view
 
 
 # --------------------------------------------------------------------------- #
@@ -267,107 +261,110 @@ class TestControllerIndependence:
 class TestMainViewSensorMuster:
 
     def test_set_sensor_muster_enabled_true_enables_both(self, view):
-        v, qt = view
+        v, _ = view
         v.set_sensor_muster_enabled(True)
-        qt.parseProtSensorMusterLEdit.setEnabled.assert_called_with(True)
-        qt.parseProtSensorMusterLabel.setEnabled.assert_called_with(True)
+        assert v.parseProtSensorMusterLEdit.isEnabled() is True
+        assert v.parseProtSensorMusterLabel.isEnabled() is True
 
     def test_set_sensor_muster_enabled_false_disables_both(self, view):
-        v, qt = view
+        v, _ = view
         v.set_sensor_muster_enabled(False)
-        qt.parseProtSensorMusterLEdit.setEnabled.assert_called_with(False)
-        qt.parseProtSensorMusterLabel.setEnabled.assert_called_with(False)
+        assert v.parseProtSensorMusterLEdit.isEnabled() is False
+        assert v.parseProtSensorMusterLabel.isEnabled() is False
 
 
 class TestMainViewLabels:
 
     def test_set_loaded_prot_ratio_label_correct_text(self, view):
-        v, qt = view
+        v, _ = view
         v.set_loaded_prot_ratio_label(3, 2)
-        qt.parseProtLoadedProtLabel.setText.assert_called_with('Protocols: 3 / 5')
+        assert v.parseProtLoadedProtLabel.text() == v.parseProtLoadedProtStr + '3 / 5'
 
     def test_set_loaded_prot_ratio_label_zero(self, view):
-        v, qt = view
+        v, _ = view
         v.set_loaded_prot_ratio_label(0, 0)
-        qt.parseProtLoadedProtLabel.setText.assert_called_with('Protocols: 0 / 0')
+        assert v.parseProtLoadedProtLabel.text() == v.parseProtLoadedProtStr + '0 / 0'
 
     def test_set_eol_error_label_simple(self, view):
-        v, qt = view
+        v, _ = view
         v.set_eol_error_label(5)
-        qt.parseProtEolErrorLabel.setText.assert_called_with('EoL: 5')
+        assert v.parseProtEolErrorLabel.text() == v.parseProtEolErrorStr + '5'
 
     def test_set_eol_error_label_with_total(self, view):
-        v, qt = view
+        v, _ = view
         v.set_eol_error_label(2, 10)
-        qt.parseProtEolErrorLabel.setText.assert_called_with('EoL: 2 / 10')
+        assert v.parseProtEolErrorLabel.text() == v.parseProtEolErrorStr + '2 / 10'
 
     def test_set_abort_crit_label(self, view):
-        v, qt = view
+        v, _ = view
         v.set_abort_crit_label(1, 4)
-        qt.parseProtAbbortCritLabel.setText.assert_called_with('Abort: 1 / 4')
+        assert v.parseProtAbbortCritLabel.text() == v.parseProtAbbortCritStr + '1 / 4'
 
     def test_set_meas_limits_label(self, view):
-        v, qt = view
+        v, _ = view
         v.set_meas_limits_label(7, 20)
-        qt.parseProtMeasLimitsExcLabel.setText.assert_called_with('Limits: 7 / 20')
+        assert v.parseProtMeasLimitsExcLabel.text() == v.parseProtMeasLimitsExcStr + '7 / 20'
 
     def test_set_parsed_loaded_label(self, view):
-        v, qt = view
+        v, _ = view
         v.set_parsed_loaded_label(10, 15)
-        qt.parseProtParsedLoadedProtLabel.setText.assert_called_with('Parsed: 10 / 15')
+        assert v.parseProtParsedLoadedProtLabel.text() == v.parseProtParsedLoadedProtStr + '10 / 15'
 
 
 class TestMainViewFilePaths:
 
     def test_set_burn_in_limits_file_sets_text_and_tooltip(self, view):
-        v, qt = view
+        v, _ = view
         v.set_burn_in_limits_file('/some/path.yaml')
-        qt.parseProtProtDataInFileBurnInLabel.setText.assert_called_with('/some/path.yaml')
-        qt.parseProtProtDataInFileBurnInLabel.setToolTip.assert_called_with('/some/path.yaml')
+        assert v.parseProtProtDataInFileBurnInLabel.text() == '/some/path.yaml'
+        assert v.parseProtProtDataInFileBurnInLabel.toolTip() == '/some/path.yaml'
 
     def test_set_cal_limits_file_sets_text_and_tooltip(self, view):
-        v, qt = view
+        v, _ = view
         v.set_cal_limits_file('/cal.yaml')
-        qt.parseProtProtDataInFileCalLabel.setText.assert_called_with('/cal.yaml')
-        qt.parseProtProtDataInFileCalLabel.setToolTip.assert_called_with('/cal.yaml')
+        assert v.parseProtProtDataInFileCalLabel.text() == '/cal.yaml'
+        assert v.parseProtProtDataInFileCalLabel.toolTip() == '/cal.yaml'
 
     def test_set_burn_in_lim_groups_file(self, view):
-        v, qt = view
+        v, _ = view
         v.set_burn_in_lim_groups_file('/groups.yaml')
-        qt.parseProtProtDataLimGroupsBurnInLabel.setText.assert_called_with('/groups.yaml')
-        qt.parseProtProtDataLimGroupsBurnInLabel.setToolTip.assert_called_with('/groups.yaml')
+        assert v.parseProtProtDataLimGroupsBurnInLabel.text() == '/groups.yaml'
+        assert v.parseProtProtDataLimGroupsBurnInLabel.toolTip() == '/groups.yaml'
 
     def test_set_cal_lim_groups_file(self, view):
-        v, qt = view
+        v, _ = view
         v.set_cal_lim_groups_file('/cal_groups.yaml')
-        qt.parseProtProtDataLimGroupsCalLabel.setText.assert_called_with('/cal_groups.yaml')
-        qt.parseProtProtDataLimGroupsCalLabel.setToolTip.assert_called_with('/cal_groups.yaml')
+        assert v.parseProtProtDataLimGroupsCalLabel.text() == '/cal_groups.yaml'
+        assert v.parseProtProtDataLimGroupsCalLabel.toolTip() == '/cal_groups.yaml'
 
     def test_set_stats_input_conf_path(self, view):
-        v, qt = view
+        v, _ = view
         v.set_stats_input_conf_path('/stats/conf.yaml')
-        qt.statsInputConfPathLabel.setText.assert_called_with('/stats/conf.yaml')
-        qt.statsInputConfPathLabel.setToolTip.assert_called_with('/stats/conf.yaml')
+        assert v.statsInputConfPathLabel.text() == '/stats/conf.yaml'
+        assert v.statsInputConfPathLabel.toolTip() == '/stats/conf.yaml'
 
 
 class TestMainViewProgressBar:
 
     def test_reset_progress_bar_calls_reset(self, view):
-        v, qt = view
-        v.reset_progress_bar()
-        qt.parseProtProgresBar.reset.assert_called_once()
+        v, _ = view
+        from unittest.mock import patch
+        with patch.object(v.parseProtProgresBar, 'reset') as mock_reset:
+            v.reset_progress_bar()
+        mock_reset.assert_called_once()
 
     def test_set_progress_bar_range(self, view):
-        v, qt = view
+        v, _ = view
         v.set_progress_bar_range(50)
-        qt.parseProtProgresBar.setRange.assert_called_with(0, 50)
+        assert v.parseProtProgresBar.maximum() == 50
 
     def test_set_progress_bar_format(self, view):
-        v, qt = view
+        v, _ = view
         v.set_progress_bar_format('5 / 10')
-        qt.parseProtProgresBar.setFormat.assert_called_with('5 / 10')
+        assert v.parseProtProgresBar.format() == '5 / 10'
 
     def test_set_progress_bar_value(self, view):
-        v, qt = view
+        v, _ = view
+        v.set_progress_bar_range(100)
         v.set_progress_bar(7)
-        qt.parseProtProgresBar.setValue.assert_called_with(7)
+        assert v.parseProtProgresBar.value() == 7

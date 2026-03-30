@@ -1,4 +1,4 @@
-"""PST-66: main.py rewritten as a thin wiring file.
+﻿"""PST-66: main.py rewritten as a thin wiring file.
 
 Responsibilities:
   1. sys.path setup
@@ -35,7 +35,9 @@ print(plugin_path)
 os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = plugin_path
 
 from ui.main_view import MainView as _MainView
+import pyside_qtgui as _pqg
 view = _MainView()
+_pqg._register(view)   # PST-67: delegate AntennaSystemDiagrams qt.<widget> lookups here
 qt = view  # backward-compatible alias: all qt.<widget> calls delegate to MainView
 
 # ---------------------------------------------------------------------------
