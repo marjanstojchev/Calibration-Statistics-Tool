@@ -24,7 +24,6 @@ for _subdir in ['shared', 'ui', 'system_diagrams', 'tx_diagrams', 'antenna_patte
 import logconfig
 from shared.parse_controller import ParseController
 from shared.plot_controller import PlotController
-import AntennaSystemDiagrams as antSysDiag
 import auxiliary as aux
 import PySide6
 
@@ -37,7 +36,9 @@ os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = plugin_path
 from ui.main_view import MainView as _MainView
 import pyside_qtgui as _pqg
 view = _MainView()
-_pqg._register(view)   # PST-67: delegate AntennaSystemDiagrams qt.<widget> lookups here
+_pqg._register(view)   # PST-67: must happen BEFORE AntennaSystemDiagrams is imported
+                       # (AntennaSystemDiagrams.py accesses qt.SysDiaInterTableParam at module level)
+import AntennaSystemDiagrams as antSysDiag
 qt = view  # backward-compatible alias: all qt.<widget> calls delegate to MainView
 
 # ---------------------------------------------------------------------------
