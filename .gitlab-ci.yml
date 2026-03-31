@@ -40,7 +40,7 @@ test:linux:
   stage: test
   script:
     - python -m pytest --version
-    - python -m pytest -v --junitxml=report.xml
+    - python -m pytest -v --benchmark-disable --junitxml=report.xml
   artifacts:
     reports:
       junit: report.xml
@@ -58,7 +58,7 @@ test:windows:
     - windows                                         # Requires Windows runner
   script:
     - python -m pytest --version
-    - python -m pytest -v --junitxml=report.xml
+    - python -m pytest -v --benchmark-disable --junitxml=report.xml
   artifacts:
     reports:
       junit: report.xml

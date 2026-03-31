@@ -54,12 +54,43 @@ statistictool
 
 ## Project Structure
 
-- `main.py` - Main GUI application
-- `pyside_qtgui.py` - Qt GUI components
-- `statistic.py` - Statistics processing
-- `antpat_v5_main_v3.py` - Antenna pattern analysis
-- `TxAntDiagrams.py` - Transmit antenna diagrams
-- Various data processing modules
+The application follows an MVC architecture split across several sub-packages:
+
+```
+main.py                         # Thin wiring file -- startup, DI, handler wiring
+shared/                         # Domain logic (controllers, parsers, models)
+    models.py                   # Data model classes
+    parse_controller.py         # ParseController -- protocol/PTU2 business logic
+    plot_controller.py          # PlotController -- diagram/plot state management
+    calcdiagram_functions.py    # Vectorised diagram calculations (NumPy)
+    parsePTU2data.py            # PTU2 file parser and data structures
+    parse_helpers.py            # Protocol parsing helpers
+    loaddata.py                 # Data loading utilities
+ui/
+    main_view.py                # MainView -- owns QApplication and all widgets
+    pyside_qtgui.py             # Backward-compat shim (delegates to MainView)
+    ui_constants.py             # Pure-Python layout/size/style constants
+    widgets.py                  # Reusable Qt widget classes (PlotFrame, etc.)
+    handlers/                   # Signal handler modules (one per tab)
+        app_context.py          # AppContext -- dependency-injection container
+        parse_handlers.py       # Parse Protocols tab handlers
+        sys_diag_handlers.py    # System Diagrams tab handlers
+        tx_ant_diag_handlers.py # Tx-Antenna Diagrams tab handlers
+        ant_pat_handlers.py     # Antenna Patterns tab handlers
+    tabs/                       # Tab widget declarations (one file per tab)
+        parse_prot_tab.py
+        sys_diag_tab.py
+        tx_ant_diag_tab.py
+        ant_pat_tab.py
+system_diagrams/                # AntennaSystemDiagrams computation module
+antenna_patterns/               # Antenna pattern analysis (antpat_v5)
+tx_diagrams/                    # Tx-Antenna Diagrams computation module
+config/                         # YAML configuration files
+tests/                          # Pytest test suite (613 tests)
+    conftest.py                 # Shared fixtures and Qt session setup
+    integration/                # Real-Qt integration tests
+docs/                           # Architecture documentation
+```
 
 ## Development
 
@@ -73,10 +104,20 @@ Run tests:
 pytest
 ```
 
+Run benchmarks (local only, informational):
+```bash
+pytest --benchmark-only
+```
+
 Lint code:
 ```bash
 ruff check .
 ```
+
+## Architecture
+
+Detailed architecture documentation is in [docs/](docs/):
+- `docs/mvc_architecture.md` — MVC design, dependency injection, layer boundaries
 
 ## License
 
