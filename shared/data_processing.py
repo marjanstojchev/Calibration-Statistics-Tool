@@ -174,7 +174,7 @@ def getDateTimeSensorCombTable(dateTimeList: list, sensorList: list, dateAndTime
                 for j in range(len(sensorList)):
                     if dateAndTimeCombList[k]["sensor"]==sensorList[j]:
                         subList.append(sensorList[j])
-            outputList.append(subList)
+                outputList.append(subList)
 
     return outputList
 

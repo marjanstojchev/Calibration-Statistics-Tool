@@ -226,7 +226,7 @@ def getUpsideDown(plotSetup: dict) -> bool:
 def getActualGraphData(graph: str, rxChannel: int, chirp: int, parseDataList: list, parseDataIdx: int) -> np.ndarray:
     strategy = strat.STRATEGY_REGISTRY.get(graph)
     if strategy is None:
-        return 0
+        return np.array([])
     context = strat.CalculationContext(strategy)
     return context.execute(rxChannel, chirp, parseDataList[parseDataIdx])
 
@@ -370,6 +370,7 @@ def plotAll(plotSetup: dict, chirpConfig: dict, allOnOneSlideGraphList: list, de
 
     ## Vertical axis setup
     # Check if there are both level [dB] and phase diff [°] like graphs
+    ax2 = None
     if useSecondAxis(allOnOneSlideGraphList):
         # Create second axis
         ax2 = ax1.twinx()
@@ -436,12 +437,15 @@ def plotAll(plotSetup: dict, chirpConfig: dict, allOnOneSlideGraphList: list, de
                 ax1.figure.canvas.draw()
                 txt.remove()
             else:
-                txt = ax2.text(xdata[ind], ydata[ind], lineLabel, ha=horAlign, style='italic',bbox={'facecolor': 'white', 'alpha': 0.7, 'pad': 5})
-                ax2.figure.canvas.draw()
-                txt.remove()
+                if ax2 is not None:
+                    txt = ax2.text(xdata[ind], ydata[ind], lineLabel, ha=horAlign, style='italic',bbox={'facecolor': 'white', 'alpha': 0.7, 'pad': 5})
+                    ax2.figure.canvas.draw()
+                    txt.remove()
 
 
-    def toggleAxis(event):
+    def toggleAxis(event):  # noqa: E306
+        if ax2 is None:
+            return
         # print('before')
         # a1 = ax1.get_zorder()
         # print(str(a1))
@@ -544,6 +548,7 @@ def plotAll(plotSetup: dict, chirpConfig: dict, allOnOneSlideGraphList: list, de
                                 actualGraphData = getActualGraphData(allOnOneSlideGraphList[graphIdx]['graphType'], rxCh, 0, parseDataList, pdIdx)
                                 # Plot data
                                 if useSecondAxis(allOnOneSlideGraphList):
+                                    assert ax2 is not None
                                     if 'evel' in allOnOneSlideGraphList[graphIdx]['graphType']:
                                         plotLabel = 'ax1_' + plotLabel
                                         ax1.plot(angle, actualGraphData, '.-',pickradius=2, color=color, label = plotLabel)
@@ -562,6 +567,7 @@ def plotAll(plotSetup: dict, chirpConfig: dict, allOnOneSlideGraphList: list, de
 
                                     # Plot data
                                     if useSecondAxis(allOnOneSlideGraphList):
+                                        assert ax2 is not None
                                         if 'evel' in allOnOneSlideGraphList[graphIdx]['graphType']:
                                             plotLabel = 'ax1_' + plotLabel
                                             ax1.plot(angle, actualGraphData, '.-',pickradius=2, color=color, label = plotLabel)
@@ -589,6 +595,7 @@ def plotAll(plotSetup: dict, chirpConfig: dict, allOnOneSlideGraphList: list, de
 
                 label = 'Phase Diff. [°] - ideal' + '_'
                 if useSecondAxis(allOnOneSlideGraphList):
+                    assert ax2 is not None
                     label = 'ax2_' + label
                     ax2.plot(angleList[angIdx]['angle'], actualGraphData, '-', color='olive',linewidth=3.5, pickradius=2, label=label)
                 else:
