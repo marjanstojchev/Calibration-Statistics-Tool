@@ -324,7 +324,7 @@ def SysDiaInterTableParamCellClicked(row, col):
     antennaTypesList       = dp.getAntennaTypesList(parseDataList)
     ptu2ListPerAntennaType = dp.getPtu2ListPerAntennaType(antennaTypesList[0], parseDataList)
     dateTimeSensorList     = dp.getDateTimeSensorCombList(antennaTypesList[0], ptu2ListPerAntennaType)
-    desiredDiagList        = dp.getDiagramList(parseDataList)
+    desiredDiagList        = dp.getDiagramList(antennaTypesList[0], parseDataList)
     ylimits0    = []
     ylimits1    = []
     ylimitssec0 = []
@@ -550,8 +550,8 @@ def SysDiaInterTableProtCellClicked(row, col):
         graphNameTable.replace('PTU2.txt', '')
         if graphNameCheck == 'False':
             # protocols table
-            item.setBackgroundColor('green')
-            item.setTextColor('white')
+            item.setBackground(qt.QBrush(qt.QColor('green')))
+            item.setForeground(qt.QBrush(qt.QColor('white')))
             # item.setText('False')
             item.setText('True')
             # ax1
@@ -576,8 +576,8 @@ def SysDiaInterTableProtCellClicked(row, col):
                 # removing lines
                 if graphNameTable in qt.SysDiaInterPlotFrame.ax2.lines[lineIndex].get_label():
                     del qt.SysDiaInterPlotFrame.ax2.lines[lineIndex]
-            item.setBackgroundColor('white')
-            item.setTextColor('black')
+            item.setBackground(qt.QBrush(qt.QColor('white')))
+            item.setForeground(qt.QBrush(qt.QColor('black')))
             item.setText('False')
             qt.SysDiaInterPlotFrame.canvas.draw()
 
