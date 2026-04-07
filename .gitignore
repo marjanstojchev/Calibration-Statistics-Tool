@@ -127,7 +127,6 @@ output_tx_diagrams/
 test_diagram_ordering.py
 test_diagram_zero.py
 test_parsing.py
-test_protocols.py
 test_diagram_ordering.py
 test_diagram_zero.py
 test_parsing.py

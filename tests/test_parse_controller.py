@@ -277,3 +277,128 @@ class TestClearState:
         pc.sysDiagParsedDataDict['parsedDataList'].append('x')
         pc.clear_state()
         assert pc.sys_diag_parsed_count() == 0
+
+
+# ---------------------------------------------------------------------------
+# PST-74 — count helpers for protocol dicts
+# ---------------------------------------------------------------------------
+
+class TestProtocolCountHelpers:
+    """protocol_count / parsed_protocol_count / to_be_parsed_count."""
+
+    def test_protocol_count_reflects_path_type_list(self):
+        pc = _make_controller()
+        pc.protocolPathDict['protocolPathTypeDictList'].append(
+            {'protocolPath': '/a.txt', 'type': 'Calibration'}
+        )
+        assert pc.protocol_count() == 1
+
+    def test_protocol_count_multiple(self):
+        pc = _make_controller()
+        for i in range(5):
+            pc.protocolPathDict['protocolPathTypeDictList'].append(
+                {'protocolPath': f'/p{i}.txt', 'type': 'BurnIn'}
+            )
+        assert pc.protocol_count() == 5
+
+    def test_parsed_protocol_count(self):
+        pc = _make_controller()
+        pc.parsedProtDict['protocolPathTypeDictList'].append({'protocolPath': '/b.txt'})
+        assert pc.parsed_protocol_count() == 1
+
+    def test_to_be_parsed_count(self):
+        pc = _make_controller()
+        pc.protToBeParsedDict['protocolPathTypeDictList'].append({'protocolPath': '/c.txt'})
+        assert pc.to_be_parsed_count() == 1
+
+    def test_all_counts_zero_after_clear(self):
+        pc = _make_controller()
+        pc.protocolPathDict['protocolPathTypeDictList'].append({'protocolPath': '/a.txt', 'type': 'BurnIn'})
+        pc.parsedProtDict['protocolPathTypeDictList'].append({'protocolPath': '/b.txt'})
+        pc.protToBeParsedDict['protocolPathTypeDictList'].append({'protocolPath': '/c.txt'})
+        pc.clear_state()
+        assert pc.protocol_count()        == 0
+        assert pc.parsed_protocol_count() == 0
+        assert pc.to_be_parsed_count()    == 0
+
+
+# ---------------------------------------------------------------------------
+# PST-74 — build_prot_path_type_list populates burnIn / cal split dicts
+# ---------------------------------------------------------------------------
+
+class TestProtocolTypeSplitDicts:
+    """Verify that build_prot_path_type_list correctly assigns types and that
+    the returned list separates BurnIn vs Calibration by type field."""
+
+    def test_auto_mode_produces_correct_types(self, tmp_path):
+        cal = tmp_path / 'cal.txt'
+        cal.write_text('Gen26_UseBurnInMeas[1];0\n')
+        burn = tmp_path / 'burn.txt'
+        burn.write_text('Gen26_UseBurnInMeas[1];3\n')
+        pc = _make_controller()
+        result = pc.build_prot_path_type_list([str(cal), str(burn)], 0, True)
+        type_map = {r['protocolPath']: r['type'] for r in result}
+        assert type_map[str(cal)]  == 'Calibration'
+        assert type_map[str(burn)] == 'BurnIn'
+
+    def test_force_calibration_mode_overrides_content(self, tmp_path):
+        p = tmp_path / 'burn_content.txt'
+        p.write_text('Gen26_UseBurnInMeas[1];3\n')  # BurnIn content
+        pc = _make_controller()
+        result = pc.build_prot_path_type_list([str(p)], burn_in_cal_mode=2, include_burn_in_start=False)
+        assert result[0]['type'] == 'Calibration'
+
+    def test_force_burn_in_mode_overrides_content(self, tmp_path):
+        p = tmp_path / 'cal_content.txt'
+        p.write_text('Gen26_UseBurnInMeas[1];0\n')  # Calibration content
+        pc = _make_controller()
+        result = pc.build_prot_path_type_list([str(p)], burn_in_cal_mode=1, include_burn_in_start=False)
+        assert result[0]['type'] == 'BurnIn'
+
+    def test_empty_path_list_returns_empty(self):
+        pc = _make_controller()
+        result = pc.build_prot_path_type_list([], 0, False)
+        assert result == []
+
+    def test_unclear_type_still_included(self, tmp_path):
+        p = tmp_path / 'unclear.txt'
+        p.write_text('no recognizable marker\n')
+        pc = _make_controller()
+        result = pc.build_prot_path_type_list([str(p)], 0, False)
+        assert len(result) == 1
+        assert result[0]['type'] == 'Unclear'
+
+
+# ---------------------------------------------------------------------------
+# PST-74 — accepted / filtered protocol path dicts
+# ---------------------------------------------------------------------------
+
+class TestAcceptedFilteredProtocolDicts:
+    """Verify structure and direct manipulation of acceptedProtocolPathDict
+    and filteredProtocolPathDict."""
+
+    def test_accepted_dict_has_all_required_keys(self):
+        pc = _make_controller()
+        assert 'emptyProtList'       in pc.acceptedProtocolPathDict
+        assert 'errorProtList'       in pc.acceptedProtocolPathDict
+        assert 'abbortCritProtList'  in pc.acceptedProtocolPathDict
+        assert 'limitExceededProtList' in pc.acceptedProtocolPathDict
+
+    def test_filtered_dict_has_protocol_path_list_key(self):
+        pc = _make_controller()
+        assert 'protocolPathList' in pc.filteredProtocolPathDict
+
+    def test_error_list_accumulates(self):
+        pc = _make_controller()
+        pc.acceptedProtocolPathDict['errorProtList'].extend(['/a.txt', '/b.txt'])
+        assert len(pc.acceptedProtocolPathDict['errorProtList']) == 2
+
+    def test_clear_resets_all_accepted_sub_lists(self):
+        pc = _make_controller()
+        pc.acceptedProtocolPathDict['errorProtList'].append('/x.txt')
+        pc.acceptedProtocolPathDict['abbortCritProtList'].append('/y.txt')
+        pc.acceptedProtocolPathDict['limitExceededProtList'].append('/z.txt')
+        pc.acceptedProtocolPathDict['emptyProtList'].append('/e.txt')
+        pc.clear_state()
+        for key in pc.acceptedProtocolPathDict:
+            assert pc.acceptedProtocolPathDict[key] == []

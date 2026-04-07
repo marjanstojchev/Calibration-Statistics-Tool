@@ -1,0 +1,23 @@
+Date:;2024-02-01
+Time:;08:00:00
+CalStart:;2024-02-01-08:00:00
+CalEnd:;2024-02-01-08:30:00
+Duration[s]:;1800
+Product-Serial:;UMRR-11.00.04-11111
+RF-Serial:;11111
+Dsp-Serial:;22222
+Calibration DSP softwareinfo:;DSP_V2.1.0_Build200
+PtuOffset: AZ[°]:;0.0
+PtuOffset: EL[°]:;0.0
+
+K=0;
+
+Measurment Durations:
+
+##### MeasurmentLimit #####
+TxAntDiagram_Level_Max[dBm]:	-10.0	-8.0	1	Max limit
+
+##### Measurements #####
+(3a) TxAnt0 raw frequency table -  measpoints
+TxAnt[1];Freq[MHz];Level[dB];
+0;76500.0;-15.2;
