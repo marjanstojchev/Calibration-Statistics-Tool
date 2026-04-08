@@ -1,0 +1,3 @@
+PTU2 placeholder - for subfolder discovery demonstration
+This file is co-located in a subfolder of the protocol directory.
+The search logic uses os.walk() so it finds files in subfolders automatically.

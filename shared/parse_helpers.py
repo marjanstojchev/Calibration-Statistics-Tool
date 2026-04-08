@@ -165,7 +165,7 @@ def walk_protocol_files(
         stem, ext = os.path.splitext(file_name_no_ptu)
 
         if search_ptu2_files:
-            search_pattern = stem + '*PTU2*' + ext
+            search_pattern = stem + '*ptu2*' + ext
             ptu2_files_list_dict['ptu2FilesList'] = get_ptu2_files_fn(path_only, search_pattern)
 
         if search_txantdiag_files:

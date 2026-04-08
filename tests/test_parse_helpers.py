@@ -459,7 +459,7 @@ class TestWalkProtocolFiles:
             capture_ptu2_fn, _noop_fn,
         )
         # After stripping 'Protocol_Chip', stem should contain '_2024'
-        assert 'PTU2' in called_with['pattern']
+        assert 'ptu2' in called_with['pattern'].lower()
         assert 'Protocol_Chip' not in called_with['pattern']
 
 

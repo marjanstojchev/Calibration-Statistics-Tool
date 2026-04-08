@@ -436,3 +436,125 @@ class TestRealFixtureFilesSmoke:
         assert len(ptu2_list) == len(accepted)
         assert len(tx_list)   == len(accepted)
         assert len(acc)       == len(accepted)
+
+    def test_subfiles_fixture_found_by_pipeline(self):
+        """PTU2 and TxAntDiag files inside the real subfiles/ sub-directory
+        are discovered because getfiltered_ptu2filelist / getfiltered_txant-
+        diagramfilelist both use os.walk(), which recurses into sub-dirs."""
+        ptu2_list, tx_list, *_ = walk_protocol_files(
+            ProtocolInfoClass.FilterProtocols(
+                ProtocolInfoClass.PreParseProtcols(
+                    ProtocolInfoClass.GetAllProtocolsList(self._PROT_DIR)
+                )[0],
+                False, True, True,
+            )[0],
+            search_ptu2_files=True,
+            search_txantdiag_files=True,
+            use_error=False,
+            use_abort=True,
+            use_limits_exceeded=True,
+            get_ptu2_files_fn=ProtocolInfoClass.getfiltered_ptu2filelist,
+            get_txantdiag_files_fn=ProtocolInfoClass.getfiltered_txantdiagramfilelist,
+        )
+
+        all_ptu2 = [
+            os.path.normpath(f)
+            for entry in ptu2_list for f in entry['ptu2FilesList']
+        ]
+        all_tx = [
+            os.path.normpath(f)
+            for entry in tx_list for f in entry['txAntDiagList']
+        ]
+
+        subfiles_dir = os.path.join(self._PROT_DIR, 'subfiles')
+        expected_ptu2 = os.path.normpath(os.path.join(
+            subfiles_dir,
+            '2024-01-15_12-30-45_Tuner1_rf12345_dsp67890_Seq1_TxAnt1_Diagram1_Az_ptu2.txt',
+        ))
+        expected_tx = os.path.normpath(os.path.join(
+            subfiles_dir,
+            '2024-01-15_12-30-45_Tuner1_rf12345_dsp67890_Seq1_TxAnt1_Diagram1_Az_TxAnt0_Diagram0.txt',
+        ))
+        assert expected_ptu2 in all_ptu2, (
+            f"Subfolder PTU2 file not discovered.\nFound PTU2 files: {all_ptu2}"
+        )
+        assert expected_tx in all_tx, (
+            f"Subfolder TxAntDiag file not discovered.\nFound TxAnt files: {all_tx}"
+        )
+
+
+# ===========================================================================
+# 7. Subfolder PTU2 / TxAntDiag file discovery (tmp_path)
+# ===========================================================================
+
+class TestSubfolderDiscovery:
+    """PTU2 and TxAntDiag files in sub-directories of the protocol folder are
+    found because getfiltered_ptu2filelist / getfiltered_txantdiagramfilelist
+    both use os.walk(), which recurses into sub-directories."""
+
+    _STEM = '2024-03-10_10-00-00_Tuner1_rfSUB_dspSUB_Seq1'
+
+    def test_ptu2_in_subfolder_is_found(self, tmp_path):
+        _write_protocol(tmp_path, self._STEM, 'S_sub', 'rfSUB', 'dspSUB')
+        subdir = tmp_path / 'associated_files'
+        subdir.mkdir()
+        ptu2_path = _write_ptu2(subdir, self._STEM)
+
+        ptu2_list, *_ = _run_pipeline(str(tmp_path), search_ptu2=True, search_txantdiag=False)
+        found = [os.path.normpath(p) for p in ptu2_list[0]['ptu2FilesList']]
+        assert os.path.normpath(ptu2_path) in found
+
+    def test_txantdiag_in_subfolder_is_found(self, tmp_path):
+        _write_protocol(tmp_path, self._STEM, 'S_sub', 'rfSUB', 'dspSUB')
+        subdir = tmp_path / 'associated_files'
+        subdir.mkdir()
+        tx_path = _write_tx_diag(subdir, self._STEM)
+
+        _, tx_list, *_ = _run_pipeline(str(tmp_path), search_ptu2=False, search_txantdiag=True)
+        found = [os.path.normpath(p) for p in tx_list[0]['txAntDiagList']]
+        assert os.path.normpath(tx_path) in found
+
+    def test_both_in_subfolder_found_simultaneously(self, tmp_path):
+        _write_protocol(tmp_path, self._STEM, 'S_sub', 'rfSUB', 'dspSUB')
+        subdir = tmp_path / 'associated_files'
+        subdir.mkdir()
+        ptu2_path = _write_ptu2(subdir, self._STEM)
+        tx_path = _write_tx_diag(subdir, self._STEM)
+
+        ptu2_list, tx_list, *_ = _run_pipeline(str(tmp_path), search_ptu2=True, search_txantdiag=True)
+        found_ptu2 = [os.path.normpath(p) for p in ptu2_list[0]['ptu2FilesList']]
+        found_tx = [os.path.normpath(p) for p in tx_list[0]['txAntDiagList']]
+        assert os.path.normpath(ptu2_path) in found_ptu2
+        assert os.path.normpath(tx_path) in found_tx
+
+    def test_deeply_nested_subfolder_found(self, tmp_path):
+        """os.walk recurses through multiple nesting levels."""
+        _write_protocol(tmp_path, self._STEM, 'S_sub', 'rfSUB', 'dspSUB')
+        deep = tmp_path / 'level1' / 'level2' / 'level3'
+        deep.mkdir(parents=True)
+        ptu2_path = _write_ptu2(deep, self._STEM)
+
+        ptu2_list, *_ = _run_pipeline(str(tmp_path), search_ptu2=True, search_txantdiag=False)
+        found = [os.path.normpath(p) for p in ptu2_list[0]['ptu2FilesList']]
+        assert os.path.normpath(ptu2_path) in found
+
+    def test_files_in_sibling_protocol_dir_not_cross_contaminated(self, tmp_path):
+        """Files for protocol A in a subfolder are not attributed to protocol B."""
+        stem_a = '2024-03-10_10-00-00_Tuner1_rfAAA_dspAAA_Seq1'
+        stem_b = '2024-03-10_11-00-00_Tuner1_rfBBB_dspBBB_Seq1'
+        _write_protocol(tmp_path, stem_a, 'SA', 'rfAAA', 'dspAAA')
+        _write_protocol(tmp_path, stem_b, 'SB', 'rfBBB', 'dspBBB')
+
+        subdir = tmp_path / 'only_for_a'
+        subdir.mkdir()
+        ptu2_a = _write_ptu2(subdir, stem_a)
+
+        ptu2_list, *_ = _run_pipeline(str(tmp_path), search_ptu2=True, search_txantdiag=False)
+        path_map = {
+            os.path.normpath(e['protocolPath']): [os.path.normpath(p) for p in e['ptu2FilesList']]
+            for e in ptu2_list
+        }
+        prot_a = os.path.normpath(str(tmp_path / f'{stem_a}_Protocol.txt'))
+        prot_b = os.path.normpath(str(tmp_path / f'{stem_b}_Protocol.txt'))
+        assert os.path.normpath(ptu2_a) in path_map[prot_a]
+        assert os.path.normpath(ptu2_a) not in path_map[prot_b]
