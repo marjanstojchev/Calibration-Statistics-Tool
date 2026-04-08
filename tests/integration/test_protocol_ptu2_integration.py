@@ -467,20 +467,27 @@ class TestRealFixtureFilesSmoke:
         ]
 
         subfiles_dir = os.path.join(self._PROT_DIR, 'subfiles')
-        expected_ptu2 = os.path.normpath(os.path.join(
-            subfiles_dir,
-            '2024-01-15_12-30-45_Tuner1_rf12345_dsp67890_Seq1_TxAnt1_Diagram1_Az_ptu2.txt',
-        ))
-        expected_tx = os.path.normpath(os.path.join(
-            subfiles_dir,
-            '2024-01-15_12-30-45_Tuner1_rf12345_dsp67890_Seq1_TxAnt1_Diagram1_Az_TxAnt0_Diagram0.txt',
-        ))
-        assert expected_ptu2 in all_ptu2, (
-            f"Subfolder PTU2 file not discovered.\nFound PTU2 files: {all_ptu2}"
-        )
-        assert expected_tx in all_tx, (
-            f"Subfolder TxAntDiag file not discovered.\nFound TxAnt files: {all_tx}"
-        )
+        stem = '2024-01-15_12-30-45_Tuner1_rf12345_dsp67890_Seq1_TxAnt1_Diagram1_'
+
+        # Both Az and El PTU2 scans for TxAnt1/Diagram1 must be discovered
+        for ptu2_suffix in ('Az_ptu2.txt', 'El_ptu2.txt'):
+            expected = os.path.normpath(os.path.join(subfiles_dir, stem + ptu2_suffix))
+            assert expected in all_ptu2, (
+                f"Subfolder PTU2 file '{ptu2_suffix}' not discovered.\n"
+                f"Found PTU2 files: {all_ptu2}"
+            )
+
+        # All three TxAntDiag variants must be discovered
+        for tx_suffix in (
+            'Az_TxAnt0_Diagram0.txt',
+            'Az_TxAnt1_Diagram1.txt',
+            'Az_TxAnt2_Diagram2.txt',
+        ):
+            expected = os.path.normpath(os.path.join(subfiles_dir, stem + tx_suffix))
+            assert expected in all_tx, (
+                f"Subfolder TxAntDiag file '{tx_suffix}' not discovered.\n"
+                f"Found TxAnt files: {all_tx}"
+            )
 
 
 # ===========================================================================
