@@ -101,7 +101,7 @@ class ParseController:
                                 self._log.error(
                                     f'Invalid BurnIn/Cal auto-detection value: {parts[1]}'
                                 )
-                    if line == FILTER_MUSTER:
+                    if line.startswith(FILTER_MUSTER):
                         filter_prot = True
                         break
         except Exception as exc:

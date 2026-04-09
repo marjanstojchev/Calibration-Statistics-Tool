@@ -605,3 +605,24 @@ class TestProtocolFilterFlowEndToEnd:
         # Pre-parse checks flags only — bErrorOccured/Abort/Limits should be clean
         assert info.bErrorOccured   is False
         assert info.bAbortCriterion is False
+
+    def test_burnin_start_filtered_by_build_prot_path_type_list(self):
+        """BurnIn_Start protocol is dropped by build_prot_path_type_list when
+        include_burn_in_start=False because the file contains both
+        Gen26_UseBurnInMeas[1];3 and the '(12a) BurnIn Start Check results:;ok'
+        line (with ';ok' suffix — real-world format)."""
+        from parse_controller import ParseController
+        pc = ParseController()
+        result = pc.build_prot_path_type_list([_BI_START], 0, include_burn_in_start=False)
+        assert result == [], (
+            "BurnIn_Start_Protocol should be filtered out (type='Filtered') "
+            "when include_burn_in_start=False"
+        )
+
+    def test_burnin_start_included_when_flag_true(self):
+        """Same protocol is kept when include_burn_in_start=True."""
+        from parse_controller import ParseController
+        pc = ParseController()
+        result = pc.build_prot_path_type_list([_BI_START], 0, include_burn_in_start=True)
+        assert len(result) == 1
+        assert result[0]['type'] == 'BurnIn'

@@ -141,6 +141,14 @@ class TestGetProtocolTypeAutoDetect:
         result = pc.get_protocol_type(path, 0, include_burn_in_start=False)
         assert result == 'Filtered'
 
+    def test_burn_in_with_start_filter_excluded_with_ok_suffix(self, tmp_path):
+        # Real-world files append ';ok' to the marker line — must still be filtered
+        content = "Gen26_UseBurnInMeas[1];3\n(12a) BurnIn Start Check results:;ok\n"
+        path = self._write_prot(tmp_path, content)
+        pc = _make_controller()
+        result = pc.get_protocol_type(path, 0, include_burn_in_start=False)
+        assert result == 'Filtered'
+
     def test_burn_in_with_start_filter_included(self, tmp_path):
         content = "Gen26_UseBurnInMeas[1];3\n(12a) BurnIn Start Check results:\n"
         path = self._write_prot(tmp_path, content)
