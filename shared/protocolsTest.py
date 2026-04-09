@@ -127,23 +127,23 @@ class ProtocolInfoClass:
             if strTemp.startswith(dateenum): # parse date
                 linelist = strTemp.split(';')
                 if len(linelist) > 1:
-                    date = linelist[1]
+                    date = linelist[1].strip()
             if strTemp.startswith(timeenum): # parse time
                 linelist = strTemp.split(';')
                 if len(linelist) > 1:
-                    dateTime = str(date) +'-' + str(linelist[1])
+                    dateTime = str(date) +'-' + str(linelist[1].strip())
             if strTemp.startswith(prodSerialenum): # parse product serial number
                 linelist = strTemp.split(';')
                 if len(linelist) > 1:
-                    prodSerial = linelist[1]
+                    prodSerial = linelist[1].strip()
             if strTemp.startswith(rfenum): # parse rf number 
                 linelist = strTemp.split(';')
                 if len(linelist) > 1:
-                    rf = linelist[1]
+                    rf = linelist[1].strip()
             if strTemp.startswith(dspenum): # parse dsp number
                 linelist = strTemp.split(';')
                 if len(linelist) > 1:
-                    dsp = linelist[1]
+                    dsp = linelist[1].strip()
 
         return bFileEmpty, bErrorOccured, bAbortCriterion, bLimitExceeded, dateTime, prodSerial, rf, dsp
 
