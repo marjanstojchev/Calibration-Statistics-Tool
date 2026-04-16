@@ -929,3 +929,73 @@ class TestBoundaryValues:
         nonexistent = str(tmp_path / 'does_not_exist')
         found = ProtocolInfoClass.GetAllProtocolsList(nonexistent)
         assert found == []
+
+
+# ===========================================================================
+# [SMOKE] PST-T21 — PTU2 subfiles discovered when Search PTU2 checkbox is checked
+# ===========================================================================
+
+class TestSearchPtu2Checkbox:
+    """[SMOKE] PST-T21: PTU2 subfiles discovered when Search PTU2 checkbox is checked.
+
+    The 'Search PTU2 Files' checkbox (``parseProtSysDiagCheckBox``) sets
+    ``search_ptu2_files`` in the ``walk_protocol_files`` call.  When checked,
+    PTU2 files located in sub-directories of the protocol folder must be
+    discovered via ``getfiltered_ptu2filelist``'s ``os.walk`` recursion.
+    When unchecked, no PTU2 files are collected.
+
+    Uses the real fixture directory ``measurement_data/protocol_files/`` which
+    contains PTU2 fixture files inside its ``subfiles/`` subdirectory.
+    """
+
+    _PROT_DIR = os.path.join(_root, 'measurement_data', 'protocol_files')
+    _SUBDIR   = os.path.join(_PROT_DIR, 'subfiles')
+    # Stem of the Cal protocol fixture that has matching PTU2 subfiles
+    _CAL_STEM = '2024-01-15_12-30-45_Tuner1_rf12345_dsp67890_Seq1_TxAnt1_Diagram1_'
+
+    def _run(self, search_ptu2: bool) -> list:
+        found = ProtocolInfoClass.GetAllProtocolsList(self._PROT_DIR)
+        infos, *_ = ProtocolInfoClass.PreParseProtcols(found)
+        accepted, _ = ProtocolInfoClass.FilterProtocols(infos, False, True, True)
+        ptu2_list, *_ = walk_protocol_files(
+            accepted,
+            search_ptu2_files=search_ptu2,
+            search_txantdiag_files=False,
+            use_error=False,
+            use_abort=True,
+            use_limits_exceeded=True,
+            get_ptu2_files_fn=ProtocolInfoClass.getfiltered_ptu2filelist,
+            get_txantdiag_files_fn=ProtocolInfoClass.getfiltered_txantdiagramfilelist,
+        )
+        return ptu2_list
+
+    def test_pst_t21_subfiles_found_when_search_ptu2_checked(self):
+        """[SMOKE] PST-T21: search_ptu2=True (checkbox checked) → PTU2 files
+        inside subfiles/ sub-directory are discovered for the Cal fixture."""
+        ptu2_list = self._run(search_ptu2=True)
+        all_ptu2 = [
+            os.path.normpath(f)
+            for entry in ptu2_list
+            for f in entry['ptu2FilesList']
+        ]
+        expected_az = os.path.normpath(
+            os.path.join(self._SUBDIR, self._CAL_STEM + 'Az_ptu2.txt')
+        )
+        expected_el = os.path.normpath(
+            os.path.join(self._SUBDIR, self._CAL_STEM + 'El_ptu2.txt')
+        )
+        assert expected_az in all_ptu2, (
+            f'PST-T21: Az PTU2 subfile not discovered.\nFound: {all_ptu2}'
+        )
+        assert expected_el in all_ptu2, (
+            f'PST-T21: El PTU2 subfile not discovered.\nFound: {all_ptu2}'
+        )
+
+    def test_pst_t21_no_ptu2_when_search_unchecked(self):
+        """[SMOKE] PST-T21: search_ptu2=False (checkbox unchecked) → no PTU2
+        entries produced at all, regardless of what files exist on disk."""
+        ptu2_list = self._run(search_ptu2=False)
+        assert ptu2_list == [], (
+            f'PST-T21: Expected empty PTU2 list when checkbox unchecked. '
+            f'Got {len(ptu2_list)} entries.'
+        )
