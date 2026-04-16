@@ -14,6 +14,7 @@ PtuOffset: EL[°]:;-0.1
 
 E=0;
 K=0;
+Gen26_UseBurnInMeas[1];0
 
 Burn16a_BurnInMeasSpeedList[km/h]:;50;80;120;150
 Burn16c_BurnInMeasPtuPosAzimuthList[°]:;-45;-30;0;30;45
