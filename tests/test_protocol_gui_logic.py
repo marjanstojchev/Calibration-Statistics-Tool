@@ -147,15 +147,17 @@ class TestSmoke:
         assert all(r['type'] == 'BurnIn' for r in result)
 
     def test_build_prot_path_type_list_with_mixed_fixture_files(self):
-        """[SMOKE] Auto-detect with real fixture files: Calibration and BurnIn detected."""
+        """[SMOKE][REGRESSION] PST-T5/PST-T6: Auto-detect with real fixture files.
+        PST-T5: Calibration fixture must be detected as 'Calibration'.
+        PST-T6: BurnIn fixture must be detected as 'BurnIn'."""
         pc = _make_pc()
         result = pc.build_prot_path_type_list(
             [_CAL_FILE, _BURN_FILE], burn_in_cal_mode=0, include_burn_in_start=True
         )
         types = {os.path.basename(r['protocolPath']): r['type'] for r in result}
-        # Cal fixture → Calibration; BurnIn fixture → BurnIn or Unclear (depends on content)
-        # At minimum both files must produce an entry (not 'Filtered')
         assert len(result) == 2
+        assert types[os.path.basename(_CAL_FILE)]  == 'Calibration', 'PST-T5'
+        assert types[os.path.basename(_BURN_FILE)] == 'BurnIn',      'PST-T6'
 
 
 # ===========================================================================
