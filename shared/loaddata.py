@@ -56,12 +56,12 @@ class LoadData:
 
 
     def proceessPath(self, absPath) -> None:
-        ptu2PathEnd = "_PTU2.txt"
+        ptu2PathEnd = "_ptu2.txt"
         protocolPathEnd = '_Protocol.txt'
 
         pathParts = os.path.split(absPath)
 
-        if pathParts[1].endswith(ptu2PathEnd):
+        if pathParts[1].lower().endswith(ptu2PathEnd):
             if 'Diff' not in pathParts[1] and 'NotOk' not in pathParts[1]:
                 parseData = pd.PTU2ParseData()
                 parseData.parseFile(absPath,self.useSensorMuster,self.sensorMusterList)
@@ -91,7 +91,7 @@ class LoadData:
 
             if lookFurther == 1:
                 for item in dirContents:
-                    if item.endswith(ptu2PathEnd):
+                    if item.lower().endswith(ptu2PathEnd):
                         if 'Diff' not in item and 'NotOk' not in item:
                             # Set path to current file
                             # pathToFile = pathParts[0] + "\\" + item
@@ -125,7 +125,7 @@ class LoadData:
                     # Sort fileList to ensure consistent order (preserves alphabetical/chronological order)
                     fileList.sort()
                     for fileName in fileList:
-                        if fileName.endswith(ptu2PathEnd):
+                        if fileName.lower().endswith(ptu2PathEnd):
                             if 'Diff' not in fileName and 'NotOk' not in fileName:
 
                                 containsPtu2 = 1
