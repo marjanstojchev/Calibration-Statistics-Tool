@@ -78,7 +78,9 @@ class TestFilterProtocolFileLists:
         assert len(tx_list) == 1
         assert tx_list[0]["protocolPath"] == path
 
-    def test_no_match_returns_empty_lists(self):
+    def test_no_match_returns_empty_stub_entries(self):
+        """When no file-list entry matches, an empty stub is appended so the
+        output lists stay index-aligned with protToBeParsedDict."""
         prot  = {"protocolPathTypeDictList": [_make_entry("/prot/a.txt")]}
         sys_d = {"filePathList": [_make_sys_entry("/prot/other.txt")]}
         tx_d  = {"filePathList": [_make_tx_entry("/prot/other.txt")]}
@@ -86,10 +88,13 @@ class TestFilterProtocolFileLists:
 
         sys_list, tx_list = filter_protocol_file_lists(prot, sys_d, tx_d, parsed)
 
-        assert sys_list == []
-        assert tx_list == []
+        assert len(sys_list) == 1
+        assert sys_list[0] == {"protocolPath": "/prot/a.txt", "ptu2FilesList": []}
+        assert len(tx_list) == 1
+        assert tx_list[0] == {"protocolPath": "/prot/a.txt", "txAntDiagList": []}
 
     def test_partial_match_only_sys(self):
+        """When only sys matches, tx gets an empty stub (aligned output)."""
         path = "/prot/a.txt"
         prot  = {"protocolPathTypeDictList": [_make_entry(path)]}
         sys_d = {"filePathList": [_make_sys_entry(path)]}
@@ -99,9 +104,12 @@ class TestFilterProtocolFileLists:
         sys_list, tx_list = filter_protocol_file_lists(prot, sys_d, tx_d, parsed)
 
         assert len(sys_list) == 1
-        assert tx_list == []
+        assert sys_list[0]["protocolPath"] == path
+        assert len(tx_list) == 1
+        assert tx_list[0] == {"protocolPath": path, "txAntDiagList": []}
 
     def test_partial_match_only_tx(self):
+        """When only tx matches, sys gets an empty stub (aligned output)."""
         path = "/prot/b.txt"
         prot  = {"protocolPathTypeDictList": [_make_entry(path)]}
         sys_d = {"filePathList": []}
@@ -110,8 +118,10 @@ class TestFilterProtocolFileLists:
 
         sys_list, tx_list = filter_protocol_file_lists(prot, sys_d, tx_d, parsed)
 
-        assert sys_list == []
+        assert len(sys_list) == 1
+        assert sys_list[0] == {"protocolPath": path, "ptu2FilesList": []}
         assert len(tx_list) == 1
+        assert tx_list[0]["protocolPath"] == path
 
     def test_appends_to_parsed_prot_dict(self):
         paths = ["/prot/a.txt", "/prot/b.txt"]

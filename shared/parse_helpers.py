@@ -33,8 +33,11 @@ def filter_protocol_file_lists(
             entry is appended here.
 
     Returns:
-        ``(filteredSysDiagList, filteredTxAntDiagList)`` — one entry per
-        protocol in *protToBeParsedDict*, ``None``-entries are excluded.
+        ``(filteredSysDiagList, filteredTxAntDiagList)`` — exactly one entry
+        per protocol in *protToBeParsedDict*, aligned by index.  When no
+        matching file-list entry is found an empty stub is used so the two
+        output lists always have the same length as
+        ``protToBeParsedDict['protocolPathTypeDictList']``.
     """
     filteredSysDiagList:  list = []
     filteredTxAntDiagList: list = []
@@ -46,15 +49,19 @@ def filter_protocol_file_lists(
             (d for d in sysDiagFilePathDict['filePathList'] if d['protocolPath'] == protPath),
             None,
         )
-        if matched_sys is not None:
-            filteredSysDiagList.append(matched_sys)
+        filteredSysDiagList.append(
+            matched_sys if matched_sys is not None
+            else {'protocolPath': protPath, 'ptu2FilesList': []}
+        )
 
         matched_tx = next(
             (d for d in txDiagfilePathDict['filePathList'] if d['protocolPath'] == protPath),
             None,
         )
-        if matched_tx is not None:
-            filteredTxAntDiagList.append(matched_tx)
+        filteredTxAntDiagList.append(
+            matched_tx if matched_tx is not None
+            else {'protocolPath': protPath, 'txAntDiagList': []}
+        )
 
         parsedProtDict['protocolPathTypeDictList'].append(entry)
 

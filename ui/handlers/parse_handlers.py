@@ -98,6 +98,13 @@ def _update_protocol_dicts(
     ctx.pc.protocolPathDict["protocolPathTypeDictList"] += accepted_prot_path_type_dict_list
 
     accepted_path_set = {d["protocolPath"] for d in ctx.pc.protocolPathDict["protocolPathTypeDictList"]}
+
+    # Protocols dropped by type-filtering (e.g. BurnIn-start when checkbox is off) should
+    # be surfaced in filteredProtocolPathDict so the ratio label reflects them, rather than
+    # disappearing silently with "No new protocols Loaded."
+    type_filtered = [p for p in accepted_crit_prot_list if p not in accepted_path_set]
+    filtered_protocol_list.extend(type_filtered)
+
     update_filtered_protocol_list(filtered_protocol_list, ctx.pc.filteredProtocolPathDict, accepted_path_set)
 
     parseDataLog.info("Filtered Protocol List:")
