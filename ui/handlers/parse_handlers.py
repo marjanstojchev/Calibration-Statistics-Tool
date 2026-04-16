@@ -142,8 +142,17 @@ def _populate_sel_prot_table(
     for prot_idx, entry in enumerate(accepted_prot_path_type_dict_list):
         protocol_path        = entry["protocolPath"]
         protocol_type        = entry["type"]
-        sys_diag_per_prot    = sys_diag_file_path_dict_temp[prot_idx]["ptu2FilesList"]
-        tx_ant_diag_per_prot = tx_diag_file_path_dict_temp[prot_idx]["txAntDiagList"]
+        # Either list may be empty when its checkbox was unchecked — fall back to [].
+        sys_diag_per_prot = (
+            sys_diag_file_path_dict_temp[prot_idx]["ptu2FilesList"]
+            if prot_idx < len(sys_diag_file_path_dict_temp)
+            else []
+        )
+        tx_ant_diag_per_prot = (
+            tx_diag_file_path_dict_temp[prot_idx]["txAntDiagList"]
+            if prot_idx < len(tx_diag_file_path_dict_temp)
+            else []
+        )
         prot_table_data      = dp.ProtocolsTableData(protocol_path, sys_diag_per_prot, tx_ant_diag_per_prot)
 
         if sys_diag_per_prot or tx_ant_diag_per_prot:
