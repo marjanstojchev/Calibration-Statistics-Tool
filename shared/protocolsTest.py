@@ -150,7 +150,7 @@ class ProtocolInfoClass:
     # alle protokolldatei im uebergebenen dateipfad und allen unterverzeichnissen
     @staticmethod
     def GetAllProtocolsList(pathname):
-        return ProtocolInfoClass.getfiltered_ptu2filelist(pathname, '*proto*.txt') # dateilist gefiltert nach '*proto*.txt'
+        return ProtocolInfoClass.getfiltered_ptu2filelist(pathname, '*[Pp]rotocol*.txt') # case-insensitive on Linux: matches Protocol and protocol
 
 
     # 'vorparsen' der protokolle: information ob fehler, abbruch kriterium oder messgrenzenueberschreitung aufgetreten ist
