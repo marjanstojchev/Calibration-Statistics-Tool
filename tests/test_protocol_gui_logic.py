@@ -63,12 +63,12 @@ from shared.protocolsTest import ProtocolInfoClass
 _PROT_DIR  = os.path.join(_root, 'measurement_data', 'protocol_files')
 _CAL_FILE  = os.path.join(_PROT_DIR, '2024-01-15_12-30-45_Tuner1_rf12345_dsp67890_Seq1_TxAnt1_Diagram1_Protocol.txt')
 _BURN_FILE = os.path.join(_PROT_DIR, '2024-01-15_10-15-20_Tuner2_rf12346_dsp67891_Seq2_TxAnt2_Diagram2_BurnIn_Protocol.txt')
-_ERROR_FILE = os.path.join(_PROT_DIR, '2024-02-01_08-00-00_Tuner1_rf11111_dsp22222_Seq1_TxAnt0_Diagram0_Protocol_Error.txt')
-_ABORT_FILE = os.path.join(_PROT_DIR, '2024-02-01_09-00-00_Tuner1_rf11112_dsp22223_Seq1_TxAnt0_Diagram0_Protocol_Abort.txt')
-_LIMITS_FILE = os.path.join(_PROT_DIR, '2024-02-01_10-00-00_Tuner1_rf11113_dsp22224_Seq1_TxAnt0_Diagram0_Protocol_Limits.txt')
-_ALL_FLAGS  = os.path.join(_PROT_DIR, '2024-02-01_11-00-00_Tuner1_rf11114_dsp22225_Seq1_TxAnt0_Diagram0_Protocol_AllFlags.txt')
+_ERROR_FILE = os.path.join(_PROT_DIR, '2024-02-01_08-00-00_Tuner1_rf11111_dsp22222_Seq1_TxAnt0_Diagram0_Error_Protocol.txt')
+_ABORT_FILE = os.path.join(_PROT_DIR, '2024-02-01_09-00-00_Tuner1_rf11112_dsp22223_Seq1_TxAnt0_Diagram0_Abort_Protocol.txt')
+_LIMITS_FILE = os.path.join(_PROT_DIR, '2024-02-01_10-00-00_Tuner1_rf11113_dsp22224_Seq1_TxAnt0_Diagram0_Limits_Protocol.txt')
+_ALL_FLAGS  = os.path.join(_PROT_DIR, '2024-02-01_11-00-00_Tuner1_rf11114_dsp22225_Seq1_TxAnt0_Diagram0_AllFlags_Protocol.txt')
 _BI_START   = os.path.join(_PROT_DIR, '2024-02-01_12-00-00_Tuner1_rf12345_dsp67890_Seq1_TxAnt0_Diagram0_BurnIn_Start_Protocol.txt')
-_NEWER_FILE = os.path.join(_PROT_DIR, '2024-02-02_08-00-00_Tuner1_rf12345_dsp67890_Seq1_TxAnt0_Diagram0_Protocol_NewerSameSensor.txt')
+_NEWER_FILE = os.path.join(_PROT_DIR, '2024-02-02_08-00-00_Tuner1_rf12345_dsp67890_Seq1_TxAnt0_Diagram0_NewerSameSensor_Protocol.txt')
 
 # ---------------------------------------------------------------------------
 # Shared helpers

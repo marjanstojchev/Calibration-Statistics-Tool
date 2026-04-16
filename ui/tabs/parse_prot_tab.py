@@ -189,7 +189,7 @@ parseProtGroupBoxFrameLayout.addWidget(parseProtImportProtFListPushBtn, stretch=
 ##### Parse Protocols - Import Protocols - File List FileDialog
 parseProtImportProtFListFDialog = QFileDialog()
 parseProtImportProtFListFDialog.setFileMode(QFileDialog.ExistingFiles)
-parseProtImportProtFListFDialog.setNameFilter("Protocols (*Protocol*.txt)")
+parseProtImportProtFListFDialog.setNameFilter("Protocols (*_Protocol.txt)")
 
 ##### Parse Protocols - Import Protocols - File Path FileDialog
 parseProtImportProtDirPathFDialog = QFileDialog()
