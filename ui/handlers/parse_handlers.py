@@ -381,6 +381,7 @@ def _load_protocol_data(
         )
         if sysDiagLoadedData.invalidPath == 1:
             parseDataLog.info(sysDiagLoadedData.invalidPathString)
+            sysDiagDataList.append([])  # keep index aligned with protToBeParsedDict
         else:
             sysDiagDataList.append(sysDiagDataPerProt)
             sysDiagParsedDataList += sysDiagLoadedData.parseDataList
@@ -393,6 +394,7 @@ def _load_protocol_data(
         )
         if txAntDiagLoadedData.invalidPath == 1:
             parseDataLog.info(txAntDiagLoadedData.invalidPathString)
+            txAntDiagDataList.append([])  # keep index aligned with protToBeParsedDict
         else:
             txAntDiagDataList.append(txAntDiagDataPerProt)
             txAntDiagParsedDataList += txAntDiagLoadedData.parseDataList
@@ -439,7 +441,7 @@ def _populate_accepted_protocols_table(
     header.setSectionResizeMode(2, ctx.qt.QHeaderView.ResizeMode.Interactive)
     header.setSectionResizeMode(3, ctx.qt.QHeaderView.ResizeMode.Stretch)
 
-    if not sysDiagDataList or not txAntDiagDataList:
+    if not sysDiagDataList and not txAntDiagDataList:
         return
 
     refRowIdx = ctx.qt.parseProtAccProtTable.rowCount()
