@@ -145,8 +145,14 @@ class TestReadHelpers:
         with patch.object(view.parseProtBurnInCalGroup, 'checkedId', return_value=1):
             assert view.get_burn_in_cal_mode() == 1
 
-    def test_get_include_burn_in_start_true(self, view):
+    def test_get_include_burn_in_start_checkbox_checked_returns_false(self, view):
+        # Checked = "Ignore BurnIn At Start" = exclude → False
         with patch.object(view.parseProtBurnStartCheckBox, 'isChecked', return_value=True):
+            assert view.get_include_burn_in_start() is False
+
+    def test_get_include_burn_in_start_checkbox_unchecked_returns_true(self, view):
+        # Unchecked (default) = don't ignore = include → True
+        with patch.object(view.parseProtBurnStartCheckBox, 'isChecked', return_value=False):
             assert view.get_include_burn_in_start() is True
 
     def test_get_use_sensor_muster_checked(self, view):

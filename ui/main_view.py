@@ -393,7 +393,8 @@ class MainView:
         return self.parseProtBurnInCalGroup.checkedId()
 
     def get_include_burn_in_start(self) -> bool:
-        return self.parseProtBurnStartCheckBox.isChecked()
+        # Checkbox means "Ignore BurnIn At Start": checked = exclude, unchecked = include.
+        return not self.parseProtBurnStartCheckBox.isChecked()
 
     def get_use_sensor_muster(self) -> int:
         return 1 if self.parseProtSensorMusterCheckBox.isChecked() else 0
