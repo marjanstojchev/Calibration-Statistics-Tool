@@ -455,7 +455,6 @@ class MainView:
 
     def set_sensor_muster_enabled(self, enabled: bool) -> None:
         self.parseProtSensorMusterLEdit.setEnabled(enabled)
-        self.parseProtSensorMusterLabel.setEnabled(enabled)
 
     # ------------------------------------------------------------------ #
     # Parse-protocol stats counter labels (ratio format)

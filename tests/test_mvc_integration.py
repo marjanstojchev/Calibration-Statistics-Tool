@@ -260,17 +260,15 @@ class TestControllerIndependence:
 
 class TestMainViewSensorMuster:
 
-    def test_set_sensor_muster_enabled_true_enables_both(self, view):
+    def test_set_sensor_muster_enabled_true_enables_ledit(self, view):
         v, _ = view
         v.set_sensor_muster_enabled(True)
         assert v.parseProtSensorMusterLEdit.isEnabled() is True
-        assert v.parseProtSensorMusterLabel.isEnabled() is True
 
-    def test_set_sensor_muster_enabled_false_disables_both(self, view):
+    def test_set_sensor_muster_enabled_false_disables_ledit(self, view):
         v, _ = view
         v.set_sensor_muster_enabled(False)
         assert v.parseProtSensorMusterLEdit.isEnabled() is False
-        assert v.parseProtSensorMusterLabel.isEnabled() is False
 
 
 class TestMainViewLabels:

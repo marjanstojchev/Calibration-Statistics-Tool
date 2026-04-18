@@ -248,12 +248,9 @@ parseProtSensorMusterCheckBox.setChecked(False)
 parseProtGroupBoxFrameLayout.addWidget(parseProtSensorMusterCheckBox)
 
 #####
-parseProtSensorMusterLabel = QLabel('Sensor Muster Parts: \n(sep. by white space)')
-parseProtGroupBoxFrameLayout.addWidget(parseProtSensorMusterLabel)
-
-#####
 parseProtSensorMusterLEdit = QLineEdit()
 parseProtSensorMusterLEdit.setFixedSize(LEDIT_BTN_H_SIZE, LEDIT_BTN_V_SIZE)
+parseProtSensorMusterLEdit.setPlaceholderText('(ex: rf dsp PT)')
 parseProtGroupBoxFrameLayout.addWidget(parseProtSensorMusterLEdit)
 
 
