@@ -1418,6 +1418,35 @@ class ParseProtocols():
         #     log.error('Opening protocol file error: '+str(exception)+'.')
         #     self.errorStatus = ErrorStatusEnum.Error
 
+class LimitsRow:
+    """Holds per-limit statistics and metadata for one measurement limit entry."""
+
+    def __init__(self) -> None:
+        self.index:      int   = 0
+        self.mean:       float = 0.0
+        self.min:        float = 0.0
+        self.max:        float = 0.0
+        self.cg:         float = 0.0
+        self.stDev:      float = 0.0
+        self.maxDev:     float = 0.0
+        self.upperLimit: float = 0.0
+        self.lowerLimit: float = 0.0
+        self.protType:   str   = ''
+        self.limitName:  str   = ''
+        self.graph:      int   = -1
+        self.axis:       int   = 0
+        self.error:      dict  = {}
+
+
+class LimitsGroup:
+    """Represents a named group of related measurement limits."""
+
+    def __init__(self) -> None:
+        self.name:                 str  = ''
+        self.protType:             str  = ''
+        self.limitsRowMatchDictList: list = []
+
+
 class ParseInputLimitsGroups:
     def __init__(self) -> None:
         self.burnInErrorStatus = 0

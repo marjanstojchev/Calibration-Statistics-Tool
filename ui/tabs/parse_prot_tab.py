@@ -426,6 +426,15 @@ parseProtProtDataBurnInLayout.addWidget(parseProtProtDataLimGroupsBurnInLabel)
 parseProtProtDataBurnInLimGroupsExtCheckBox = QCheckBox('Extend Limits Groups File')
 parseProtProtDataBurnInLayout.addWidget(parseProtProtDataBurnInLimGroupsExtCheckBox)
 
+#####
+parseProtProtDataBurnInGroupSelLabel = QLabel('Active Limits Group:')
+parseProtProtDataBurnInLayout.addWidget(parseProtProtDataBurnInGroupSelLabel)
+
+parseProtProtDataBurnInGroupSelComboBox = QComboBox()
+parseProtProtDataBurnInGroupSelComboBox.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
+parseProtProtDataBurnInGroupSelComboBox.setEnabled(False)
+parseProtProtDataBurnInLayout.addWidget(parseProtProtDataBurnInGroupSelComboBox)
+
 ######
 parseProtProtDataCalInclCheckBox = QCheckBox('Include for Parsing')
 parseProtProtDataCalLayout.addWidget(parseProtProtDataCalInclCheckBox)
@@ -481,6 +490,15 @@ parseProtProtDataCalLayout.addWidget(parseProtProtDataLimGroupsCalLabel)
 
 parseProtProtDataCalLimGroupsExtCheckBox = QCheckBox('Extend Limits Groups File')
 parseProtProtDataCalLayout.addWidget(parseProtProtDataCalLimGroupsExtCheckBox)
+
+#####
+parseProtProtDataCalGroupSelLabel = QLabel('Active Limits Group:')
+parseProtProtDataCalLayout.addWidget(parseProtProtDataCalGroupSelLabel)
+
+parseProtProtDataCalGroupSelComboBox = QComboBox()
+parseProtProtDataCalGroupSelComboBox.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
+parseProtProtDataCalGroupSelComboBox.setEnabled(False)
+parseProtProtDataCalLayout.addWidget(parseProtProtDataCalGroupSelComboBox)
 
 
 ### Parse Protocols Status

@@ -116,6 +116,7 @@ import ui.handlers.parse_handlers       as parse_h
 import ui.handlers.sys_diag_handlers    as sys_diag_h
 import ui.handlers.tx_ant_diag_handlers as tx_h
 import ui.handlers.ant_pat_handlers     as ant_h
+import ui.handlers.stats_handlers       as stats_h
 
 ctx = AppContext(qt=qt, mv=view, plc=plc, pc=pc)
 
@@ -123,11 +124,13 @@ parse_h.init_widgets(ctx)
 sys_diag_h.init_widgets(ctx)
 tx_h.init_widgets(ctx)
 ant_h.init_widgets(ctx)
+stats_h.init_widgets(ctx)
 
 parse_h.wire(ctx)
 sys_diag_h.wire(ctx)
 tx_h.wire(ctx)
 ant_h.wire(ctx)
+stats_h.wire(ctx)
 
 qt.parseProtMergePPTXBtn.clicked.connect(lambda: None)  # merge: stub (feature removed)
 

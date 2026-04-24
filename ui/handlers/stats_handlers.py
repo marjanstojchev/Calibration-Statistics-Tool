@@ -1,0 +1,645 @@
+"""Statistics tab signal handlers  (PST-28).
+
+Wires:
+  - statsTable cell clicks  (col 0 = graph toggle, col 1 = axis toggle)
+  - Group navigation: Forward / Back / Save
+  - statsClearBtn, parseProtWriteStatsPushBtn, parseProtClearStatsDataBtn
+  - statsGroupsTypeButtonGroup (BurnIn / Calibration radio)
+"""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from PySide6.QtWidgets import QTableWidgetItem, QHeaderView
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor, QBrush
+
+if TYPE_CHECKING:  # pragma: no cover
+    from ui.handlers.app_context import AppContext
+
+import logconfig
+
+_log = logconfig.mainLoadDataLogger.logger
+
+# ---------------------------------------------------------------------------
+# Module-level graph-index tracking (mirrors statsTableGraphsDict in old code)
+# ---------------------------------------------------------------------------
+
+_graphs_dict: dict = {
+    'actualRemovedGraphsList': [],
+    'actualCheckedGraphsDict': {-1: 'default'},
+}
+
+
+# ---------------------------------------------------------------------------
+# Internal helpers
+# ---------------------------------------------------------------------------
+
+def _get_prot_list(parsed_dict: dict) -> list:
+    return [e['parsedData'] for e in parsed_dict['protocolParsingDictList']]
+
+
+def _get_protocol_paths(ctx: "AppContext") -> list[str]:
+    paths: list[str] = []
+    for d in ctx.pc.burnInParsedProtDict['protocolParsingDictList']:
+        paths.append(d['protocolPath'])
+    for d in ctx.pc.calParsedProtDict['protocolParsingDictList']:
+        paths.append(d['protocolPath'])
+    return paths
+
+
+def _get_graph_index() -> int:
+    removed = _graphs_dict['actualRemovedGraphsList']
+    checked = _graphs_dict['actualCheckedGraphsDict']
+    if not removed:
+        return max(checked.keys()) + 1
+    idx = min(removed)
+    removed.remove(idx)
+    return idx
+
+
+def _reset_graphs_dict() -> None:
+    _graphs_dict['actualRemovedGraphsList'] = []
+    _graphs_dict['actualCheckedGraphsDict'] = {-1: 'default'}
+
+
+def _collect_plot_data(parsed_list: list, limit_name: str) -> tuple[list[int], list[float]]:
+    """Gather (protocol_index_list, y_value_list) for a given limit name."""
+    from shared import safeparse as sp
+
+    prot_idx_list: list[int]   = []
+    plot_data:     list[float] = []
+
+    for i, pp in enumerate(parsed_list):
+        prot_idx_list.append(i)
+        if (
+            hasattr(pp, 'inputFilteredMeasurementLimit')
+            and pp.inputFilteredMeasurementLimit is not None
+            and hasattr(pp.inputFilteredMeasurementLimit, 'limitsList')
+        ):
+            for lim in pp.inputFilteredMeasurementLimit.limitsList:
+                if lim.name == limit_name and getattr(lim, 'valueFound', 0) == 1:
+                    plot_data.append(float(lim.value))
+                    break
+            else:
+                if hasattr(pp, 'rawParsedProtocolHead') and pp.rawParsedProtocolHead:
+                    for hdr, hvals in pp.rawParsedProtocolHead.items():
+                        if hdr == limit_name:
+                            for v in hvals:
+                                if sp.checkInt(str(v)) or sp.checkDecimal(str(v)):
+                                    plot_data.append(float(v))
+                                    break
+                            break
+        else:
+            if hasattr(pp, 'rawParsedProtocolHead') and pp.rawParsedProtocolHead:
+                for hdr, hvals in pp.rawParsedProtocolHead.items():
+                    if hdr == limit_name:
+                        for v in hvals:
+                            if sp.checkInt(str(v)) or sp.checkDecimal(str(v)):
+                                plot_data.append(float(v))
+                                break
+                        break
+
+    # align lengths — if plot_data shorter than prot_idx_list, trim index list
+    if len(plot_data) < len(prot_idx_list):
+        prot_idx_list = prot_idx_list[:len(plot_data)]
+
+    return prot_idx_list, plot_data
+
+
+# ---------------------------------------------------------------------------
+# Graph cell colour helpers
+# ---------------------------------------------------------------------------
+
+_LIGHT_GRAPH_COLORS = {'cyan', 'yellow', 'springgreen', 'white'}
+
+
+def _apply_graph_cell_color(item: QTableWidgetItem, graph_index: int) -> None:
+    from widgets import getGraphColor
+    color = getGraphColor(graph_index)
+    item.setBackground(QBrush(QColor(color)))
+    text_color = 'black' if color in _LIGHT_GRAPH_COLORS else 'white'
+    item.setForeground(QBrush(QColor(text_color)))
+    item.setText(str(graph_index))
+    item.setData(Qt.UserRole, graph_index)
+
+
+# ---------------------------------------------------------------------------
+# Fill stats table
+# ---------------------------------------------------------------------------
+
+def fill_stats_table(ctx: "AppContext") -> None:
+    """Populate statsTable from limitsRowListDict (after compute_limits_stats)."""
+    ctx.qt.statsTable.setRowCount(0)
+    col = ctx.mv.statsTableColMapping
+
+    for row_obj in ctx.pc.limitsRowListDict['limitsRowList']:
+        row_idx = ctx.qt.statsTable.rowCount()
+        ctx.qt.statsTable.insertRow(row_idx)
+
+        def _item(val: object) -> QTableWidgetItem:
+            it = QTableWidgetItem(str(val) if val != 0.0 or isinstance(val, str) else '0.0')
+            return it
+
+        # Graph column — Off / not plotted by default
+        graph_item = QTableWidgetItem()
+        graph_item.setData(Qt.DisplayRole, 'Off')
+        graph_item.setData(Qt.UserRole, -1)
+        graph_item.setFlags(Qt.ItemIsEnabled)
+        ctx.qt.statsTable.setItem(row_idx, col['graph'], graph_item)
+
+        # Axis column — ax1 by default
+        axis_item = QTableWidgetItem()
+        axis_item.setData(Qt.DisplayRole, 'ax1')
+        axis_item.setData(Qt.UserRole, 1)
+        axis_item.setFlags(Qt.ItemIsEnabled)
+        ctx.qt.statsTable.setItem(row_idx, col['axis'], axis_item)
+
+        # Error
+        err_str = ', '.join(str(k) for k in row_obj.error.keys()) if row_obj.error else ''
+        ctx.qt.statsTable.setItem(row_idx, col['error'],      _item(err_str))
+        ctx.qt.statsTable.setItem(row_idx, col['protType'],   _item(row_obj.protType))
+        ctx.qt.statsTable.setItem(row_idx, col['limitName'],  _item(row_obj.limitName))
+        ctx.qt.statsTable.setItem(row_idx, col['stDev'],      _item(row_obj.stDev))
+        ctx.qt.statsTable.setItem(row_idx, col['mean'],       _item(row_obj.mean))
+        ctx.qt.statsTable.setItem(row_idx, col['min'],        _item(row_obj.min))
+        ctx.qt.statsTable.setItem(row_idx, col['max'],        _item(row_obj.max))
+        ctx.qt.statsTable.setItem(row_idx, col['maxDev'],     _item(row_obj.maxDev))
+        ctx.qt.statsTable.setItem(row_idx, col['upperLimit'], _item(row_obj.upperLimit))
+        ctx.qt.statsTable.setItem(row_idx, col['lowerLimit'], _item(row_obj.lowerLimit))
+        ctx.qt.statsTable.setItem(row_idx, col['cg'],         _item(row_obj.cg))
+
+    # Completion list for the save dialog (default to BurnIn names)
+    burn_in_names = [
+        r.limitName for r in ctx.pc.limitsRowListDict['limitsRowList']
+        if r.protType == 'BurnIn'
+    ]
+    ctx.mv.statsGroupsSaveDialog.completionList = burn_in_names
+
+
+# ---------------------------------------------------------------------------
+# Cell click handlers
+# ---------------------------------------------------------------------------
+
+def _on_stats_cell_clicked(ctx: "AppContext", row: int, col: int) -> None:
+    col_map  = ctx.mv.statsTableColMapping
+    protocol = _get_protocol_paths(ctx)
+    if col == col_map['graph']:
+        _handle_graph_click(ctx, row, protocol)
+    elif col == col_map['axis']:
+        _handle_axis_click(ctx, row, protocol)
+
+
+def _handle_graph_click(ctx: "AppContext", row: int, protocol: list[str]) -> None:
+    col_map   = ctx.mv.statsTableColMapping
+    graph_item = ctx.qt.statsTable.item(row, col_map['graph'])
+    axis_item  = ctx.qt.statsTable.item(row, col_map['axis'])
+    name_item  = ctx.qt.statsTable.item(row, col_map['limitName'])
+    type_item  = ctx.qt.statsTable.item(row, col_map['protType'])
+
+    if graph_item is None or name_item is None:
+        return
+
+    graph_index = graph_item.data(Qt.UserRole)
+    limit_name  = name_item.data(Qt.DisplayRole)
+    ax          = axis_item.data(Qt.UserRole) if axis_item else 1
+    rows        = ctx.pc.limitsRowListDict['limitsRowList']
+
+    if graph_index != -1:
+        # ---- Toggle OFF: remove line from plot ----------------------------
+        graph_item.setBackground(QBrush(QColor('white')))
+        graph_item.setForeground(QBrush(QColor('black')))
+        graph_item.setText('Off')
+        graph_item.setData(Qt.UserRole, -1)
+
+        _graphs_dict['actualRemovedGraphsList'].append(graph_index)
+        if graph_index in _graphs_dict['actualCheckedGraphsDict']:
+            del _graphs_dict['actualCheckedGraphsDict'][graph_index]
+
+        if row < len(rows):
+            rows[row].graph = -1
+
+        target_ax = ctx.mv.statsPlotFrame.ax1 if ax == 1 else ctx.mv.statsPlotFrame.ax2
+        for i, line in enumerate(target_ax.lines):
+            if line.get_label() == limit_name:
+                target_ax.lines[i].remove()
+                break
+        ctx.mv.statsPlotFrame.ax1.legend(title='Legends', loc='upper left')
+        ctx.mv.statsPlotFrame.canvas.draw()
+
+    else:
+        # ---- Toggle ON: add line to plot ----------------------------------
+        graph_index = _get_graph_index()
+        _graphs_dict['actualCheckedGraphsDict'][graph_index] = limit_name
+        _apply_graph_cell_color(graph_item, graph_index)
+
+        if axis_item is not None:
+            axis_item.setForeground(QBrush(QColor('blue' if ax == 1 else 'red')))
+
+        if row < len(rows):
+            rows[row].graph = graph_index
+
+        # Build plot data
+        prot_type   = type_item.data(Qt.DisplayRole) if type_item else 'BurnIn'
+        parsed_dict = (
+            ctx.pc.calParsedProtDict
+            if prot_type == 'Calibration'
+            else ctx.pc.burnInParsedProtDict
+        )
+        parsed_list = _get_prot_list(parsed_dict)
+        prot_idx_list, plot_data = _collect_plot_data(parsed_list, limit_name)
+
+        if plot_data:
+            ctx.mv.statsPlotFrame.plot(prot_idx_list, plot_data, graph_index, limit_name, protocol, ax)
+
+
+def _handle_axis_click(ctx: "AppContext", row: int, protocol: list[str]) -> None:
+    col_map    = ctx.mv.statsTableColMapping
+    graph_item = ctx.qt.statsTable.item(row, col_map['graph'])
+    name_item  = ctx.qt.statsTable.item(row, col_map['limitName'])
+    axis_item  = ctx.qt.statsTable.item(row, col_map['axis'])
+
+    if axis_item is None:
+        return
+
+    graph_index = graph_item.data(Qt.UserRole) if graph_item else -1
+    limit_name  = name_item.data(Qt.DisplayRole) if name_item else ''
+    ax          = axis_item.data(Qt.UserRole)
+    rows        = ctx.pc.limitsRowListDict['limitsRowList']
+
+    new_ax  = 2 if ax == 1 else 1
+    axis_item.setData(Qt.UserRole, new_ax)
+    axis_item.setData(Qt.DisplayRole, f'ax{new_ax}')
+    axis_item.setForeground(QBrush(QColor('blue' if new_ax == 1 else 'red')))
+
+    if row < len(rows):
+        rows[row].axis = new_ax
+
+    # If currently plotted: move line between axes
+    if graph_index == -1:
+        return
+
+    src_ax = ctx.mv.statsPlotFrame.ax1 if ax == 1 else ctx.mv.statsPlotFrame.ax2
+    for i, line in enumerate(src_ax.lines):
+        if line.get_label() == limit_name:
+            x = list(line.get_xdata())
+            y = list(line.get_ydata())
+            src_ax.lines[i].remove()
+            prot_type   = (
+                ctx.qt.statsTable.item(row, col_map['protType']).data(Qt.DisplayRole)
+                if ctx.qt.statsTable.item(row, col_map['protType']) else 'BurnIn'
+            )
+            parsed_dict = (
+                ctx.pc.calParsedProtDict
+                if prot_type == 'Calibration'
+                else ctx.pc.burnInParsedProtDict
+            )
+            prot_paths  = _get_protocol_paths(ctx)
+            ctx.mv.statsPlotFrame.plot(x, y, graph_index, limit_name, prot_paths, new_ax)
+            break
+
+
+# ---------------------------------------------------------------------------
+# Clear selected stats data (plot + table selection state)
+# ---------------------------------------------------------------------------
+
+def clear_sel_stats_data(ctx: "AppContext") -> None:
+    """Clear the plot and reset all graph/axis selections in statsTable."""
+    ctx.mv.statsPlotFrame.clear()
+    col_map = ctx.mv.statsTableColMapping
+    rows    = ctx.pc.limitsRowListDict['limitsRowList']
+
+    for row_idx in range(ctx.qt.statsTable.rowCount()):
+        graph_item = ctx.qt.statsTable.item(row_idx, col_map['graph'])
+        axis_item  = ctx.qt.statsTable.item(row_idx, col_map['axis'])
+
+        if graph_item is not None and graph_item.data(Qt.UserRole) != -1:
+            graph_item.setData(Qt.UserRole, -1)
+            graph_item.setData(Qt.DisplayRole, 'Off')
+            graph_item.setBackground(QBrush(QColor('white')))
+            graph_item.setForeground(QBrush(QColor('black')))
+            if row_idx < len(rows):
+                rows[row_idx].graph = -1
+
+        if axis_item is not None:
+            axis_item.setForeground(QBrush(QColor('black')))
+            axis_item.setData(Qt.UserRole, 1)
+            axis_item.setData(Qt.DisplayRole, 'ax1')
+            if row_idx < len(rows):
+                rows[row_idx].axis = 1
+
+    ctx.mv.statsGroupNameLabel.setText(ctx.mv.statsGroupNameString)
+    _reset_graphs_dict()
+
+
+# ---------------------------------------------------------------------------
+# Group activation
+# ---------------------------------------------------------------------------
+
+def set_limits_group_active(ctx: "AppContext", limits_group) -> None:
+    """Activate a LimitsGroup: highlight its rows and plot them."""
+    protocol = _get_protocol_paths(ctx)
+    clear_sel_stats_data(ctx)
+
+    col_map = ctx.mv.statsTableColMapping
+    rows    = ctx.pc.limitsRowListDict['limitsRowList']
+
+    prot_type_label = limits_group.protType
+    ctx.mv.statsGroupNameLabel.setText(f'{prot_type_label}: {limits_group.name}')
+
+    parsed_dict = (
+        ctx.pc.calParsedProtDict
+        if prot_type_label == 'Calibration'
+        else ctx.pc.burnInParsedProtDict
+    )
+    parsed_list = _get_prot_list(parsed_dict)
+
+    for match_dict in limits_group.limitsRowMatchDictList:
+        limit_row = match_dict['row']
+        row_idx   = limit_row.index
+
+        if row_idx >= ctx.qt.statsTable.rowCount():
+            continue
+
+        axis_item  = ctx.qt.statsTable.item(row_idx, col_map['axis'])
+        ax         = axis_item.data(Qt.UserRole) if axis_item else 1
+
+        graph_index = _get_graph_index()
+        _graphs_dict['actualCheckedGraphsDict'][graph_index] = limit_row.limitName
+
+        graph_item = ctx.qt.statsTable.item(row_idx, col_map['graph'])
+        if graph_item is not None:
+            _apply_graph_cell_color(graph_item, graph_index)
+
+        if axis_item is not None:
+            axis_item.setForeground(QBrush(QColor('blue' if ax == 1 else 'red')))
+
+        if row_idx < len(rows):
+            rows[row_idx].graph = graph_index
+
+        prot_idx_list, plot_data = _collect_plot_data(parsed_list, limit_row.limitName)
+        if plot_data:
+            ctx.mv.statsPlotFrame.plot(
+                prot_idx_list, plot_data, graph_index, limit_row.limitName, protocol, ax
+            )
+
+
+# ---------------------------------------------------------------------------
+# Group navigation
+# ---------------------------------------------------------------------------
+
+def _on_show_groups_type(ctx: "AppContext") -> None:
+    btn_id   = ctx.qt.statsGroupsTypeButtonGroup.checkedId()
+    grp_dict = ctx.pc.burnInLimitsGroupDict if btn_id == 0 else ctx.pc.calLimitsGroupDict
+    active   = grp_dict['activeGroupIndex']
+    if active == -1:
+        clear_sel_stats_data(ctx)
+    else:
+        set_limits_group_active(ctx, grp_dict['limitsGroupList'][active])
+
+
+def _on_group_forward(ctx: "AppContext") -> None:
+    btn_id   = ctx.qt.statsGroupsTypeButtonGroup.checkedId()
+    grp_dict = ctx.pc.burnInLimitsGroupDict if btn_id == 0 else ctx.pc.calLimitsGroupDict
+    lst      = grp_dict['limitsGroupList']
+    if not lst:
+        return
+    idx = grp_dict['activeGroupIndex']
+    idx = 0 if idx >= len(lst) - 1 else idx + 1
+    grp_dict['activeGroupIndex'] = idx
+    set_limits_group_active(ctx, lst[idx])
+
+
+def _on_group_back(ctx: "AppContext") -> None:
+    btn_id   = ctx.qt.statsGroupsTypeButtonGroup.checkedId()
+    grp_dict = ctx.pc.burnInLimitsGroupDict if btn_id == 0 else ctx.pc.calLimitsGroupDict
+    lst      = grp_dict['limitsGroupList']
+    if not lst:
+        return
+    idx = grp_dict['activeGroupIndex']
+    idx = len(lst) - 1 if idx <= 0 else idx - 1
+    grp_dict['activeGroupIndex'] = idx
+    set_limits_group_active(ctx, lst[idx])
+
+
+# ---------------------------------------------------------------------------
+# Save group dialog
+# ---------------------------------------------------------------------------
+
+def _on_group_save(ctx: "AppContext") -> None:
+    """Open LimitsGroupsSaveDialog pre-populated with currently visible rows."""
+    dialog    = ctx.mv.statsGroupsSaveDialog
+    btn_id    = ctx.qt.statsGroupsTypeButtonGroup.checkedId()
+    prot_type = 'BurnIn' if btn_id == 0 else 'Calibration'
+    grp_dict  = ctx.pc.burnInLimitsGroupDict if btn_id == 0 else ctx.pc.calLimitsGroupDict
+
+    # Reset dialog
+    dialog.errorLabel.setText('')
+    dialog.groupNameLEdit.clear()
+    dialog.saveToFileCheckBox.setChecked(False)
+    dialog.table.setRowCount(0)
+    dialog.comboList = []
+    dialog.initTable()
+
+    # Completion list
+    completion = [
+        r.limitName for r in ctx.pc.limitsRowListDict['limitsRowList']
+        if r.protType == prot_type
+    ]
+    dialog.completionList = completion
+
+    # Pre-fill with rows that are currently graphed for this prot_type
+    col_map    = ctx.mv.statsTableColMapping
+    table_row  = 0
+    active_idx = grp_dict['activeGroupIndex']
+    active_matches: list[dict] = []
+    if active_idx != -1:
+        active_matches = grp_dict['limitsGroupList'][active_idx].limitsRowMatchDictList
+
+    rows = ctx.pc.limitsRowListDict['limitsRowList']
+    for r_idx in range(ctx.qt.statsTable.rowCount()):
+        if r_idx >= len(rows):
+            break
+        row_obj = rows[r_idx]
+        if row_obj.graph == -1 or row_obj.protType != prot_type:
+            continue
+
+        while table_row >= dialog.table.rowCount():
+            dialog.addLine()
+
+        limit_item = dialog.table.item(table_row, 0)
+        if limit_item is not None:
+            limit_item.setText(row_obj.limitName)
+            comp_dict = {'completion_ls': completion, 'row': row_obj}
+            limit_item.setData(Qt.UserRole, comp_dict)
+
+        combo = dialog.table.cellWidget(table_row, 1)
+        if combo:
+            match_val = 'ExactMatch'
+            for m in active_matches:
+                if m['row'].limitName == row_obj.limitName:
+                    match_val = m.get('match', 'ExactMatch')
+                    break
+            idx = 0 if match_val == 'ExactMatch' else 1
+            combo.setCurrentIndex(idx)
+
+        table_row += 1
+
+    # Wire Save button once
+    try:
+        dialog.buttonBox.accepted.disconnect()
+    except RuntimeError:
+        pass
+    dialog.buttonBox.accepted.connect(lambda: _dialog_save(ctx))
+    dialog.exec_()
+
+
+def _dialog_save(ctx: "AppContext") -> None:
+    """Validate and save the new LimitsGroup from the save dialog."""
+    from shared.parseProtocols import LimitsGroup
+
+    dialog    = ctx.mv.statsGroupsSaveDialog
+    btn_id    = ctx.qt.statsGroupsTypeButtonGroup.checkedId()
+    prot_type = 'BurnIn' if btn_id == 0 else 'Calibration'
+    grp_dict  = ctx.pc.burnInLimitsGroupDict if btn_id == 0 else ctx.pc.calLimitsGroupDict
+
+    group_name = dialog.groupNameLEdit.text().strip()
+    if not group_name:
+        dialog.errorLabel.setText('Empty Group Name field!')
+        return
+
+    new_group           = LimitsGroup()
+    new_group.name      = group_name
+    new_group.protType  = prot_type
+
+    rows = ctx.pc.limitsRowListDict['limitsRowList']
+    for r in range(dialog.table.rowCount()):
+        limit_item = dialog.table.item(r, 0)
+        if limit_item is None:
+            continue
+        lim_name = limit_item.text().strip()
+        if not lim_name:
+            continue
+        combo = dialog.table.cellWidget(r, 1)
+        match = combo.currentText() if combo else 'ExactMatch'
+        for row_obj in rows:
+            if row_obj.limitName == lim_name and row_obj.protType == prot_type:
+                new_group.limitsRowMatchDictList.append({'row': row_obj, 'match': match})
+                break
+
+    grp_dict['limitsGroupList'].append(new_group)
+    grp_dict['activeGroupIndex'] = len(grp_dict['limitsGroupList']) - 1
+    set_limits_group_active(ctx, new_group)
+    dialog.close()
+    _log.info(f"Saved new limits group '{group_name}' ({prot_type})")
+
+
+# ---------------------------------------------------------------------------
+# Full clear (stats table + plot + state dicts)
+# ---------------------------------------------------------------------------
+
+def _on_stats_clear(ctx: "AppContext") -> None:
+    """Clear statsTable and the plot entirely."""
+    ctx.qt.statsTable.setRowCount(0)
+    ctx.mv.statsPlotFrame.clear()
+    ctx.mv.statsGroupNameLabel.setText(ctx.mv.statsGroupNameString)
+    _reset_graphs_dict()
+    ctx.pc.limitsRowListDict['limitsRowList'] = []
+
+
+# ---------------------------------------------------------------------------
+# Write statistic (compute + fill tables)
+# ---------------------------------------------------------------------------
+
+def write_statistic(ctx: "AppContext") -> None:
+    """Compute stats and populate the statistics tables.
+
+    Called by the 'Parse / Write Statistic' button.
+    """
+    # Switch to Statistics Protocols sub-tab so the user sees the tables fill
+    ctx.qt.mainTabWidget.setCurrentIndex(0)
+    ctx.qt.parseProtTableTabWidget.setCurrentIndex(4)
+
+    ctx.pc.compute_limits_stats()
+    fill_stats_table(ctx)
+    _fill_stats_protocol_tables(ctx)
+
+    # Switch to main Statistics tab
+    ctx.qt.mainTabWidget.setCurrentIndex(6)
+    _log.info('write_statistic: complete.')
+
+
+def _fill_stats_protocol_tables(ctx: "AppContext") -> None:
+    """Populate parseProtStatsParsedTable and parseProtStatsFailedTable."""
+    for tbl, dicts, labels in (
+        (
+            ctx.qt.parseProtStatsParsedTable,
+            [ctx.pc.burnInParsedProtDict, ctx.pc.calParsedProtDict],
+            ['BurnIn', 'Calibration'],
+        ),
+        (
+            ctx.qt.parseProtStatsFailedTable,
+            [ctx.pc.burnInFailedProtDict, ctx.pc.calFailedProtDict],
+            ['BurnIn', 'Calibration'],
+        ),
+    ):
+        tbl.setRowCount(0)
+        hdr = tbl.horizontalHeader()
+        hdr.setSectionResizeMode(0, QHeaderView.Interactive)
+        tbl.setColumnWidth(0, 800)
+        hdr.setSectionResizeMode(1, QHeaderView.Interactive)
+        tbl.setColumnWidth(1, 110)
+        hdr.setSectionResizeMode(2, QHeaderView.Stretch)
+
+        for parsed_dict, p_label in zip(dicts, labels):
+            for entry in parsed_dict['protocolParsingDictList']:
+                r = tbl.rowCount()
+                tbl.insertRow(r)
+                tbl.setItem(r, 0, QTableWidgetItem(entry.get('protocolPath', '')))
+                tbl.setItem(r, 1, QTableWidgetItem(entry.get('type', '')))
+                tbl.setItem(r, 2, QTableWidgetItem(p_label))
+
+
+# ---------------------------------------------------------------------------
+# init_widgets / wire
+# ---------------------------------------------------------------------------
+
+def init_widgets(ctx: "AppContext") -> None:
+    ctx.qt.statsGroupsTypeBurnInRadio.setChecked(True)
+    # Let cursor click on statsPlotFrame log the file name
+    ctx.mv.statsPlotFrame._on_cursor_select = lambda name: _log.info(f'Plot cursor: {name}')
+
+
+def wire(ctx: "AppContext") -> None:
+    """Connect all statistics-tab Qt signals to their handlers."""
+    # Parse tab buttons
+    ctx.qt.parseProtWriteStatsPushBtn.clicked.connect(
+        lambda: write_statistic(ctx)
+    )
+    ctx.qt.parseProtClearStatsDataBtn.clicked.connect(
+        lambda: _on_stats_clear(ctx)
+    )
+
+    # Statistics tab buttons
+    ctx.qt.statsClearBtn.clicked.connect(
+        lambda: clear_sel_stats_data(ctx)
+    )
+    ctx.qt.statsGroupForwardBtn.clicked.connect(
+        lambda: _on_group_forward(ctx)
+    )
+    ctx.qt.statsGroupBackBtn.clicked.connect(
+        lambda: _on_group_back(ctx)
+    )
+    ctx.qt.statsGroupSaveBtn.clicked.connect(
+        lambda: _on_group_save(ctx)
+    )
+
+    # Group type radio buttons
+    ctx.qt.statsGroupsTypeButtonGroup.buttonClicked.connect(
+        lambda _btn: _on_show_groups_type(ctx)
+    )
+
+    # Cell click
+    ctx.qt.statsTable.cellClicked.connect(
+        lambda r, c: _on_stats_cell_clicked(ctx, r, c)
+    )

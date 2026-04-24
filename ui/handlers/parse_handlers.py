@@ -346,6 +346,16 @@ def loadCalLimitsGroupsFile(ctx: "AppContext") -> None:
     ctx.mv.set_cal_lim_groups_file(filePath)
 
 
+def _on_burn_in_group_changed(ctx: "AppContext", index: int) -> None:
+    """Sync the BurnIn active group index in ParseController when the ComboBox changes."""
+    ctx.pc.burnInLimitsGroupDict['activeGroupIndex'] = index
+
+
+def _on_cal_group_changed(ctx: "AppContext", index: int) -> None:
+    """Sync the Calibration active group index in ParseController when the ComboBox changes."""
+    ctx.pc.calLimitsGroupDict['activeGroupIndex'] = index
+
+
 # ---------------------------------------------------------------------------
 # Parse orchestration
 # ---------------------------------------------------------------------------
@@ -530,6 +540,34 @@ def parseData(ctx: "AppContext") -> None:
 
     _populate_accepted_protocols_table(ctx, sysDiagDataList, txAntDiagDataList)
 
+    ctx.pc.parse_protocol_limits(
+        burn_in_limits_path=ctx.qt.parseProtProtDataInFileBurnInLabel.text(),
+        cal_limits_path=ctx.qt.parseProtProtDataInFileCalLabel.text(),
+        include_burn_in=ctx.qt.parseProtProtDataBurnInInclCheckBox.isChecked(),
+        include_cal=ctx.qt.parseProtProtDataCalInclCheckBox.isChecked(),
+        extend_burn_in=ctx.qt.parseProtProtDataBurnInExtCheckBox.isChecked(),
+        extend_cal=ctx.qt.parseProtProtDataCalExtCheckBox.isChecked(),
+    )
+
+    ctx.pc.build_limits_rows()
+    ctx.pc.build_limits_groups(
+        burn_in_lim_groups_path=ctx.qt.parseProtProtDataLimGroupsBurnInLabel.text(),
+        cal_lim_groups_path=ctx.qt.parseProtProtDataLimGroupsCalLabel.text(),
+        include_burn_in=ctx.qt.parseProtProtDataBurnInInclCheckBox.isChecked(),
+        include_cal=ctx.qt.parseProtProtDataCalInclCheckBox.isChecked(),
+        extend_burn_in_groups=ctx.qt.parseProtProtDataBurnInLimGroupsExtCheckBox.isChecked(),
+        extend_cal_groups=ctx.qt.parseProtProtDataCalLimGroupsExtCheckBox.isChecked(),
+    )
+
+    burn_in_group_names = [
+        g.name for g in ctx.pc.burnInLimitsGroupDict['limitsGroupList']
+    ]
+    cal_group_names = [
+        g.name for g in ctx.pc.calLimitsGroupDict['limitsGroupList']
+    ]
+    ctx.mv.populate_burn_in_groups(burn_in_group_names)
+    ctx.mv.populate_cal_groups(cal_group_names)
+
     ctx.mv.set_progress_label(
         f'Parsing finished. Protocols parsed: {len(ctx.pc.protToBeParsedDict["protocolPathTypeDictList"])}.'
     )
@@ -568,6 +606,8 @@ def clearData(ctx: "AppContext") -> None:
     ctx.mv.reset_progress_bar()
     ctx.mv.set_progress_bar_format("")
     ctx.mv.set_progress_label("No protocols loaded.")
+    ctx.mv.populate_burn_in_groups([])
+    ctx.mv.populate_cal_groups([])
 
     clearTable(ctx, ctx.qt.parseProtSelProtTable)
     clearTable(ctx, ctx.qt.parseProtAccProtTable)
@@ -575,6 +615,8 @@ def clearData(ctx: "AppContext") -> None:
     clearTable(ctx, ctx.qt.parseProtAddPtu2FailedTable)
     clearTable(ctx, ctx.qt.parseProtAddTxAntDiagFailedTable)
     clearTable(ctx, ctx.qt.parseProtAddTxAntDiagParsedTable)
+    clearTable(ctx, ctx.qt.parseProtStatsParsedTable)
+    clearTable(ctx, ctx.qt.parseProtStatsFailedTable)
 
     parseDataLog.info("Loaded and Parsed Data cleared!")
 
@@ -710,6 +752,12 @@ def wire(ctx: "AppContext") -> None:
     )
     ctx.qt.parseProtProtDataLimGroupsCalPushBtn.clicked.connect(
         lambda: loadCalLimitsGroupsFile(ctx)
+    )
+    ctx.qt.parseProtProtDataBurnInGroupSelComboBox.currentIndexChanged.connect(
+        lambda idx: _on_burn_in_group_changed(ctx, idx)
+    )
+    ctx.qt.parseProtProtDataCalGroupSelComboBox.currentIndexChanged.connect(
+        lambda idx: _on_cal_group_changed(ctx, idx)
     )
     ctx.qt.mainLogTableClearBtn.clicked.connect(
         lambda: clearLogTable(ctx)

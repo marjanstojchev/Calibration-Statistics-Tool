@@ -172,6 +172,11 @@ class MainView:
         statsButtonFrameLayout.addWidget(self.statsGroupSaveBtn, stretch=1, alignment=Qt.AlignLeft)
         statsButtonFrameLayout.addWidget(QLabel('Group Name: '), alignment=Qt.AlignLeft)
 
+        self.statsGroupNameString = ''
+        self.statsGroupNameLabel = QLabel(self.statsGroupNameString)
+        self.statsGroupNameLabel.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
+        statsButtonFrameLayout.addWidget(self.statsGroupNameLabel, alignment=Qt.AlignLeft)
+
         statsGroupPptxFrame = QFrame()
         statsGroupPptxFrame.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Maximum)
         statsGroupPptxFrameLayout = QHBoxLayout()
@@ -519,6 +524,40 @@ class MainView:
     def set_cal_lim_groups_file(self, path: str) -> None:
         self.parseProtProtDataLimGroupsCalLabel.setText(path)
         self.parseProtProtDataLimGroupsCalLabel.setToolTip(path)
+
+    def populate_burn_in_groups(self, group_names: list[str]) -> None:
+        """Populate the BurnIn group selection ComboBox with ``group_names``.
+
+        Clears any previous entries first and enables/disables the widget
+        depending on whether any names were provided.
+        """
+        cb = self.parseProtProtDataBurnInGroupSelComboBox
+        cb.blockSignals(True)
+        cb.clear()
+        if group_names:
+            cb.addItems(group_names)
+            cb.setEnabled(True)
+        else:
+            cb.setEnabled(False)
+        cb.blockSignals(False)
+
+    def populate_cal_groups(self, group_names: list[str]) -> None:
+        """Populate the Calibration group selection ComboBox with ``group_names``."""
+        cb = self.parseProtProtDataCalGroupSelComboBox
+        cb.blockSignals(True)
+        cb.clear()
+        if group_names:
+            cb.addItems(group_names)
+            cb.setEnabled(True)
+        else:
+            cb.setEnabled(False)
+        cb.blockSignals(False)
+
+    def get_burn_in_active_group_index(self) -> int:
+        return self.parseProtProtDataBurnInGroupSelComboBox.currentIndex()
+
+    def get_cal_active_group_index(self) -> int:
+        return self.parseProtProtDataCalGroupSelComboBox.currentIndex()
 
     def set_stats_input_conf_path(self, path: str) -> None:
         self.statsInputConfPathLabel.setText(path)
