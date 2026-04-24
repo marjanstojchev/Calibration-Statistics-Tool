@@ -1,0 +1,833 @@
+Meas3BurnInLimitDopplerGenRangeChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas3BurnInLimitDopplerGenRangeChirp0[cm]
+    - Meas3BurnInLimitDopplerGenRangeChirp1[cm]
+    - Meas3BurnInLimitDopplerGenRangeChirp2[cm]
+Meas0BurnInLimitDopplerGenSpeedChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas0BurnInLimitDopplerGenSpeedChirp1[m/s]
+    - Meas0BurnInLimitDopplerGenSpeedChirp0[m/s]
+Meas2BurnInLimitDopplerTargetFoundRatioChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas2BurnInLimitDopplerTargetFoundRatioChirp0[%]
+    - Meas2BurnInLimitDopplerTargetFoundRatioChirp1[%]
+Sensor1u8_interim_release_tag:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Sensor1u8_interim_release_tag2
+    - Sensor1u8_interim_release_tag1
+Meas2BurnInLimitDopplerGenAmplitudeChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas2BurnInLimitDopplerGenAmplitudeChirp0[db]
+    - Meas2BurnInLimitDopplerGenAmplitudeChirp1[db]
+    - Meas2BurnInLimitDopplerGenAmplitudeChirp2[db]
+Meas1BurnInLimitDopplerGenAmplitudeMaxDevChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas1BurnInLimitDopplerGenAmplitudeMaxDevChirp1[db]
+    - Meas1BurnInLimitDopplerGenAmplitudeMaxDevChirp0[db]
+Meas1BurnInLimitNoiseChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas1BurnInLimitNoiseChirp0[1]
+    - Meas1BurnInLimitNoiseChirp1[1]
+Meas4BurnInLimitNoiseChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas4BurnInLimitNoiseChirp0[1]
+    - Meas4BurnInLimitNoiseChirp1[1]
+PDITabCheckIPv6TargetWord:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - PDITabCheckIPv6TargetWord0
+    - PDITabCheckIPv6TargetWord6
+    - PDITabCheckIPv6TargetWord3
+    - PDITabCheckIPv6TargetWord7
+    - PDITabCheckIPv6TargetWord1
+    - PDITabCheckIPv6TargetWord2
+    - PDITabCheckIPv6TargetWord5
+    - PDITabCheckIPv6TargetWord4
+Meas1BurnInLimitDopplerGenSpeedChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas1BurnInLimitDopplerGenSpeedChirp1[m/s]
+    - Meas1BurnInLimitDopplerGenSpeedChirp0[m/s]
+Sensor0Diag_status_HAL00_bu1_adc_q:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Sensor0Diag_status_HAL00_bu1_adc_q3
+    - Sensor0Diag_status_HAL00_bu1_adc_q4
+    - Sensor0Diag_status_HAL00_bu1_adc_q1
+    - Sensor0Diag_status_HAL00_bu1_adc_q2
+Meas4BurnInLimitDopplerGenAngleChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas4BurnInLimitDopplerGenAngleChirp1[°]
+    - Meas4BurnInLimitDopplerGenAngleChirp0[°]
+Meas2BurnInLimitDopplerGenAngleChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas2BurnInLimitDopplerGenAngleChirp1[°]
+    - Meas2BurnInLimitDopplerGenAngleChirp0[°]
+Meas4BurnInLimitDopplerGenRangeMaxDevChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas4BurnInLimitDopplerGenRangeMaxDevChirp0[cm]
+    - Meas4BurnInLimitDopplerGenRangeMaxDevChirp1[cm]
+Meas0BurnInLimitDopplerGenSpeedMaxDevChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas0BurnInLimitDopplerGenSpeedMaxDevChirp1[m/s]
+    - Meas0BurnInLimitDopplerGenSpeedMaxDevChirp0[m/s]
+Uart0AtxmegaRs:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Uart0AtxmegaRs485
+    - Uart0AtxmegaRs485_Frequency
+Meas2BurnInLimitDopplerGenAmplitudeMaxDevChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas2BurnInLimitDopplerGenAmplitudeMaxDevChirp0[db]
+    - Meas2BurnInLimitDopplerGenAmplitudeMaxDevChirp1[db]
+Meas0BurnInLimitDopplerGenAmplitudeChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas0BurnInLimitDopplerGenAmplitudeChirp0[db]
+    - Meas0BurnInLimitDopplerGenAmplitudeChirp1[db]
+Meas2BurnInLimitDopplerGenRangeMaxDevChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas2BurnInLimitDopplerGenRangeMaxDevChirp0[cm]
+    - Meas2BurnInLimitDopplerGenRangeMaxDevChirp1[cm]
+PDITabCheckIPv6SourceWord:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - PDITabCheckIPv6SourceWord2
+    - PDITabCheckIPv6SourceWord7
+    - PDITabCheckIPv6SourceWord6
+    - PDITabCheckIPv6SourceWord0
+    - PDITabCheckIPv6SourceWord1
+    - PDITabCheckIPv6SourceWord3
+    - PDITabCheckIPv6SourceWord5
+    - PDITabCheckIPv6SourceWord4
+Meas1BurnInLimitDopplerGenRangeChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas1BurnInLimitDopplerGenRangeChirp0[cm]
+    - Meas1BurnInLimitDopplerGenRangeChirp1[cm]
+Sensor0u8_interim_release_tag:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Sensor0u8_interim_release_tag1
+    - Sensor0u8_interim_release_tag2
+PDITabCheckMACAddressByte:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - PDITabCheckMACAddressByte2
+    - PDITabCheckMACAddressByte1
+    - PDITabCheckMACAddressByte5
+    - PDITabCheckMACAddressByte4
+    - PDITabCheckMACAddressByte3
+    - PDITabCheckMACAddressByte0
+PDITabCheckIPv4SubnetMaskByte:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - PDITabCheckIPv4SubnetMaskByte2
+    - PDITabCheckIPv4SubnetMaskByte1
+    - PDITabCheckIPv4SubnetMaskByte0
+    - PDITabCheckIPv4SubnetMaskByte3
+Meas0BurnInLimitNoiseChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas0BurnInLimitNoiseChirp0[1]
+    - Meas0BurnInLimitNoiseChirp1[1]
+Meas4BurnInLimitMaxNoiseChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas4BurnInLimitMaxNoiseChirp1[1]
+    - Meas4BurnInLimitMaxNoiseChirp0[1]
+Meas2BurnInLimitDopplerGenRangeChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas2BurnInLimitDopplerGenRangeChirp1[cm]
+    - Meas2BurnInLimitDopplerGenRangeChirp0[cm]
+Meas3BurnInLimitDopplerGenSpeedChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas3BurnInLimitDopplerGenSpeedChirp0[m/s]
+    - Meas3BurnInLimitDopplerGenSpeedChirp1[m/s]
+Meas1BurnInLimitDopplerGenRangeMaxDevChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas1BurnInLimitDopplerGenRangeMaxDevChirp1[cm]
+    - Meas1BurnInLimitDopplerGenRangeMaxDevChirp0[cm]
+Meas1BurnInLimitMaxNoiseChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas1BurnInLimitMaxNoiseChirp0[1]
+    - Meas1BurnInLimitMaxNoiseChirp1[1]
+Meas2BurnInLimitCycleDurationChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas2BurnInLimitCycleDurationChirp1[s]
+    - Meas2BurnInLimitCycleDurationChirp0[s]
+Meas0BurnInLimitDopplerGenAngleChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas0BurnInLimitDopplerGenAngleChirp0[°]
+    - Meas0BurnInLimitDopplerGenAngleChirp1[°]
+Meas4BurnInLimitDopplerGenSpeedMaxDevChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas4BurnInLimitDopplerGenSpeedMaxDevChirp1[m/s]
+    - Meas4BurnInLimitDopplerGenSpeedMaxDevChirp0[m/s]
+Sensor1u8_main_release_tag:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Sensor1u8_main_release_tag1
+    - Sensor1u8_main_release_tag2
+    - Sensor1u8_main_release_tag3
+Meas1BurnInLimitDopplerGenAngleMaxDevChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas1BurnInLimitDopplerGenAngleMaxDevChirp1[°]
+    - Meas1BurnInLimitDopplerGenAngleMaxDevChirp0[°]
+Meas2BurnInLimitMaxNoiseChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas2BurnInLimitMaxNoiseChirp1[1]
+    - Meas2BurnInLimitMaxNoiseChirp0[1]
+Meas3BurnInLimitDopplerGenAmplitudeChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas3BurnInLimitDopplerGenAmplitudeChirp0[db]
+    - Meas3BurnInLimitDopplerGenAmplitudeChirp1[db]
+Meas3BurnInLimitDopplerTargetFoundRatioChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas3BurnInLimitDopplerTargetFoundRatioChirp0[%]
+    - Meas3BurnInLimitDopplerTargetFoundRatioChirp1[%]
+Meas0BurnInLimitCycleDurationChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas0BurnInLimitCycleDurationChirp1[s]
+    - Meas0BurnInLimitCycleDurationChirp0[s]
+Meas1BurnInLimitCycleDurationChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas1BurnInLimitCycleDurationChirp0[s]
+    - Meas1BurnInLimitCycleDurationChirp1[s]
+Meas1BurnInLimitDopplerGenAngleChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas1BurnInLimitDopplerGenAngleChirp0[°]
+    - Meas1BurnInLimitDopplerGenAngleChirp1[°]
+Sensor0Diag_status_HAL00_bu1_Bit:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Sensor0Diag_status_HAL00_bu1_Bit14
+    - Sensor0Diag_status_HAL00_bu1_Bit15
+Meas3BurnInLimitDopplerGenRangeMaxDevChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas3BurnInLimitDopplerGenRangeMaxDevChirp0[cm]
+    - Meas3BurnInLimitDopplerGenRangeMaxDevChirp1[cm]
+PDITabCheckIPv4TargetByte:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - PDITabCheckIPv4TargetByte2
+    - PDITabCheckIPv4TargetByte3
+    - PDITabCheckIPv4TargetByte0
+    - PDITabCheckIPv4TargetByte1
+Meas1BurnInLimitDopplerGenAmplitudeChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas1BurnInLimitDopplerGenAmplitudeChirp0[db]
+    - Meas1BurnInLimitDopplerGenAmplitudeChirp1[db]
+Sensor0Diag_error_SW00_bu1_pll_lock:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Sensor0Diag_error_SW00_bu1_pll_lock1
+    - Sensor0Diag_error_SW00_bu1_pll_lock2
+Sensor0Diag_status_SW00_bu1_pll_lock:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Sensor0Diag_status_SW00_bu1_pll_lock2
+    - Sensor0Diag_status_SW00_bu1_pll_lock1
+Meas4BurnInLimitDopplerGenRangeChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas4BurnInLimitDopplerGenRangeChirp1[cm]
+    - Meas4BurnInLimitDopplerGenRangeChirp0[cm]
+Meas2BurnInLimitNoiseChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas2BurnInLimitNoiseChirp1[1]
+    - Meas2BurnInLimitNoiseChirp0[1]
+PDITabCheckIPv4SourceByte:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - PDITabCheckIPv4SourceByte3
+    - PDITabCheckIPv4SourceByte2
+    - PDITabCheckIPv4SourceByte1
+    - PDITabCheckIPv4SourceByte0
+Sensor0Diag_error_HAL00_bu1_adc_i:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Sensor0Diag_error_HAL00_bu1_adc_i4
+    - Sensor0Diag_error_HAL00_bu1_adc_i1
+    - Sensor0Diag_error_HAL00_bu1_adc_i3
+    - Sensor0Diag_error_HAL00_bu1_adc_i2
+Meas0BurnInLimitDopplerGenRangeMaxDevChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas0BurnInLimitDopplerGenRangeMaxDevChirp0[cm]
+    - Meas0BurnInLimitDopplerGenRangeMaxDevChirp1[cm]
+Sensor0u8_main_release_tag:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Sensor0u8_main_release_tag1
+    - Sensor0u8_main_release_tag2
+    - Sensor0u8_main_release_tag3
+Sensor0Diag_error_HAL00_bu1_adc_q:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Sensor0Diag_error_HAL00_bu1_adc_q2
+    - Sensor0Diag_error_HAL00_bu1_adc_q3
+    - Sensor0Diag_error_HAL00_bu1_adc_q1
+    - Sensor0Diag_error_HAL00_bu1_adc_q4
+PDITabCheckReservedWord:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - PDITabCheckReservedWord0
+Sensor0Diag_error_HAL00_bu1_Bit:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Sensor0Diag_error_HAL00_bu1_Bit14
+    - Sensor0Diag_error_HAL00_bu1_Bit15
+Meas0BurnInLimitDopplerTargetFoundRatioChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas0BurnInLimitDopplerTargetFoundRatioChirp1[%]
+    - Meas0BurnInLimitDopplerTargetFoundRatioChirp0[%]
+Meas2BurnInLimitDopplerGenAngleMaxDevChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas2BurnInLimitDopplerGenAngleMaxDevChirp1[°]
+    - Meas2BurnInLimitDopplerGenAngleMaxDevChirp0[°]
+PDITabCheckIPv4GatewayByte:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - PDITabCheckIPv4GatewayByte1
+    - PDITabCheckIPv4GatewayByte3
+    - PDITabCheckIPv4GatewayByte0
+    - PDITabCheckIPv4GatewayByte2
+Meas4BurnInLimitDopplerGenAmplitudeMaxDevChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas4BurnInLimitDopplerGenAmplitudeMaxDevChirp0[db]
+    - Meas4BurnInLimitDopplerGenAmplitudeMaxDevChirp1[db]
+Meas0BurnInLimitDopplerGenRangeChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas0BurnInLimitDopplerGenRangeChirp0[cm]
+    - Meas0BurnInLimitDopplerGenRangeChirp1[cm]
+Meas4BurnInLimitDopplerTargetFoundRatioChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas4BurnInLimitDopplerTargetFoundRatioChirp1[%]
+    - Meas4BurnInLimitDopplerTargetFoundRatioChirp0[%]
+Meas3BurnInLimitDopplerGenAmplitudeMaxDevChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas3BurnInLimitDopplerGenAmplitudeMaxDevChirp0[db]
+    - Meas3BurnInLimitDopplerGenAmplitudeMaxDevChirp1[db]
+Meas3BurnInLimitDopplerGenSpeedMaxDevChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas3BurnInLimitDopplerGenSpeedMaxDevChirp0[m/s]
+    - Meas3BurnInLimitDopplerGenSpeedMaxDevChirp1[m/s]
+Meas0BurnInLimitDopplerGenAmplitudeMaxDevChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas0BurnInLimitDopplerGenAmplitudeMaxDevChirp1[db]
+    - Meas0BurnInLimitDopplerGenAmplitudeMaxDevChirp0[db]
+Meas1BurnInLimitDopplerTargetFoundRatioChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas1BurnInLimitDopplerTargetFoundRatioChirp0[%]
+    - Meas1BurnInLimitDopplerTargetFoundRatioChirp1[%]
+Meas3BurnInLimitDopplerGenAngleMaxDevChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas3BurnInLimitDopplerGenAngleMaxDevChirp0[°]
+    - Meas3BurnInLimitDopplerGenAngleMaxDevChirp1[°]
+Meas2BurnInLimitDopplerGenSpeedMaxDevChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas2BurnInLimitDopplerGenSpeedMaxDevChirp1[m/s]
+    - Meas2BurnInLimitDopplerGenSpeedMaxDevChirp0[m/s]
+Meas0BurnInLimitMaxNoiseChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas0BurnInLimitMaxNoiseChirp1[1]
+    - Meas0BurnInLimitMaxNoiseChirp0[1]
+Meas4BurnInLimitDopplerGenSpeedChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas4BurnInLimitDopplerGenSpeedChirp0[m/s]
+    - Meas4BurnInLimitDopplerGenSpeedChirp1[m/s]
+Meas3BurnInLimitMaxNoiseChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas3BurnInLimitMaxNoiseChirp1[1]
+    - Meas3BurnInLimitMaxNoiseChirp0[1]
+Meas4BurnInLimitCycleDurationChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas4BurnInLimitCycleDurationChirp0[s]
+    - Meas4BurnInLimitCycleDurationChirp1[s]
+Meas3BurnInLimitDopplerGenAngleChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas3BurnInLimitDopplerGenAngleChirp0[°]
+    - Meas3BurnInLimitDopplerGenAngleChirp1[°]
+Meas4BurnInLimitDopplerGenAmplitudeChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas4BurnInLimitDopplerGenAmplitudeChirp0[db]
+    - Meas4BurnInLimitDopplerGenAmplitudeChirp1[db]
+Meas3BurnInLimitNoiseChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas3BurnInLimitNoiseChirp0[1]
+    - Meas3BurnInLimitNoiseChirp1[1]
+Meas3BurnInLimitCycleDurationChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas3BurnInLimitCycleDurationChirp1[s]
+    - Meas3BurnInLimitCycleDurationChirp0[s]
+Meas4BurnInLimitDopplerGenAngleMaxDevChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas4BurnInLimitDopplerGenAngleMaxDevChirp1[°]
+    - Meas4BurnInLimitDopplerGenAngleMaxDevChirp0[°]
+Meas2BurnInLimitDopplerGenSpeedChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas2BurnInLimitDopplerGenSpeedChirp1[m/s]
+    - Meas2BurnInLimitDopplerGenSpeedChirp0[m/s]
+Sensor0Diag_status_HAL00_bu1_adc_i:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Sensor0Diag_status_HAL00_bu1_adc_i1
+    - Sensor0Diag_status_HAL00_bu1_adc_i4
+    - Sensor0Diag_status_HAL00_bu1_adc_i2
+    - Sensor0Diag_status_HAL00_bu1_adc_i3
+Meas0BurnInLimitDopplerGenAngleMaxDevChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas0BurnInLimitDopplerGenAngleMaxDevChirp0[°]
+    - Meas0BurnInLimitDopplerGenAngleMaxDevChirp1[°]
+Meas1BurnInLimitDopplerGenSpeedMaxDevChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas1BurnInLimitDopplerGenSpeedMaxDevChirp0[m/s]
+    - Meas1BurnInLimitDopplerGenSpeedMaxDevChirp1[m/s]
+DurationV:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - 'DurationV2[s]:'
+    - 'DurationV2[s]:'
+    - 'DurationV2[s]:'
+Sensor0SCTagu8_main_release_tag:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Sensor0SCTagu8_main_release_tag1
+    - Sensor0SCTagu8_main_release_tag2
+    - Sensor0SCTagu8_main_release_tag3
+    - Sensor0SCTagu8_main_release_tag1
+    - Sensor0SCTagu8_main_release_tag2
+    - Sensor0SCTagu8_main_release_tag3
+Sensor0SCTagu8_interim_release_tag:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Sensor0SCTagu8_interim_release_tag1
+    - Sensor0SCTagu8_interim_release_tag2
+    - Sensor0SCTagu8_interim_release_tag1
+    - Sensor0SCTagu8_interim_release_tag2
+BurnInLimitNoisePtuPos0Chirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - BurnInLimitNoisePtuPos0Chirp0[1]
+    - BurnInLimitNoisePtuPos0Chirp1[1]
+    - BurnInLimitNoisePtuPos0Chirp2[1]
+    - BurnInLimitNoisePtuPos0Chirp3[1]
+BurnInLimitCycleDurationMaxDevPtuPos0Chirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - BurnInLimitCycleDurationMaxDevPtuPos0Chirp0[s]
+    - BurnInLimitCycleDurationMaxDevPtuPos0Chirp1[s]
+    - BurnInLimitCycleDurationMaxDevPtuPos0Chirp2[s]
+    - BurnInLimitCycleDurationMaxDevPtuPos0Chirp3[s]
+BurnInLimitMaxNoisePtuPos0Chirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - BurnInLimitMaxNoisePtuPos0Chirp0[1]
+    - BurnInLimitMaxNoisePtuPos0Chirp1[1]
+    - BurnInLimitMaxNoisePtuPos0Chirp2[1]
+    - BurnInLimitMaxNoisePtuPos0Chirp3[1]
+BurnInLimitDopplerGenAmplitudeMaxDevPtuPos0Chirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - BurnInLimitDopplerGenAmplitudeMaxDevPtuPos0Chirp0[db]
+    - BurnInLimitDopplerGenAmplitudeMaxDevPtuPos0Chirp1[db]
+    - BurnInLimitDopplerGenAmplitudeMaxDevPtuPos0Chirp2[db]
+    - BurnInLimitDopplerGenAmplitudeMaxDevPtuPos0Chirp3[db]
+BurnInLimitDopplerGenAngleMaxDevPtuPos0Chirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - BurnInLimitDopplerGenAngleMaxDevPtuPos0Chirp0[°]
+    - BurnInLimitDopplerGenAngleMaxDevPtuPos0Chirp1[°]
+    - BurnInLimitDopplerGenAngleMaxDevPtuPos0Chirp2[°]
+    - BurnInLimitDopplerGenAngleMaxDevPtuPos0Chirp3[°]
+BurnInLimitDopplerGenRangeMaxDevPtuPos0Chirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - BurnInLimitDopplerGenRangeMaxDevPtuPos0Chirp0[cm]
+    - BurnInLimitDopplerGenRangeMaxDevPtuPos0Chirp1[cm]
+    - BurnInLimitDopplerGenRangeMaxDevPtuPos0Chirp2[cm]
+    - BurnInLimitDopplerGenRangeMaxDevPtuPos0Chirp3[cm]
+BurnInLimitDopplerGenSpeedMaxDevPtuPos0Chirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - BurnInLimitDopplerGenSpeedMaxDevPtuPos0Chirp0[m/s]
+    - BurnInLimitDopplerGenSpeedMaxDevPtuPos0Chirp1[m/s]
+    - BurnInLimitDopplerGenSpeedMaxDevPtuPos0Chirp2[m/s]
+    - BurnInLimitDopplerGenSpeedMaxDevPtuPos0Chirp3[m/s]
+BurnInLimitDopplerTargetFoundRatioPtuPos0Chirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - BurnInLimitDopplerTargetFoundRatioPtuPos0Chirp0[%]
+    - BurnInLimitDopplerTargetFoundRatioPtuPos0Chirp1[%]
+    - BurnInLimitDopplerTargetFoundRatioPtuPos0Chirp2[%]
+    - BurnInLimitDopplerTargetFoundRatioPtuPos0Chirp3[%]
+BurnInLimitDopplerTargetFoundRatioOverallPtuPos:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - BurnInLimitDopplerTargetFoundRatioOverallPtuPos0[%]
+    - BurnInLimitDopplerTargetFoundRatioOverallPtuPos1[%]
+    - BurnInLimitDopplerTargetFoundRatioOverallPtuPos2[%]
+BurnInLimitNoisePtuPos1Chirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - BurnInLimitNoisePtuPos1Chirp0[1]
+    - BurnInLimitNoisePtuPos1Chirp1[1]
+    - BurnInLimitNoisePtuPos1Chirp2[1]
+    - BurnInLimitNoisePtuPos1Chirp3[1]
+BurnInLimitCycleDurationMaxDevPtuPos1Chirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - BurnInLimitCycleDurationMaxDevPtuPos1Chirp0[s]
+    - BurnInLimitCycleDurationMaxDevPtuPos1Chirp1[s]
+    - BurnInLimitCycleDurationMaxDevPtuPos1Chirp2[s]
+    - BurnInLimitCycleDurationMaxDevPtuPos1Chirp3[s]
+BurnInLimitMaxNoisePtuPos1Chirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - BurnInLimitMaxNoisePtuPos1Chirp0[1]
+    - BurnInLimitMaxNoisePtuPos1Chirp1[1]
+    - BurnInLimitMaxNoisePtuPos1Chirp2[1]
+    - BurnInLimitMaxNoisePtuPos1Chirp3[1]
+BurnInLimitDopplerGenAmplitudeMaxDevPtuPos1Chirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - BurnInLimitDopplerGenAmplitudeMaxDevPtuPos1Chirp0[db]
+    - BurnInLimitDopplerGenAmplitudeMaxDevPtuPos1Chirp1[db]
+    - BurnInLimitDopplerGenAmplitudeMaxDevPtuPos1Chirp2[db]
+    - BurnInLimitDopplerGenAmplitudeMaxDevPtuPos1Chirp3[db]
+BurnInLimitDopplerGenAngleMaxDevPtuPos1Chirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - BurnInLimitDopplerGenAngleMaxDevPtuPos1Chirp0[°]
+    - BurnInLimitDopplerGenAngleMaxDevPtuPos1Chirp1[°]
+    - BurnInLimitDopplerGenAngleMaxDevPtuPos1Chirp2[°]
+    - BurnInLimitDopplerGenAngleMaxDevPtuPos1Chirp3[°]
+BurnInLimitDopplerGenRangeMaxDevPtuPos1Chirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - BurnInLimitDopplerGenRangeMaxDevPtuPos1Chirp0[cm]
+    - BurnInLimitDopplerGenRangeMaxDevPtuPos1Chirp1[cm]
+    - BurnInLimitDopplerGenRangeMaxDevPtuPos1Chirp2[cm]
+    - BurnInLimitDopplerGenRangeMaxDevPtuPos1Chirp3[cm]
+BurnInLimitDopplerGenSpeedMaxDevPtuPos1Chirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - BurnInLimitDopplerGenSpeedMaxDevPtuPos1Chirp0[m/s]
+    - BurnInLimitDopplerGenSpeedMaxDevPtuPos1Chirp1[m/s]
+    - BurnInLimitDopplerGenSpeedMaxDevPtuPos1Chirp2[m/s]
+    - BurnInLimitDopplerGenSpeedMaxDevPtuPos1Chirp3[m/s]
+BurnInLimitDopplerTargetFoundRatioPtuPos1Chirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - BurnInLimitDopplerTargetFoundRatioPtuPos1Chirp0[%]
+    - BurnInLimitDopplerTargetFoundRatioPtuPos1Chirp1[%]
+    - BurnInLimitDopplerTargetFoundRatioPtuPos1Chirp2[%]
+    - BurnInLimitDopplerTargetFoundRatioPtuPos1Chirp3[%]
+BurnInLimitNoisePtuPos2Chirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - BurnInLimitNoisePtuPos2Chirp0[1]
+    - BurnInLimitNoisePtuPos2Chirp1[1]
+    - BurnInLimitNoisePtuPos2Chirp2[1]
+    - BurnInLimitNoisePtuPos2Chirp3[1]
+BurnInLimitCycleDurationMaxDevPtuPos2Chirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - BurnInLimitCycleDurationMaxDevPtuPos2Chirp0[s]
+    - BurnInLimitCycleDurationMaxDevPtuPos2Chirp1[s]
+    - BurnInLimitCycleDurationMaxDevPtuPos2Chirp2[s]
+    - BurnInLimitCycleDurationMaxDevPtuPos2Chirp3[s]
+BurnInLimitMaxNoisePtuPos2Chirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - BurnInLimitMaxNoisePtuPos2Chirp0[1]
+    - BurnInLimitMaxNoisePtuPos2Chirp1[1]
+    - BurnInLimitMaxNoisePtuPos2Chirp2[1]
+    - BurnInLimitMaxNoisePtuPos2Chirp3[1]
+BurnInLimitDopplerGenAmplitudeMaxDevPtuPos2Chirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - BurnInLimitDopplerGenAmplitudeMaxDevPtuPos2Chirp0[db]
+    - BurnInLimitDopplerGenAmplitudeMaxDevPtuPos2Chirp1[db]
+    - BurnInLimitDopplerGenAmplitudeMaxDevPtuPos2Chirp2[db]
+    - BurnInLimitDopplerGenAmplitudeMaxDevPtuPos2Chirp3[db]
+BurnInLimitDopplerGenAngleMaxDevPtuPos2Chirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - BurnInLimitDopplerGenAngleMaxDevPtuPos2Chirp0[°]
+    - BurnInLimitDopplerGenAngleMaxDevPtuPos2Chirp1[°]
+    - BurnInLimitDopplerGenAngleMaxDevPtuPos2Chirp2[°]
+    - BurnInLimitDopplerGenAngleMaxDevPtuPos2Chirp3[°]
+BurnInLimitDopplerGenRangeMaxDevPtuPos2Chirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - BurnInLimitDopplerGenRangeMaxDevPtuPos2Chirp0[cm]
+    - BurnInLimitDopplerGenRangeMaxDevPtuPos2Chirp1[cm]
+    - BurnInLimitDopplerGenRangeMaxDevPtuPos2Chirp2[cm]
+    - BurnInLimitDopplerGenRangeMaxDevPtuPos2Chirp3[cm]
+BurnInLimitDopplerGenSpeedMaxDevPtuPos2Chirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - BurnInLimitDopplerGenSpeedMaxDevPtuPos2Chirp0[m/s]
+    - BurnInLimitDopplerGenSpeedMaxDevPtuPos2Chirp1[m/s]
+    - BurnInLimitDopplerGenSpeedMaxDevPtuPos2Chirp2[m/s]
+    - BurnInLimitDopplerGenSpeedMaxDevPtuPos2Chirp3[m/s]
+BurnInLimitDopplerTargetFoundRatioPtuPos2Chirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - BurnInLimitDopplerTargetFoundRatioPtuPos2Chirp0[%]
+    - BurnInLimitDopplerTargetFoundRatioPtuPos2Chirp1[%]
+    - BurnInLimitDopplerTargetFoundRatioPtuPos2Chirp2[%]
+    - BurnInLimitDopplerTargetFoundRatioPtuPos2Chirp3[%]
+Meas0BurnInLimitCycleDurationMaxDevChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas0BurnInLimitCycleDurationMaxDevChirp0[s]
+Meas0BurnInLimitDopplerGenElevationChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas0BurnInLimitDopplerGenElevationChirp0[°]
+Meas0BurnInLimitDopplerGenElevationMaxDevChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas0BurnInLimitDopplerGenElevationMaxDevChirp0[°]
+Meas1BurnInLimitCycleDurationMaxDevChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas1BurnInLimitCycleDurationMaxDevChirp0[s]
+Meas1BurnInLimitDopplerGenElevationChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas1BurnInLimitDopplerGenElevationChirp0[°]
+Meas1BurnInLimitDopplerGenElevationMaxDevChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas1BurnInLimitDopplerGenElevationMaxDevChirp0[°]
+Meas2BurnInLimitCycleDurationMaxDevChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas2BurnInLimitCycleDurationMaxDevChirp0[s]
+Meas2BurnInLimitDopplerGenElevationChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas2BurnInLimitDopplerGenElevationChirp0[°]
+Meas2BurnInLimitDopplerGenElevationMaxDevChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas2BurnInLimitDopplerGenElevationMaxDevChirp0[°]
+Meas3BurnInLimitCycleDurationMaxDevChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas3BurnInLimitCycleDurationMaxDevChirp0[s]
+Meas3BurnInLimitDopplerGenElevationChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas3BurnInLimitDopplerGenElevationChirp0[°]
+Meas3BurnInLimitDopplerGenElevationMaxDevChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas3BurnInLimitDopplerGenElevationMaxDevChirp0[°]
+Meas4BurnInLimitCycleDurationMaxDevChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas4BurnInLimitCycleDurationMaxDevChirp0[s]
+Meas4BurnInLimitDopplerGenElevationChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas4BurnInLimitDopplerGenElevationChirp0[°]
+Meas4BurnInLimitDopplerGenElevationMaxDevChirp:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas4BurnInLimitDopplerGenElevationMaxDevChirp0[°]
+Sensor0ModSwBootloaderVersionDigit:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Sensor0ModSwBootloaderVersionDigit1
+    - Sensor0ModSwBootloaderVersionDigit2
+    - Sensor0ModSwBootloaderVersionDigit3
+    - Sensor0ModSwBootloaderVersionDigit4
+    - Sensor0ModSwBootloaderVersionDigit5
+    - Sensor0ModSwBootloaderVersionDigit6
+    - Sensor0ModSwBootloaderVersionDigit7
+    - Sensor0ModSwBootloaderVersionDigit8
+    - Sensor0ModSwBootloaderVersionDigit9

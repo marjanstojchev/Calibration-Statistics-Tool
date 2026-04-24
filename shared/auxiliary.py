@@ -42,21 +42,24 @@ setcurvesinputconffilepath = os.path.join(basicDir, setcurvesinputconffilename)
 setcurvescustinputconffilename = 'SetCurvesCustomerInputConf.json'
 setcurvescustinputconffilepath = os.path.join(basicDir, setcurvescustinputconffilename)
 
+# config folder (limits YAML + stats JSON live here alongside the diagram confs)
+configDir = os.path.join(basicDir, 'config')
+
 #stats input config
 statsinputconffilename = 'StatisticsLimitsConfig.json'
-statsinputconffilepath = os.path.join(basicDir, statsinputconffilename)
+statsinputconffilepath = os.path.join(configDir, statsinputconffilename)
 
 burnInLimitsFileName = 'BurnInLimits.yaml'
-burnInLimitsFilePath = os.path.join(basicDir, burnInLimitsFileName)
+burnInLimitsFilePath = os.path.join(configDir, burnInLimitsFileName)
 
 calLimitsFileName = 'CalLimits.yaml'
-calLimitsFilePath = os.path.join(basicDir, calLimitsFileName)
+calLimitsFilePath = os.path.join(configDir, calLimitsFileName)
 
 burnInLimGroupsFileName = 'BurnInLimGroups.yaml'
-burnInLimGroupsFilePath = os.path.join(basicDir, burnInLimGroupsFileName)
+burnInLimGroupsFilePath = os.path.join(configDir, burnInLimGroupsFileName)
 
 calLimGroupsFileName = 'CalLimGroups.yaml'
-calLimGroupsFilePath = os.path.join(basicDir, calLimGroupsFileName)
+calLimGroupsFilePath = os.path.join(configDir, calLimGroupsFileName)
 
 # Clear the output directory
 def clearAll(outputFolderPath: str) -> tuple[bool, str]:

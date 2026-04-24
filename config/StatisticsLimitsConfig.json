@@ -1,0 +1,230 @@
+{
+	"mainTitle": "The Statistics",
+	"ImagesDPI": 150,
+	
+	"PlotSetups":[{
+		
+		"PlotNoise_Channel": [{
+			"SeparationSheet": "Statistical series",
+			"Title": "Noise_Channel",
+			"SlideText" : "Noise_Channel",
+			"yaxis": "Noise_Channel",
+			"yaxisSecondary": "null",
+			"Slide Setup": [{
+				"Presentation": [{
+					"template": ["onegraph"]
+				}],
+				"graph configuration": [{
+					"x": ["auto"],
+					"y": ["auto"]
+				}]
+			}]
+		}],
+
+		"PlotMax_noise_channel": [{
+			"SeparationSheet": "null",
+			"Title": "Max_noise_channel",
+			"SlideText" : "Max_noise_channel",
+			"yaxis": "Max_noise_channel",
+			"yaxisSecondary": "null",
+			"Slide Setup": [{
+				"Presentation": [{
+					"template": ["onegraph"]
+				}],
+				"graph configuration": [{
+					"x": ["auto"],
+					"y": ["auto"]
+				}]
+			}]
+		}],
+		
+		"PlotSignal_channel": [{
+			"SeparationSheet": "null",
+			"Title": "Signal_channel",
+			"SlideText" : "Signal_channel",
+			"yaxis": "Signal_channel",
+			"yaxisSecondary": "null",
+			"Slide Setup": [{
+				"Presentation": [{
+					"template": ["onegraph"]
+				}],
+				"graph configuration": [{
+					"x": ["auto"],
+					"y": ["auto"]
+				}]
+			}]
+		}],
+
+		
+		"PlotSignal_to_noise_channel": [{
+			"SeparationSheet": "null",
+			"Title": "Signal_to_noise_channel",
+			"SlideText" : "Signal_to_noise_channel",
+			"yaxis": "Signal_to_noise_channel",
+			"yaxisSecondary": "null",
+			"Slide Setup": [{
+				"Presentation": [{
+					"template": ["onegraph"]
+				}],
+				"graph configuration": [{
+					"x": ["auto"],
+					"y": ["auto"]
+				}]
+			}]
+		}],
+		
+		"PlotBias_channel": [{
+			"SeparationSheet": "null",
+			"Title": "max_signal_rxonoff_signal_channel",
+			"SlideText" : "max_signal_rxonoff_signal_channel",
+			"yaxis": "max_signal_rxonoff_signal_channel",
+			"yaxisSecondary": "null",
+			"Slide Setup": [{
+				"Presentation": [{
+					"template": ["onegraph"]
+				}],
+				"graph configuration": [{
+					"x": ["auto"],
+					"y": ["auto"]
+				}]
+			}]
+		}],
+		
+		"PlotSignal_offset_channel": [{
+			"SeparationSheet": "null",
+			"Title": "Signal_offset_channel",
+			"SlideText" : "Signal_offset_channel",
+			"yaxis": "Signal_offset_channel",
+			"yaxisSecondary": "null",
+			"Slide Setup": [{
+				"Presentation": [{
+					"template": ["onegraph"]
+				}],
+				"graph configuration": [{
+					"x": ["auto"],
+					"y": ["auto"]
+				}]
+			}]
+		}],
+		
+		"PlotMeasCfgSeqTxAntBias_channel": [{
+			"SeparationSheet": "null",
+			"Title": "MeasCfgSeqTxAntBias_channel",
+			"SlideText" : "MeasCfgSeqTxAntBias_channel",
+			"yaxis": "MeasCfg$?$Seq$?$TxAnt$?$Bias_channel",
+			"yaxisSecondary": "null",
+			"Slide Setup": [{
+				"Presentation": [{
+					"template": ["onegraph"]
+				}],
+				"graph configuration": [{
+					"x": ["auto"],
+					"y": ["auto"]
+				}]
+			}]
+		}],
+		
+		"PlotMeasCfgSeqTxAntMax_signal_over_TxFreq_channel": [{
+			"SeparationSheet": "null",
+			"Title": "MeasCfgSeqTxAntMax_signal_over_TxFreq_channel",
+			"SlideText" : "MeasCfgSeqTxAntMax_signal_over_TxFreq_channel",
+			"yaxis": "MeasCfg$?$Seq$?$TxAnt$?$Max_signal_over_TxFreq_channel",
+			"yaxisSecondary": "null",
+			"Slide Setup": [{
+				"Presentation": [{
+					"template": ["onegraph"]
+				}],
+				"graph configuration": [{
+					"x": ["auto"],
+					"y": ["auto"]
+				}]
+			}]
+		}],
+		
+		"PlotMeasCfgSeqTxAntMaxAmpl_error_ant": [{
+			"SeparationSheet": "null",
+			"Title": "MeasCfgSeqTxAntMaxAmpl_error_ant",
+			"SlideText" : "MeasCfgSeqTxAntMaxAmpl_error_ant",
+			"yaxis": "MeasCfg$?$Seq$?$TxAnt$?$MaxAmpl_error_ant",
+			"yaxisSecondary": "null",
+			"Slide Setup": [{
+				"Presentation": [{
+					"template": ["onegraph"]
+				}],
+				"graph configuration": [{
+					"x": ["auto"],
+					"y": ["auto"]
+				}]
+			}]
+		}],
+		
+		"PlotMeasCfgSeqTxAntDeltaDiff_phase": [{
+			"SeparationSheet": "null",
+			"Title": "MeasCfgSeqTxAntDeltaDiff_phase",
+			"SlideText" : "MeasCfgSeqTxAntDeltaDiff_phase",
+			"yaxis": "MeasCfg$?$Seq$?$TxAnt$?$DeltaDiff_phase",
+			"yaxisSecondary": "null",
+			"Slide Setup": [{
+				"Presentation": [{
+					"template": ["onegraph"]
+				}],
+				"graph configuration": [{
+					"x": ["auto"],
+					"y": ["auto"]
+				}]
+			}]
+		}],
+		
+		"PlotMeasCfgSeqTxAntRxBandMainFreqRangeMaxAmpl_error_ant": [{
+			"SeparationSheet": "null",
+			"Title": "MeasCfgSeqTxAntRxBandMainFreqRangeMaxAmpl_error_ant",
+			"SlideText" : "MeasCfgSeqTxAntRxBandMainFreqRangeMaxAmpl_error_ant",
+			"yaxis": "MeasCfg$?$Seq$?$TxAnt$?$RxBandMainFreqRangeMaxAmpl_error_ant",
+			"yaxisSecondary": "null",
+			"Slide Setup": [{
+				"Presentation": [{
+					"template": ["onegraph"]
+				}],
+				"graph configuration": [{
+					"x": ["auto"],
+					"y": ["auto"]
+				}]
+			}]
+		}],
+		
+		"PlotMeasCfgSeqTxAntRxBandMainFreqRangeDeltaDiff_phase": [{
+			"SeparationSheet": "null",
+			"Title": "MeasCfgSeqTxAntRxBandMainFreqRangeDeltaDiff_phase",
+			"SlideText" : "MeasCfgSeqTxAntRxBandMainFreqRangeDeltaDiff_phase",
+			"yaxis": "MeasCfg$?$Seq$?$TxAnt$?$RxBandMainFreqRangeDeltaDiff_phase",
+			"yaxisSecondary": "null",
+			"Slide Setup": [{
+				"Presentation": [{
+					"template": ["onegraph"]
+				}],
+				"graph configuration": [{
+					"x": ["auto"],
+					"y": ["auto"]
+				}]
+			}]
+		}],
+		
+		"PlotMeasCfgSeqTxAntRxBandMainFreqRangeDeltaDiff_phase": [{
+			"SeparationSheet": "null",
+			"Title": "MeasCfgSeqTxAntRxBandMainFreqRangeDeltaDiff_phase",
+			"SlideText" : "MeasCfgSeqTxAntRxBandMainFreqRangeDeltaDiff_phase",
+			"yaxis": "MeasCfg$?$Seq$?$TxAnt$?$RxBandMainFreqRangeDeltaDiff_phase",
+			"yaxisSecondary": "null",
+			"Slide Setup": [{
+				"Presentation": [{
+					"template": ["onegraph"]
+				}],
+				"graph configuration": [{
+					"x": ["auto"],
+					"y": ["auto"]
+				}]
+			}]
+		}]	
+		
+	}]
+}

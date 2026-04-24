@@ -762,8 +762,9 @@ class ParseProtocols():
 
         log.info('Generate '+str(self.protocolType)+' input-filtered MeasurementLimit.')
 
-        if self.errorStatus==1:
-            log.error('Generate input-filtered MeasurementLimit: Invalid input.')
+        if self.errorStatus in (ErrorStatusEnum.Error, 1) or \
+                ProtocolCategoryNameEnum.MeasurementLimits.value not in inputLimitDict:
+            log.error('Generate input-filtered MeasurementLimit: Invalid input or missing key.')
             self.errorStatus = ErrorStatusEnum.Error
             return
 

@@ -331,6 +331,13 @@ class ParseController:
 
                 pp = ParseProtocols(ProtocolType.BurnIn)
                 pp.loadProtocolParseInputDictYAML(burn_in_limits_path)
+                if pp.errorStatus in (ErrorStatusEnum.Error, 1):
+                    self.burnInFailedProtDict['protocolParsingDictList'].append(
+                        {'protocolPath': protocol_path, 'type': prot_type,
+                         'parsing': 'BurnIn', 'parsedData': pp}
+                    )
+                    self._log.warning(f'BurnIn limits YAML load failed: {protocol_path}')
+                    continue
                 pp.rawParseProtocols([ProtocolCategoriesEnum.MeasurementLimits], protocol_path)
                 pp.rawParseProtocols([ProtocolCategoriesEnum.ProtocolHead], protocol_path)
 
@@ -366,6 +373,13 @@ class ParseController:
 
                 pp = ParseProtocols(ProtocolType.Calibration)
                 pp.loadProtocolParseInputDictYAML(cal_limits_path)
+                if pp.errorStatus in (ErrorStatusEnum.Error, 1):
+                    self.calFailedProtDict['protocolParsingDictList'].append(
+                        {'protocolPath': protocol_path, 'type': prot_type,
+                         'parsing': 'Calibration', 'parsedData': pp}
+                    )
+                    self._log.warning(f'Calibration limits YAML load failed: {protocol_path}')
+                    continue
                 pp.rawParseProtocols([ProtocolCategoriesEnum.MeasurementLimits], protocol_path)
                 pp.rawParseProtocols([ProtocolCategoriesEnum.ProtocolHead], protocol_path)
 
