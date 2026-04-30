@@ -22,6 +22,7 @@ from shared.parse_helpers import (
     update_filtered_protocol_list,
     walk_protocol_files,
 )
+from ui.handlers.stats_handlers import clear_stats_ui, update_stats_nav_buttons
 
 if TYPE_CHECKING:  # pragma: no cover
     from ui.handlers.app_context import AppContext
@@ -480,6 +481,13 @@ def _populate_accepted_protocols_table(
         protTableData            = dp.ProtocolsTableData(protocolPath, sysDiagListPerProtocol, txAntDiagListPerProtocol)
 
         if not sysDiagListPerProtocol and not txAntDiagListPerProtocol:
+            rowIdx = refRowIdx
+            ctx.qt.parseProtAccProtTable.insertRow(rowIdx)
+            ctx.qt.parseProtAccProtTable.setItem(rowIdx, 0, QTableWidgetItem(protocolPath))
+            ctx.qt.parseProtAccProtTable.setItem(rowIdx, 1, QTableWidgetItem(protocolType))
+            ctx.qt.parseProtAccProtTable.setItem(rowIdx, 2, QTableWidgetItem(''))
+            ctx.qt.parseProtAccProtTable.setItem(rowIdx, 3, QTableWidgetItem(''))
+            refRowIdx += 1
             continue
 
         for relRowIdx in range(protTableData.biggerListLength):
@@ -510,6 +518,7 @@ def parseData(ctx: "AppContext") -> None:
 
     if not ctx.pc.protToBeParsedDict["protocolPathTypeDictList"]:
         ctx.mv.set_progress_label("No protocols to be parsed.")
+        parseDataLog.info("No protocol files loaded. Please load protocol files before parsing.")
         return
 
     if not ctx.pc.parsedProtDict["protocolPathTypeDictList"]:
@@ -568,6 +577,8 @@ def parseData(ctx: "AppContext") -> None:
     ctx.mv.populate_burn_in_groups(burn_in_group_names)
     ctx.mv.populate_cal_groups(cal_group_names)
 
+    update_stats_nav_buttons(ctx)
+
     ctx.mv.set_progress_label(
         f'Parsing finished. Protocols parsed: {len(ctx.pc.protToBeParsedDict["protocolPathTypeDictList"])}.'
     )
@@ -618,6 +629,7 @@ def clearData(ctx: "AppContext") -> None:
     clearTable(ctx, ctx.qt.parseProtStatsParsedTable)
     clearTable(ctx, ctx.qt.parseProtStatsFailedTable)
 
+    clear_stats_ui(ctx)
     parseDataLog.info("Loaded and Parsed Data cleared!")
 
 

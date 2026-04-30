@@ -83,3 +83,21 @@ TxAnt[1];Freq[MHz];Level[dB];Level-Powermeter[dB];FreqSensorSetting[MHz];Time[ms
 3;Current_Over_Limit;195.2;210.8;235.5;OK
 4;Power_Output_Low;-25.8;-20.2;-15.5;OK
 5;Frequency_Drift;1.8;2.2;3.1;OK
+
+(9) limit values results:
+MeasurmentLimit: BurnIn;BurnInLimitDopplerGenSpeedPtuPos0Chirp0[m/s];45.5;max: 55.0;min: 30.0;MeasResultMeasOk;1;BurnIn speed limit pos 0 chirp 0
+MeasurmentLimit: BurnIn;BurnInLimitDopplerGenSpeedPtuPos0Chirp1[m/s];47.2;max: 55.0;min: 30.0;MeasResultMeasOk;1;BurnIn speed limit pos 0 chirp 1
+MeasurmentLimit: BurnIn;BurnInLimitDopplerGenSpeedPtuPos1Chirp0[m/s];46.3;max: 55.0;min: 30.0;MeasResultMeasOk;1;BurnIn speed limit pos 1 chirp 0
+MeasurmentLimit: BurnIn;BurnInLimitDopplerGenSpeedPtuPos1Chirp1[m/s];48.9;max: 55.0;min: 30.0;MeasResultMeasOk;1;BurnIn speed limit pos 1 chirp 1
+MeasurmentLimit: BurnIn;BurnInLimitDopplerGenRangePtuPos3Chirp0[cm];52.3;max: 70.0;min: 30.0;MeasResultMeasOk;1;BurnIn range limit pos 3 chirp 0
+MeasurmentLimit: BurnIn;BurnInLimitDopplerGenRangePtuPos3Chirp1[cm];54.1;max: 70.0;min: 30.0;MeasResultMeasOk;1;BurnIn range limit pos 3 chirp 1
+MeasurmentLimit: BurnIn;BurnInLimitDopplerGenRangePtuPos3Chirp2[cm];51.8;max: 70.0;min: 30.0;MeasResultMeasOk;1;BurnIn range limit pos 3 chirp 2
+MeasurmentLimit: BurnIn;BurnInLimitDopplerGenAmplitudePtuPos0Chirp0[db];-11.8;max: -8.0;min: -20.0;MeasResultMeasOk;1;BurnIn amplitude limit pos 0 chirp 0
+MeasurmentLimit: BurnIn;BurnInLimitDopplerGenAmplitudePtuPos0Chirp1[db];-12.4;max: -8.0;min: -20.0;MeasResultMeasOk;1;BurnIn amplitude limit pos 0 chirp 1
+MeasurmentLimit: BurnIn;BurnInLimitDopplerGenAmplitudePtuPos2Chirp0[db];-12.5;max: -8.0;min: -20.0;MeasResultMeasOk;1;BurnIn amplitude limit pos 2 chirp 0
+MeasurmentLimit: BurnIn;BurnInLimitDopplerGenAmplitudePtuPos2Chirp1[db];-13.1;max: -8.0;min: -20.0;MeasResultMeasOk;1;BurnIn amplitude limit pos 2 chirp 1
+MeasurmentLimit: BurnIn;BurnInLimitDopplerGenAmplitudePtuPos2Chirp2[db];-11.9;max: -8.0;min: -20.0;MeasResultMeasOk;1;BurnIn amplitude limit pos 2 chirp 2
+MeasurmentLimit: BurnIn;Meas1BurnInLimitNoiseChirp0[1];0.012;max: 0.05;min: 0.0;MeasResultMeasOk;1;BurnIn noise chirp meas 1 pos 0
+MeasurmentLimit: BurnIn;Meas1BurnInLimitNoiseChirp1[1];0.011;max: 0.05;min: 0.0;MeasResultMeasOk;1;BurnIn noise chirp meas 1 pos 1
+MeasurmentLimit: BurnIn;Meas4BurnInLimitNoiseChirp0[1];0.014;max: 0.05;min: 0.0;MeasResultMeasOk;1;BurnIn noise chirp meas 4 pos 0
+MeasurmentLimit: BurnIn;Meas4BurnInLimitNoiseChirp1[1];0.013;max: 0.05;min: 0.0;MeasResultMeasOk;1;BurnIn noise chirp meas 4 pos 1

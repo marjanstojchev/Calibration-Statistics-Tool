@@ -543,8 +543,9 @@ class ParseProtocols():
                             outputDict[headobject.value] = [value.value]
 
             else:
-                log.error('Generate MeasurementLimits dict: Empty limits list for MeasurementLimit.')
-                self.errorStatus = ErrorStatusEnum.Error
+                log.warning('Generate MeasurementLimits dict: Protocol head element not found in file: ' + str(headobject))
+                if self.errorStatus not in (ErrorStatusEnum.Error, 1):
+                    self.errorStatus = ErrorStatusEnum.Warning
 
         return outputDict
 

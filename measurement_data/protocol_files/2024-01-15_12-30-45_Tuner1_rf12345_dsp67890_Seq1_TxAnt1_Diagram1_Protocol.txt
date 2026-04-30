@@ -65,3 +65,21 @@ TxAnt[1];Freq[MHz];Level[dB];Level-Powermeter[dB];FreqSensorSetting[MHz];Time[ms
 1;Temperature_Over_Limit;25.5;45.2;78.3;OK
 2;Voltage_Under_Limit;2.95;3.1;3.25;OK
 3;Current_Over_Limit;185.2;200.5;220.8;OK
+
+(9) limit values results:
+MeasurmentLimit: SignalQuality;Signal_to_noise_channel0[1];12.5;max: 25.0;min: 5.0;MeasResultMeasOk;1;Signal to noise ratio channel 0
+MeasurmentLimit: SignalQuality;Signal_to_noise_channel1[1];13.2;max: 25.0;min: 5.0;MeasResultMeasOk;1;Signal to noise ratio channel 1
+MeasurmentLimit: SignalQuality;Signal_to_noise_channel2[1];11.8;max: 25.0;min: 5.0;MeasResultMeasOk;1;Signal to noise ratio channel 2
+MeasurmentLimit: SignalQuality;Signal_to_noise_channel3[1];12.1;max: 25.0;min: 5.0;MeasResultMeasOk;1;Signal to noise ratio channel 3
+MeasurmentLimit: SignalQuality;Signal_offset_channel0[1];0.15;max: 0.5;min: -0.5;MeasResultMeasOk;1;Signal offset channel 0
+MeasurmentLimit: SignalQuality;Signal_offset_channel1[1];0.18;max: 0.5;min: -0.5;MeasResultMeasOk;1;Signal offset channel 1
+MeasurmentLimit: SignalQuality;Signal_offset_channel2[1];-0.12;max: 0.5;min: -0.5;MeasResultMeasOk;1;Signal offset channel 2
+MeasurmentLimit: SignalQuality;Signal_offset_channel3[1];0.22;max: 0.5;min: -0.5;MeasResultMeasOk;1;Signal offset channel 3
+MeasurmentLimit: SignalQuality;Max_noise_channel0[1];0.035;max: 0.1;min: 0.0;MeasResultMeasOk;1;Max noise channel 0
+MeasurmentLimit: SignalQuality;Max_noise_channel1[1];0.038;max: 0.1;min: 0.0;MeasResultMeasOk;1;Max noise channel 1
+MeasurmentLimit: SignalQuality;Max_noise_channel2[1];0.031;max: 0.1;min: 0.0;MeasResultMeasOk;1;Max noise channel 2
+MeasurmentLimit: SignalQuality;Max_noise_channel3[1];0.042;max: 0.1;min: 0.0;MeasResultMeasOk;1;Max noise channel 3
+MeasurmentLimit: SignalQuality;Signal_channel0[1];85.2;max: 100.0;min: 50.0;MeasResultMeasOk;1;Signal channel 0
+MeasurmentLimit: SignalQuality;Signal_channel1[1];87.5;max: 100.0;min: 50.0;MeasResultMeasOk;1;Signal channel 1
+MeasurmentLimit: SignalQuality;Signal_channel2[1];83.8;max: 100.0;min: 50.0;MeasResultMeasOk;1;Signal channel 2
+MeasurmentLimit: SignalQuality;Signal_channel3[1];86.1;max: 100.0;min: 50.0;MeasResultMeasOk;1;Signal channel 3

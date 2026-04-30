@@ -52,7 +52,7 @@ class ProtocolInfoClass:
             #for file in files:
                 #print('root: ' + root + ' file: ' + file)
             for file in files:
-                if fnmatch.fnmatch(file,'*'+ protocolIdentifier+'*') and fnmatch.fnmatch(file, '*TxAnt*') and fnmatch.fnmatch(file, '*Diagram*') and  fnmatch.fnmatch(file, '*.txt*') and not fnmatch.fnmatch(file.lower(), '*ptu2*'):
+                if fnmatch.fnmatch(file,'*'+ protocolIdentifier+'*') and fnmatch.fnmatch(file, '*TxAnt*') and fnmatch.fnmatch(file, '*Diagram*') and  fnmatch.fnmatch(file, '*.txt*') and not fnmatch.fnmatch(file.lower(), '*ptu2*') and not fnmatch.fnmatch(file, '*Protocol*'):
                     path=root +'/' + file
                     filteredfilescompletelist.append(path)
                 # filteredlisttemp =  fnmatch.filter(files,searchpattern) #liste der passenden dateien im jeweiligen unterferzeichnis

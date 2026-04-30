@@ -235,7 +235,8 @@ class TestClearDataButton:
         """clearData must call ctx.pc.clear_state()."""
         pc = MagicMock(spec=ParseController)
         ctx = _make_ctx(pc=pc)
-        with patch('ui.handlers.parse_handlers.clearTable'):
+        with patch('ui.handlers.parse_handlers.clearTable'), \
+             patch('ui.handlers.parse_handlers.clear_stats_ui'):
             clearData(ctx)
         pc.clear_state.assert_called_once()
 

@@ -28,3 +28,13 @@ TxAntDiagram_Level_Max[dBm]:	-9.0	-7.5	1	Max limit burn-in
 (3a) TxAnt0 raw frequency table -  measpoints
 TxAnt[1];Freq[MHz];Level[dB];
 0;76500.0;-15.2;
+
+(9) limit values results:
+MeasurmentLimit: BurnIn;BurnInLimitDopplerGenSpeedPtuPos0Chirp0[m/s];44.8;max: 55.0;min: 30.0;MeasResultMeasOk;1;BurnIn start speed limit pos 0 chirp 0
+MeasurmentLimit: BurnIn;BurnInLimitDopplerGenSpeedPtuPos0Chirp1[m/s];46.5;max: 55.0;min: 30.0;MeasResultMeasOk;1;BurnIn start speed limit pos 0 chirp 1
+MeasurmentLimit: BurnIn;BurnInLimitDopplerGenSpeedPtuPos1Chirp0[m/s];45.2;max: 55.0;min: 30.0;MeasResultMeasOk;1;BurnIn start speed limit pos 1 chirp 0
+MeasurmentLimit: BurnIn;BurnInLimitDopplerGenSpeedPtuPos1Chirp1[m/s];47.1;max: 55.0;min: 30.0;MeasResultMeasOk;1;BurnIn start speed limit pos 1 chirp 1
+MeasurmentLimit: BurnIn;BurnInLimitDopplerGenAmplitudePtuPos0Chirp0[db];-11.5;max: -8.0;min: -20.0;MeasResultMeasOk;1;BurnIn start amplitude pos 0 chirp 0
+MeasurmentLimit: BurnIn;BurnInLimitDopplerGenAmplitudePtuPos0Chirp1[db];-12.2;max: -8.0;min: -20.0;MeasResultMeasOk;1;BurnIn start amplitude pos 0 chirp 1
+MeasurmentLimit: BurnIn;Meas1BurnInLimitNoiseChirp0[1];0.013;max: 0.05;min: 0.0;MeasResultMeasOk;1;BurnIn start noise chirp meas 1 pos 0
+MeasurmentLimit: BurnIn;Meas1BurnInLimitNoiseChirp1[1];0.010;max: 0.05;min: 0.0;MeasResultMeasOk;1;BurnIn start noise chirp meas 1 pos 1

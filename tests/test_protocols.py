@@ -529,6 +529,14 @@ class TestGetFilteredTxAntDiagramFileList:
         assert len(found) == 1
         assert 'TxAnt0_Diagram0' in found[0]
 
+    def test_excludes_protocol_files(self, tmp_path):
+        stem = '2024-01-15_10-15-20_Tuner2_rf12346_dsp67891_Seq2_TxAnt2_Diagram2_BurnIn_'
+        (tmp_path / f'{stem}Protocol.txt').write_text('protocol data')
+        (tmp_path / f'{stem}TxAnt2_Diagram2.txt').write_text('tx diag data')
+        found = ProtocolInfoClass.getfiltered_txantdiagramfilelist(str(tmp_path), stem)
+        assert len(found) == 1
+        assert 'Protocol' not in os.path.basename(found[0])
+
     def test_no_match_returns_empty(self, tmp_path):
         (tmp_path / 'unrelated.txt').write_text('data')
         found = ProtocolInfoClass.getfiltered_txantdiagramfilelist(str(tmp_path), 'myidentifier_')

@@ -17,7 +17,12 @@ from PySide6.QtGui import QColor, QBrush
 if TYPE_CHECKING:  # pragma: no cover
     from ui.handlers.app_context import AppContext
 
-import logconfig
+try:
+    import logconfig
+except ModuleNotFoundError:
+    import sys as _sys, os as _os
+    _sys.path.insert(0, _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), '..', '..', 'shared'))
+    import logconfig
 
 _log = logconfig.mainLoadDataLogger.logger
 
@@ -61,6 +66,28 @@ def _get_graph_index() -> int:
 def _reset_graphs_dict() -> None:
     _graphs_dict['actualRemovedGraphsList'] = []
     _graphs_dict['actualCheckedGraphsDict'] = {-1: 'default'}
+
+
+def update_stats_nav_buttons(ctx: "AppContext") -> None:
+    """Enable group nav buttons only after statistics have been written (table has rows)."""
+    btn_id = ctx.qt.statsGroupsTypeButtonGroup.checkedId()
+    grp_dict = ctx.pc.burnInLimitsGroupDict if btn_id == 0 else ctx.pc.calLimitsGroupDict
+    has_groups = bool(grp_dict['limitsGroupList'])
+    has_rows = ctx.qt.statsTable.rowCount() > 0
+    ctx.qt.statsGroupForwardBtn.setEnabled(has_groups and has_rows)
+    ctx.qt.statsGroupBackBtn.setEnabled(has_groups and has_rows)
+    ctx.qt.statsGroupSaveBtn.setEnabled(has_rows)
+
+
+def clear_stats_ui(ctx: "AppContext") -> None:
+    """Clear the stats table, plot, group label, and selection state entirely."""
+    ctx.qt.statsTable.setRowCount(0)
+    ctx.mv.statsPlotFrame.clear()
+    ctx.mv.statsGroupNameLabel.setText(ctx.mv.statsGroupNameString)
+    _reset_graphs_dict()
+    ctx.pc.burnInLimitsGroupDict['activeGroupIndex'] = -1
+    ctx.pc.calLimitsGroupDict['activeGroupIndex'] = -1
+    update_stats_nav_buttons(ctx)
 
 
 def _collect_plot_data(parsed_list: list, limit_name: str) -> tuple[list[int], list[float]]:
@@ -175,6 +202,7 @@ def fill_stats_table(ctx: "AppContext") -> None:
         if r.protType == 'BurnIn'
     ]
     ctx.mv.statsGroupsSaveDialog.completionList = burn_in_names
+    update_stats_nav_buttons(ctx)
 
 
 # ---------------------------------------------------------------------------
@@ -305,6 +333,8 @@ def _handle_axis_click(ctx: "AppContext", row: int, protocol: list[str]) -> None
 
 def clear_sel_stats_data(ctx: "AppContext") -> None:
     """Clear the plot and reset all graph/axis selections in statsTable."""
+    ctx.pc.burnInLimitsGroupDict['activeGroupIndex'] = -1
+    ctx.pc.calLimitsGroupDict['activeGroupIndex'] = -1
     ctx.mv.statsPlotFrame.clear()
     col_map = ctx.mv.statsTableColMapping
     rows    = ctx.pc.limitsRowListDict['limitsRowList']
@@ -396,6 +426,7 @@ def _on_show_groups_type(ctx: "AppContext") -> None:
         clear_sel_stats_data(ctx)
     else:
         set_limits_group_active(ctx, grp_dict['limitsGroupList'][active])
+    update_stats_nav_buttons(ctx)
 
 
 def _on_group_forward(ctx: "AppContext") -> None:
@@ -406,8 +437,8 @@ def _on_group_forward(ctx: "AppContext") -> None:
         return
     idx = grp_dict['activeGroupIndex']
     idx = 0 if idx >= len(lst) - 1 else idx + 1
-    grp_dict['activeGroupIndex'] = idx
     set_limits_group_active(ctx, lst[idx])
+    grp_dict['activeGroupIndex'] = idx
 
 
 def _on_group_back(ctx: "AppContext") -> None:
@@ -418,8 +449,8 @@ def _on_group_back(ctx: "AppContext") -> None:
         return
     idx = grp_dict['activeGroupIndex']
     idx = len(lst) - 1 if idx <= 0 else idx - 1
-    grp_dict['activeGroupIndex'] = idx
     set_limits_group_active(ctx, lst[idx])
+    grp_dict['activeGroupIndex'] = idx
 
 
 # ---------------------------------------------------------------------------
@@ -530,6 +561,7 @@ def _dialog_save(ctx: "AppContext") -> None:
     grp_dict['limitsGroupList'].append(new_group)
     grp_dict['activeGroupIndex'] = len(grp_dict['limitsGroupList']) - 1
     set_limits_group_active(ctx, new_group)
+    update_stats_nav_buttons(ctx)
     dialog.close()
     _log.info(f"Saved new limits group '{group_name}' ({prot_type})")
 
@@ -540,11 +572,7 @@ def _dialog_save(ctx: "AppContext") -> None:
 
 def _on_stats_clear(ctx: "AppContext") -> None:
     """Clear statsTable and the plot entirely."""
-    ctx.qt.statsTable.setRowCount(0)
-    ctx.mv.statsPlotFrame.clear()
-    ctx.mv.statsGroupNameLabel.setText(ctx.mv.statsGroupNameString)
-    _reset_graphs_dict()
-    ctx.pc.limitsRowListDict['limitsRowList'] = []
+    clear_stats_ui(ctx)
 
 
 # ---------------------------------------------------------------------------
@@ -608,6 +636,7 @@ def init_widgets(ctx: "AppContext") -> None:
     ctx.qt.statsGroupsTypeBurnInRadio.setChecked(True)
     # Let cursor click on statsPlotFrame log the file name
     ctx.mv.statsPlotFrame._on_cursor_select = lambda name: _log.info(f'Plot cursor: {name}')
+    update_stats_nav_buttons(ctx)
 
 
 def wire(ctx: "AppContext") -> None:
