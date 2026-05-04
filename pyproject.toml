@@ -48,6 +48,9 @@ dev = [
     "ruff>=0.1.0",
     "mypy>=1.0.0",
 ]
+test-writer = [
+    "mcp>=1.23.0",
+]
 docs = [
     "sphinx>=5.0.0",
 ]
@@ -57,6 +60,7 @@ calibration-tool = "main:run"
 
 [project.scripts]
 test-writer = "test_writer.cli:main"
+test-writer-mcp = "test_writer.mcp_server:mcp.run"
 
 [tool.setuptools]
 py-modules = ["main"]
