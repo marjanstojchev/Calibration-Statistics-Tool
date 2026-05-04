@@ -53,7 +53,7 @@ mcp = FastMCP(
 
 @mcp.tool(
     description=(
-        "Analyse Python source files and generate a Jira Zephyr Scale CSV file "
+        "Analyze Python source files and generate a Jira Zephyr Scale CSV file "
         "containing manual test cases. Returns the path to the generated CSV."
     )
 )
@@ -67,7 +67,7 @@ def generate_test_csv(
     """Generate a Zephyr Scale CSV from Python source files.
 
     Args:
-        source_paths:      List of directories or .py files to analyse.
+        source_paths:      List of directories or .py files to analyze.
         output_csv:        Output CSV file path.
         levels:            Test levels to generate (e.g. ["Unit", "Integration"]).
                            Defaults to ["Unit", "Integration"].
@@ -90,7 +90,7 @@ def generate_test_csv(
 
 @mcp.tool(
     description=(
-        "Analyse Python source files and return a JSON summary of all discovered "
+        "Analyze Python source files and return a JSON summary of all discovered "
         "public symbols (modules, classes, functions/methods)."
     )
 )
@@ -145,5 +145,10 @@ def list_test_levels() -> str:
 # Entry point
 # ---------------------------------------------------------------------------
 
-if __name__ == "__main__":
+def run_server() -> None:
+    """Start the MCP server using stdio transport (used by most MCP clients)."""
     mcp.run(transport="stdio")
+
+
+if __name__ == "__main__":
+    run_server()

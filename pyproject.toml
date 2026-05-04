@@ -60,7 +60,7 @@ calibration-tool = "main:run"
 
 [project.scripts]
 test-writer = "test_writer.cli:main"
-test-writer-mcp = "test_writer.mcp_server:mcp.run"
+test-writer-mcp = "test_writer.mcp_server:run_server"
 
 [tool.setuptools]
 py-modules = ["main"]
