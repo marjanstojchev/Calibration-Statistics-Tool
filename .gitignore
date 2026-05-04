@@ -161,6 +161,7 @@ PTU_File_Format_Documentation.md
 .vscode/*
 !.vscode/settings.json
 !.vscode/extensions.json
+!.vscode/mcp.json
 .idea/
 
 # OS
