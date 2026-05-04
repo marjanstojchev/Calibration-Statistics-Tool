@@ -1,10 +1,10 @@
 """MCP server for the Zephyr test-writer agent.
 
-Exposes the test-writer capabilities as MCP tools so that cloud AI agents
-(GitHub Copilot, Claude Desktop, Cursor, etc.) can call them directly via
-the Model Context Protocol.
+Exposes helper tools so that AI agents (GitHub Copilot, Claude Desktop,
+Cursor, etc.) can read source files from the repo and write the generated
+CSV — the AI itself does the test-case writing guided by TEST_WRITER_AGENT.md.
 
-Start the server (stdio transport, used by most MCP clients)::
+Start the server (stdio transport)::
 
     python -m test_writer.mcp_server
 
@@ -18,9 +18,6 @@ import os
 import sys
 from typing import List, Optional
 
-# ---------------------------------------------------------------------------
-# Ensure the repo root is on sys.path when launched as __main__
-# ---------------------------------------------------------------------------
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _ROOT = os.path.dirname(_HERE)
 if _ROOT not in sys.path:
@@ -28,21 +25,13 @@ if _ROOT not in sys.path:
 
 from mcp.server.fastmcp import FastMCP  # type: ignore[import-untyped]
 
-from test_writer.agent import TestWriterAgent
-from test_writer.code_analyzer import CodeAnalyzer
-from test_writer.models import TestLevel
-
-# ---------------------------------------------------------------------------
-# Server instance
-# ---------------------------------------------------------------------------
-
 mcp = FastMCP(
     "zephyr-test-writer",
     instructions=(
-        "Generate Jira Zephyr Scale manual test cases from Python source files. "
-        "Use generate_test_csv to produce an importable CSV file, "
-        "analyze_source to inspect discovered symbols, or "
-        "list_test_levels to see available test levels."
+        "You are a QA engineer assistant for the Calibration Statistics Tool. "
+        "Read source files with read_source_file and list_source_files, then "
+        "write manual test cases as a Zephyr Scale CSV using write_csv. "
+        "Follow the instructions in TEST_WRITER_AGENT.md for format and rules."
     ),
 )
 
@@ -51,94 +40,99 @@ mcp = FastMCP(
 # Tools
 # ---------------------------------------------------------------------------
 
-@mcp.tool(
-    description=(
-        "Analyze Python source files and generate a Jira Zephyr Scale CSV file "
-        "containing manual test cases. Returns the path to the generated CSV."
-    )
-)
-def generate_test_csv(
-    source_paths: List[str],
-    output_csv: str = "zephyr_tests.csv",
-    levels: Optional[List[str]] = None,
-    component_prefix: str = "Calibration-Statistics-Tool",
+@mcp.tool(description="List Python source files under a given directory path.")
+def list_source_files(
+    directory: str,
     skip_dirs: Optional[List[str]] = None,
 ) -> str:
-    """Generate a Zephyr Scale CSV from Python source files.
+    """Return a JSON list of .py file paths found under *directory*.
 
     Args:
-        source_paths:      List of directories or .py files to analyze.
-        output_csv:        Output CSV file path.
-        levels:            Test levels to generate (e.g. ["Unit", "Integration"]).
-                           Defaults to ["Unit", "Integration"].
-        component_prefix:  Jira component name prefix.
-        skip_dirs:         Directory names to skip during source walking.
+        directory:  Directory to walk (relative to repo root or absolute).
+        skip_dirs:  Directory names to skip (e.g. ["__pycache__", "tests"]).
 
     Returns:
-        Absolute path to the generated CSV file.
+        JSON list of relative file paths.
     """
-    agent = TestWriterAgent(
-        source_paths=source_paths,
-        levels=levels or ["Unit", "Integration"],
-        output_csv=output_csv,
-        root=_ROOT,
-        skip_dirs=skip_dirs,
-        component_prefix=component_prefix,
-    )
-    return agent.run()
+    skip = set(skip_dirs or ["__pycache__", ".git", "test_writer"])
+    base = directory if os.path.isabs(directory) else os.path.join(_ROOT, directory)
+    found: List[str] = []
+    for dirpath, dirnames, filenames in os.walk(base):
+        dirnames[:] = [d for d in dirnames if d not in skip]
+        for fname in filenames:
+            if fname.endswith(".py"):
+                full = os.path.join(dirpath, fname)
+                found.append(os.path.relpath(full, _ROOT))
+    return json.dumps(found)
 
 
-@mcp.tool(
-    description=(
-        "Analyze Python source files and return a JSON summary of all discovered "
-        "public symbols (modules, classes, functions/methods)."
-    )
-)
-def analyze_source(
-    source_paths: List[str],
-    skip_dirs: Optional[List[str]] = None,
-) -> str:
-    """Discover public symbols in Python source files.
+@mcp.tool(description="Read the contents of a source file.")
+def read_source_file(file_path: str) -> str:
+    """Return the text content of *file_path*.
 
     Args:
-        source_paths: Directories or .py files to scan.
-        skip_dirs:    Directory names to skip.
+        file_path: Path relative to repo root or absolute.
 
     Returns:
-        JSON string — list of symbol objects with keys:
-        kind, name, module, file_path, docstring, args, lineno.
+        File contents as a plain string.
     """
-    analyzer = CodeAnalyzer(
-        source_paths=source_paths,
-        root=_ROOT,
-        skip_dirs=skip_dirs,
-    )
-    symbols = analyzer.analyse()
-    result = [
-        {
-            "kind": s.kind,
-            "name": s.name,
-            "module": s.module,
-            "file_path": s.file_path,
-            "docstring": s.docstring,
-            "args": s.args,
-            "lineno": s.lineno,
-        }
-        for s in symbols
-    ]
-    return json.dumps(result, indent=2)
+    full = file_path if os.path.isabs(file_path) else os.path.join(_ROOT, file_path)
+    with open(full, encoding="utf-8") as fh:
+        return fh.read()
 
 
-@mcp.tool(
-    description="List all supported Zephyr test levels that can be used with generate_test_csv."
-)
+@mcp.tool(description="Write the AI-generated Zephyr CSV content to a file.")
+def write_csv(content: str, output_path: str = "zephyr_tests.csv") -> str:
+    """Save *content* (a complete Zephyr Scale CSV string) to *output_path*.
+
+    Args:
+        content:     Full CSV text to write (UTF-8, all fields quoted).
+        output_path: Destination file path (default: zephyr_tests.csv).
+
+    Returns:
+        Absolute path of the written file.
+    """
+    full = output_path if os.path.isabs(output_path) else os.path.join(_ROOT, output_path)
+    os.makedirs(os.path.dirname(full) or ".", exist_ok=True)
+    with open(full, "w", encoding="utf-8") as fh:
+        fh.write(content)
+    return full
+
+
+@mcp.tool(description="List all supported Zephyr test levels.")
 def list_test_levels() -> str:
-    """Return all available test levels.
+    """Return a JSON list of valid test level strings."""
+    return json.dumps(["Unit", "Integration", "System", "Smoke", "Regression", "Acceptance"])
+
+
+@mcp.tool(description="Import a generated CSV file directly into Jira Zephyr Scale Cloud.")
+def import_to_zephyr(
+    csv_path: str,
+    project_key: str,
+    token: str,
+    base_url: str = "https://api.zephyrscale.smartbear.com/v2",
+) -> str:
+    """Upload *csv_path* to Zephyr Scale Cloud and start the import job.
+
+    Args:
+        csv_path:    Path to the CSV file (absolute or relative to repo root).
+        project_key: Jira project key (e.g. "PST").
+        token:       Zephyr Scale API token (Apps → Zephyr Scale → API Keys in Jira).
+        base_url:    Override for Zephyr Scale Server/DC deployments.
 
     Returns:
-        JSON list of valid level strings.
+        JSON string with the API response (includes import job status URL).
     """
-    return json.dumps([lv.value for lv in TestLevel])
+    from test_writer.zephyr_client import import_csv
+
+    full_path = csv_path if os.path.isabs(csv_path) else os.path.join(_ROOT, csv_path)
+    result = import_csv(
+        csv_path=full_path,
+        project_key=project_key,
+        token=token,
+        base_url=base_url,
+    )
+    return json.dumps(result, indent=2)
 
 
 # ---------------------------------------------------------------------------
