@@ -55,9 +55,12 @@ docs = [
 [project.gui-scripts]
 calibration-tool = "main:run"
 
+[project.scripts]
+test-writer = "test_writer.cli:main"
+
 [tool.setuptools]
 py-modules = ["main"]
-packages = ["shared", "ui", "system_diagrams", "tx_diagrams", "antenna_patterns"]
+packages = ["shared", "ui", "system_diagrams", "tx_diagrams", "antenna_patterns", "test_writer"]
 
 [tool.ruff]
 line-length = 120
