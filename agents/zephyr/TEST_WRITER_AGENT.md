@@ -36,7 +36,7 @@ python -m agents.zephyr.mcp_server
 
 ---
 
-## Importing to Jira Zephyr Scale
+## Importing to Jira Zephyr
 
 After generating the CSV, import it with the `import_to_zephyr` MCP tool.
 
@@ -51,9 +51,16 @@ After generating the CSV, import it with the `import_to_zephyr` MCP tool.
 |----------|--------------|
 | `ZEPHYR_TOKEN` | Jira → Apps → Zephyr Scale → API Keys → Generate token |
 
+For Zephyr Essential, also set the import endpoint from your Essential API docs:
+
+| Variable | How to get it |
+|----------|--------------|
+| `ZEPHYR_IMPORT_ENDPOINT` | Zephyr Essential Swagger docs: use the full CSV import endpoint URL |
+
 Set it in your shell before starting VS Code (or add to your user environment):
 ```powershell
 $env:ZEPHYR_TOKEN = "your-token-here"
+$env:ZEPHYR_IMPORT_ENDPOINT = "https://<your-essential-import-endpoint>"
 ```
 Or add it permanently via Windows → System → Environment Variables.
 
@@ -62,14 +69,16 @@ Or add it permanently via Windows → System → Environment Variables.
 |-----------|-------------|
 | `project_key` | Override if importing to a different Jira project |
 | `base_url` | Override only for Zephyr Scale Server/DC (not Cloud) |
+| `import_endpoint` | Full endpoint override (recommended for Zephyr Essential) |
 
 ### Default import behavior
 **Always import to Zephyr automatically after generating the CSV** — do not wait for the user to ask.
 
 1. Generate the CSV and save it with `write_csv`
 2. Immediately call `import_to_zephyr` using the saved CSV path
-3. Token and project key are read from env vars automatically — do not prompt the user
-4. Report the Jira job URL back to the user
+3. If token is available, run API import and report the Jira job URL
+4. If token is missing or API import fails, switch to CSV-only fallback and return clear manual import steps
+5. Token and project key are read from env vars automatically — do not prompt the user for secrets in chat
 
 The user must say **"skip import"** or **"CSV only"** explicitly to skip the Zephyr import.
 

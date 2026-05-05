@@ -117,12 +117,14 @@ def import_to_zephyr(
     project_key: Optional[str] = None,
     token: Optional[str] = None,
     base_url: Optional[str] = None,
+    import_endpoint: Optional[str] = None,
 ) -> str:
     """Upload *csv_path* to Zephyr Scale Cloud and start the import job.
 
     Credentials are resolved in this order:
       1. Explicit argument passed by the caller.
-      2. Environment variables: ZEPHYR_TOKEN, ZEPHYR_PROJECT_KEY, ZEPHYR_BASE_URL.
+            2. Environment variables: ZEPHYR_TOKEN, ZEPHYR_PROJECT_KEY, ZEPHYR_BASE_URL,
+                 ZEPHYR_IMPORT_ENDPOINT.
       3. Hardcoded defaults: project_key='PST', base_url=Zephyr Scale Cloud API.
 
     Args:
@@ -130,27 +132,64 @@ def import_to_zephyr(
         project_key: Jira project key. Defaults to ZEPHYR_PROJECT_KEY env var or 'PST'.
         token:       Zephyr Scale API token. Defaults to ZEPHYR_TOKEN env var.
         base_url:    API base URL. Defaults to ZEPHYR_BASE_URL env var or Cloud URL.
+        import_endpoint: Full endpoint URL. Defaults to ZEPHYR_IMPORT_ENDPOINT env var.
 
     Returns:
-        JSON string with the API response (includes import job status URL).
+        JSON string with either:
+        - an API import response (includes job status URL), or
+        - a graceful fallback payload with manual import steps.
     """
     from agents.zephyr.zephyr_client import import_csv
 
     resolved_token = token or os.environ.get("ZEPHYR_TOKEN")
     resolved_project = project_key or os.environ.get("ZEPHYR_PROJECT_KEY") or _DEFAULT_PROJECT_KEY
     resolved_url = base_url or os.environ.get("ZEPHYR_BASE_URL") or _DEFAULT_BASE_URL
+    resolved_import_endpoint = import_endpoint or os.environ.get("ZEPHYR_IMPORT_ENDPOINT")
+    full_path = csv_path if os.path.isabs(csv_path) else os.path.join(_ROOT, csv_path)
+
+    fallback_steps = [
+        "Open Zephyr in Jira.",
+        "Go to Test Cases.",
+        "Choose Import -> CSV.",
+        f"Select file: {full_path}",
+        "Run the import wizard and confirm.",
+    ]
 
     if not resolved_token:
-        return json.dumps({"error": "No Zephyr token provided. Set the ZEPHYR_TOKEN environment variable or pass token explicitly."})
+        return json.dumps(
+            {
+                "status": "skipped",
+                "reason": "No Zephyr token provided.",
+                "csv_path": full_path,
+                "project_key": resolved_project,
+                "manual_import_steps": fallback_steps,
+                "hint": "Set ZEPHYR_TOKEN to enable automatic import.",
+            },
+            indent=2,
+        )
 
-    full_path = csv_path if os.path.isabs(csv_path) else os.path.join(_ROOT, csv_path)
-    result = import_csv(
-        csv_path=full_path,
-        project_key=resolved_project,
-        token=resolved_token,
-        base_url=resolved_url,
-    )
-    return json.dumps(result, indent=2)
+    try:
+        result = import_csv(
+            csv_path=full_path,
+            project_key=resolved_project,
+            token=resolved_token,
+            base_url=resolved_url,
+            import_endpoint=resolved_import_endpoint,
+        )
+        return json.dumps(result, indent=2)
+    except Exception as exc:
+        return json.dumps(
+            {
+                "status": "fallback",
+                "reason": "Automatic API import failed.",
+                "error": str(exc),
+                "csv_path": full_path,
+                "project_key": resolved_project,
+                "manual_import_steps": fallback_steps,
+                "hint": "If using Zephyr Essential, set ZEPHYR_IMPORT_ENDPOINT.",
+            },
+            indent=2,
+        )
 
 
 # ---------------------------------------------------------------------------
