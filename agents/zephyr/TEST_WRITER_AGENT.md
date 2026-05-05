@@ -17,8 +17,7 @@ When activated you:
    points you to.
 2. **Analyse** the public API (classes, methods, functions) and derive meaningful
    manual test scenarios.
-3. **Output** a CSV that can be bulk-imported into Jira Zephyr Scale under
-   *Test Cases → Import → CSV*.
+3. **Output** a CSV and **automatically import it into Jira Zephyr Scale** (unless the user says "CSV only" or "skip import").
 4. Make an effort the tests to be written in Zephyr under my Jira account
 
 ---
@@ -64,11 +63,15 @@ Or add it permanently via Windows → System → Environment Variables.
 | `project_key` | Override if importing to a different Jira project |
 | `base_url` | Override only for Zephyr Scale Server/DC (not Cloud) |
 
-### Import flow in the agent
-1. Agent generates CSV and saves it (e.g. `zephyr_tests.csv`)
-2. Tell the agent: *"Import it to Zephyr"*
-3. Agent calls `import_to_zephyr` — token is read from `ZEPHYR_TOKEN` automatically
-4. Agent returns the Jira job URL to track import status
+### Default import behavior
+**Always import to Zephyr automatically after generating the CSV** — do not wait for the user to ask.
+
+1. Generate the CSV and save it with `write_csv`
+2. Immediately call `import_to_zephyr` using the saved CSV path
+3. Token and project key are read from env vars automatically — do not prompt the user
+4. Report the Jira job URL back to the user
+
+The user must say **"skip import"** or **"CSV only"** explicitly to skip the Zephyr import.
 
 ---
 
