@@ -19,6 +19,7 @@ When activated you:
    manual test scenarios.
 3. **Output** a CSV that can be bulk-imported into Jira Zephyr Scale under
    *Test Cases → Import → CSV*.
+4. Make an effort the tests to be written in Zephyr under my Jira account
 
 ---
 
@@ -36,14 +37,50 @@ python -m agents.zephyr.mcp_server
 
 ---
 
+## Importing to Jira Zephyr Scale
+
+After generating the CSV, import it with the `import_to_zephyr` MCP tool.
+
+### What is pre-configured (no action needed)
+| Setting | Value | Where set |
+|---------|-------|-----------|
+| Project key | `PST` | Hardcoded default in `mcp_server.py` |
+| API base URL | `https://api.zephyrscale.smartbear.com/v2` | Hardcoded default |
+
+### What you must provide once (set as environment variable)
+| Variable | How to get it |
+|----------|--------------|
+| `ZEPHYR_TOKEN` | Jira → Apps → Zephyr Scale → API Keys → Generate token |
+
+Set it in your shell before starting VS Code (or add to your user environment):
+```powershell
+$env:ZEPHYR_TOKEN = "your-token-here"
+```
+Or add it permanently via Windows → System → Environment Variables.
+
+### What you can override per import (optional)
+| Parameter | Description |
+|-----------|-------------|
+| `project_key` | Override if importing to a different Jira project |
+| `base_url` | Override only for Zephyr Scale Server/DC (not Cloud) |
+
+### Import flow in the agent
+1. Agent generates CSV and saves it (e.g. `zephyr_tests.csv`)
+2. Tell the agent: *"Import it to Zephyr"*
+3. Agent calls `import_to_zephyr` — token is read from `ZEPHYR_TOKEN` automatically
+4. Agent returns the Jira job URL to track import status
+
+---
+
 ## Source reading rules
 
 | Source type | What to extract |
 |-------------|----------------|
 | Python `.py` | Public classes, methods, top-level functions; docstrings; parameter names |
-| `config/*.yaml` | Limit values, measurement parameters → use as realistic test data |
-| `measurement_data/` | Protocol file paths → use as example input files in test steps |
+| `config/*.yaml` | Limit values, limits groups, measurement parameters → use as realistic test data |
+| `measurement_data/` | Protocol file paths → use as example input files in test steps, PTU2 files, TxAnt diagram files |
 | `tests/` | Existing pytest coverage → **skip** generating manual tests for already-covered code |
+| `output/` and similar | Use for having insights what should be expected in the pptx or in the logs
 
 - Skip private symbols (names starting with `_`).
 - Skip auto-generated or boilerplate files (`__pycache__`, migrations, etc.).
@@ -103,16 +140,32 @@ Test Script (Expected Result) The observable outcome that proves success
 ### Smoke
 1. Launch the application → opens without errors
 2. Load a sample protocol file → data displayed correctly
-3. Exit → no crash
+3. Consider each script (meant for a tab) specific inputs and outputs documents
+4. Exit → no crash
+- Number of tests should be resonably small covering the tested module basic functioning
 
 ### Regression
 - Include the defect ticket reference in *Objective*: "Verify fix for PST-NNN — <summary>"
 - Reproduce the original failure condition in step 1
 - Verify the fix in step 2
+- Determine tests slightly more complex than the smoke tests that could be potentially affected by code change
+- Number of tests should cover each graphic sub element functionality
 
 ### Acceptance
 - Write in user language ("I can …" / "The system shall …")
 - Focus on business value, not implementation details
+
+---
+
+## Zephyr
+
+### Activation
+- by default try to import them in Zephyr
+- generate only csv, not import in Zephyr: only if explicitely emphesized
+
+### Organization
+- SMOKE Tests: Create proper folder in the root/SMOKE named by the function (tab) that is being tested
+- Regression Tests: Create proper folder in the root/REGRESSION named by the function (tab) that is being tested (aligned with the one for the smoke case)
 
 ---
 

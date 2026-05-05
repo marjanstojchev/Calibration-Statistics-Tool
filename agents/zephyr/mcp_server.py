@@ -107,32 +107,48 @@ def list_test_levels() -> str:
     return json.dumps(["Unit", "Integration", "System", "Smoke", "Regression", "Acceptance"])
 
 
+_DEFAULT_PROJECT_KEY = "PST"
+_DEFAULT_BASE_URL = "https://api.zephyrscale.smartbear.com/v2"
+
+
 @mcp.tool(description="Import a generated CSV file directly into Jira Zephyr Scale Cloud.")
 def import_to_zephyr(
     csv_path: str,
-    project_key: str,
-    token: str,
-    base_url: str = "https://api.zephyrscale.smartbear.com/v2",
+    project_key: Optional[str] = None,
+    token: Optional[str] = None,
+    base_url: Optional[str] = None,
 ) -> str:
     """Upload *csv_path* to Zephyr Scale Cloud and start the import job.
 
+    Credentials are resolved in this order:
+      1. Explicit argument passed by the caller.
+      2. Environment variables: ZEPHYR_TOKEN, ZEPHYR_PROJECT_KEY, ZEPHYR_BASE_URL.
+      3. Hardcoded defaults: project_key='PST', base_url=Zephyr Scale Cloud API.
+
     Args:
         csv_path:    Path to the CSV file (absolute or relative to repo root).
-        project_key: Jira project key (e.g. "PST").
-        token:       Zephyr Scale API token (Apps → Zephyr Scale → API Keys in Jira).
-        base_url:    Override for Zephyr Scale Server/DC deployments.
+        project_key: Jira project key. Defaults to ZEPHYR_PROJECT_KEY env var or 'PST'.
+        token:       Zephyr Scale API token. Defaults to ZEPHYR_TOKEN env var.
+        base_url:    API base URL. Defaults to ZEPHYR_BASE_URL env var or Cloud URL.
 
     Returns:
         JSON string with the API response (includes import job status URL).
     """
     from agents.zephyr.zephyr_client import import_csv
 
+    resolved_token = token or os.environ.get("ZEPHYR_TOKEN")
+    resolved_project = project_key or os.environ.get("ZEPHYR_PROJECT_KEY") or _DEFAULT_PROJECT_KEY
+    resolved_url = base_url or os.environ.get("ZEPHYR_BASE_URL") or _DEFAULT_BASE_URL
+
+    if not resolved_token:
+        return json.dumps({"error": "No Zephyr token provided. Set the ZEPHYR_TOKEN environment variable or pass token explicitly."})
+
     full_path = csv_path if os.path.isabs(csv_path) else os.path.join(_ROOT, csv_path)
     result = import_csv(
         csv_path=full_path,
-        project_key=project_key,
-        token=token,
-        base_url=base_url,
+        project_key=resolved_project,
+        token=resolved_token,
+        base_url=resolved_url,
     )
     return json.dumps(result, indent=2)
 
