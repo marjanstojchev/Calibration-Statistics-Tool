@@ -121,7 +121,7 @@ Detailed architecture documentation is in [docs/](docs/):
 
 ## Test Writer Agent (Jira Zephyr)
 
-The `test_writer` package analyses the Python source tree and generates
+The `agents/zephyr` package analyses the Python source tree and generates
 **manual test cases** as a CSV file that can be imported directly into
 **Jira Zephyr Scale** (*Test Cases → Import → CSV*).
 
@@ -129,7 +129,7 @@ The `test_writer` package analyses the Python source tree and generates
 
 ```bash
 # Generate Unit + Integration test cases for the shared/ module
-python -m test_writer.cli \
+python -m agents.zephyr.mcp_server \
     --source shared/ \
     --level Unit \
     --level Integration \

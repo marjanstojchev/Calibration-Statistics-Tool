@@ -31,7 +31,7 @@ The user can activate you by saying any of:
 
 You may also be run from the command line:
 ```bash
-python -m test_writer.cli --source <path> --level <level> --output <file.csv>
+python -m agents.zephyr.mcp_server
 ```
 
 ---

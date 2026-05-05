@@ -59,11 +59,11 @@ docs = [
 calibration-tool = "main:run"
 
 [project.scripts]
-test-writer-mcp = "test_writer.mcp_server:run_server"
+test-writer-mcp = "agents.zephyr.mcp_server:run_server"
 
 [tool.setuptools]
 py-modules = ["main"]
-packages = ["shared", "ui", "system_diagrams", "tx_diagrams", "antenna_patterns", "test_writer"]
+packages = ["shared", "ui", "system_diagrams", "tx_diagrams", "antenna_patterns", "agents", "agents.zephyr"]
 
 [tool.ruff]
 line-length = 120

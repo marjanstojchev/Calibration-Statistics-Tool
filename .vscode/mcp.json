@@ -3,7 +3,7 @@
     "zephyr-test-writer": {
       "type": "stdio",
       "command": "python",
-      "args": ["-m", "test_writer.mcp_server"],
+      "args": ["-m", "agents.zephyr.mcp_server"],
       "description": "Generate Jira Zephyr Scale manual test cases from Python source files"
     }
   }

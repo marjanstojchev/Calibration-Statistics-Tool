@@ -2,11 +2,12 @@
 
 Exposes helper tools so that AI agents (GitHub Copilot, Claude Desktop,
 Cursor, etc.) can read source files from the repo and write the generated
-CSV — the AI itself does the test-case writing guided by TEST_WRITER_AGENT.md.
+CSV — the AI itself does the test-case writing guided by
+agents/zephyr/TEST_WRITER_AGENT.md.
 
 Start the server (stdio transport)::
 
-    python -m test_writer.mcp_server
+    python -m agents.zephyr.mcp_server
 
 Or register it in ``.mcp.json`` / ``.vscode/mcp.json`` and let your IDE
 start it automatically.
@@ -19,7 +20,7 @@ import sys
 from typing import List, Optional
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
-_ROOT = os.path.dirname(_HERE)
+_ROOT = os.path.dirname(os.path.dirname(_HERE))
 if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
@@ -31,7 +32,8 @@ mcp = FastMCP(
         "You are a QA engineer assistant for the Calibration Statistics Tool. "
         "Read source files with read_source_file and list_source_files, then "
         "write manual test cases as a Zephyr Scale CSV using write_csv. "
-        "Follow the instructions in TEST_WRITER_AGENT.md for format and rules."
+        "Follow the instructions in agents/zephyr/TEST_WRITER_AGENT.md for "
+        "format and rules."
     ),
 )
 
@@ -123,7 +125,7 @@ def import_to_zephyr(
     Returns:
         JSON string with the API response (includes import job status URL).
     """
-    from test_writer.zephyr_client import import_csv
+    from agents.zephyr.zephyr_client import import_csv
 
     full_path = csv_path if os.path.isabs(csv_path) else os.path.join(_ROOT, csv_path)
     result = import_csv(
