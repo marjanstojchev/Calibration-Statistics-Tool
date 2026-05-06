@@ -1,0 +1,61 @@
+Name;Status;Objective;Precondition;Test Script (Step);Test Script (Test Data);Test Script (Expected Result);Labels;Priority
+ST-01 Config files present in config/ subfolder;Draft;Verify all limits config files are deployed in the correct location.;Application installed / repository checked out.;"1. Open the config/ folder in the project root.
+2. Confirm BurnInLimits.yaml exists.
+3. Confirm CalLimits.yaml exists.
+4. Confirm BurnInLimGroups.yaml exists.
+5. Confirm CalLimGroups.yaml exists.
+6. Confirm StatisticsLimitsConfig.json exists.";;All five files are present. No files are missing or empty.;limits, smoke, pst-28;High
+ST-02 BurnIn limits file loads without error;Draft;Verify BurnInLimits.yaml is valid YAML and loads on parse.;ST-01 passes.;"1. Launch the application.
+2. Open the Parse tab.
+3. Set the BurnIn Limits path field to config/BurnInLimits.yaml.
+4. Click Parse Data.
+5. Check the log / status area for errors.";config/BurnInLimits.yaml;No YAML parse error in the log. Application does not crash.;limits, smoke, pst-28;High
+ST-03 Cal limits file loads without error;Draft;Verify CalLimits.yaml is valid YAML and loads on parse.;ST-01 passes.;"1. Launch the application.
+2. Open the Parse tab.
+3. Set the Cal Limits path field to config/CalLimits.yaml.
+4. Click Parse Data.
+5. Check the log / status area for errors.";config/CalLimits.yaml;No YAML parse error in the log. Application does not crash.;limits, smoke, pst-28;High
+ST-04 BurnIn groups combobox populated after Parse Data;Draft;Verify the BurnIn group combobox is filled from BurnInLimGroups.yaml after parsing.;ST-02 passes. At least one BurnIn _Protocol.txt file available.;"1. Launch the application.
+2. Set the BurnIn Limits path to config/BurnInLimits.yaml.
+3. Add at least one BurnIn _Protocol.txt file in the protocol file list.
+4. Click Parse Data.
+5. Switch to the Statistics tab.
+6. Inspect the BurnIn Groups combobox.";config/BurnInLimits.yaml, one BurnIn protocol file;Combobox contains one or more group names from BurnInLimGroups.yaml. Combobox is enabled.;limits, smoke, pst-28;High
+ST-05 Cal groups combobox populated after Parse Data;Draft;Verify the Cal group combobox is filled from CalLimGroups.yaml after parsing.;ST-03 passes. At least one Calibration _Protocol.txt file available.;"1. Launch the application.
+2. Set the Cal Limits path to config/CalLimits.yaml.
+3. Add at least one Calibration _Protocol.txt file.
+4. Click Parse Data.
+5. Switch to the Statistics tab.
+6. Inspect the Cal Groups combobox.";config/CalLimits.yaml, one Cal protocol file;Combobox contains one or more group names from CalLimGroups.yaml. Combobox is enabled.;limits, smoke, pst-28;High
+ST-06 Parse Data with no protocol files – no crash;Draft;Verify the application handles an empty protocol list gracefully.;Application launched.;"1. Do not add any protocol files.
+2. Set BurnIn / Cal limits paths or leave blank.
+3. Click Parse Data.";No protocol files;Status label shows 'No protocols to be parsed.' Application does not crash.;limits, smoke, pst-28;Medium
+ST-07 Parse Data with no limits paths – no crash;Draft;Verify parsing proceeds without crash when limits path fields are empty.;At least one protocol file added to the list.;"1. Leave the BurnIn Limits and Cal Limits path fields blank.
+2. Add one or more protocol files.
+3. Click Parse Data.";Empty limits paths;Protocols are parsed. No limits loaded (limits columns remain empty). No crash or error dialog.;limits, smoke, pst-28;Medium
+ST-08 Clear Data resets the parse table;Draft;Verify Clear Data removes all parsed data from the protocol table.;At least one parse has been performed (ST-04 or ST-05).;"1. After a successful Parse Data, confirm the accepted-protocols table is populated.
+2. Click Clear Data.
+3. Inspect the accepted-protocols table.
+4. Inspect the BurnIn and Cal groups comboboxes.";N/A;Protocol table is empty. Both group comboboxes are empty / disabled.;limits, smoke, pst-28;High
+ST-09 Write Statistic populates the statistics table;Draft;Verify Write Statistic fills the stats table with limit-evaluation rows.;ST-04 or ST-05 passed (parse completed with limits loaded).;"1. Switch to the Statistics tab.
+2. Select a group from the BurnIn or Cal groups combobox.
+3. Click Write Statistic.
+4. Inspect the statistics table.";N/A;Table is populated with rows for the selected group's limit entries (channel, measured value, limit, pass/fail status visible).;limits, smoke, pst-28;High
+ST-10 Forward navigation advances active group;Draft;Verify the Next Group (?) button increments the active group.;ST-04 passed. At least two groups exist in the BurnIn combobox.;"1. Switch to the Statistics tab.
+2. Note the current group name label.
+3. Click the ? (forward) navigation button.
+4. Note the new group name label.";N/A;Group name label shows the next group. Statistics table updates to reflect the new group's data.;limits, smoke, pst-28;High
+ST-11 Forward navigation wraps at the last group;Draft;Verify forward navigation wraps around to the first group.;ST-10 passes. Navigate to the last group.;"1. Navigate forward until the last group is active (label shows the last group).
+2. Click ? once more.";N/A;Active group wraps back to the first group. Group name label updates accordingly.;limits, smoke, pst-28;Medium
+ST-12 Back navigation decrements active group;Draft;Verify the ? (back) button decrements the active group.;ST-10 passed. Currently on the second or later group.;"1. Navigate forward to at least the second group.
+2. Click ? (back).
+3. Note the group name label.";N/A;Group name label shows the previous group. Statistics table updates.;limits, smoke, pst-28;High
+ST-13 Back navigation wraps at the first group;Draft;Verify back navigation wraps around to the last group.;Currently on the first group.;"1. Ensure the first group is active.
+2. Click ? once.";N/A;Active group wraps to the last group. Label and table update.;limits, smoke, pst-28;Medium
+ST-14 Clear Selected Stats Data clears the statistics view;Draft;Verify Clear Sel. Stats Data resets the statistics tab without removing parsed protocols.;ST-09 passed (stats table populated).;"1. After a successful Write Statistic, inspect that the stats table and plot frame are populated.
+2. Click Clear Sel. Stats Data.
+3. Inspect the stats table, plot frame, and group name label.";N/A;Plot frame is cleared. Group name label resets to default string. Parsed protocol table on the Parse tab is NOT affected.;limits, smoke, pst-28;High
+ST-15 Group name label updates when a group is set active;Draft;Verify the group name label reflects the currently active group.;ST-04 passed. At least one group in the combobox.;"1. Switch to the Statistics tab.
+2. Select a specific group from the BurnIn groups combobox.
+3. Click Write Statistic (or use navigation buttons) to make that group active.
+4. Read the group name label at the top of the statistics panel.";N/A;Label reads 'BurnIn: <group name>' (or 'Cal: <group name>' for a Cal group), matching the selected group exactly.;limits, smoke, pst-28;High

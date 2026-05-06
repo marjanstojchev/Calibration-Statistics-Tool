@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Local credentials (never commit)
+.jira_credentials
+
 # C extensions
 *.so
 
@@ -34,6 +37,7 @@ MANIFEST
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
+*.tmp
 
 # Unit test / coverage reports
 htmlcov/

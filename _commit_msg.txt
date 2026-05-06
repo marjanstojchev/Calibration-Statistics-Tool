@@ -1,0 +1,31 @@
+PST-72/73/74/75: Protocol test suite - fixtures, unit tests, integration. 721 passed
+
+PST-73: 6 new protocol fixture files in measurement_data/protocol_files/
+  - Protocol_Error.txt (bErrorOccured=True)
+  - Protocol_Abort.txt (bAbortCriterion=True)
+  - Protocol_Limits.txt (bLimitExceeded=True via M: line)
+  - Protocol_AllFlags.txt (all three flags set)
+  - BurnIn_Start_Protocol.txt (Gen26_UseBurnInMeas[1];3 + (12a) start marker)
+  - Protocol_NewerSameSensor.txt (same rf/dsp/serial, newer date for FilterNewProtocols)
+
+PST-72: tests/test_protocols.py (61 tests, was empty placeholder)
+  - TestGetPreParseInfo: E=0/K=0/M: flags, header stop, metadata extraction
+  - TestFilterProtocols: all 6 EOL flag combos, empty-file handling, sorting
+  - TestFilterNewProtocols: single/multi sensor, keeps newest per sensor
+  - TestPreParseProtocols: all 8 fixture files, missing-file handling
+  - TestGetAllProtocolsList / getfiltered_ptu2filelist / getfiltered_txantdiagramfilelist
+  - TestProtocolFilterFlowEndToEnd: full pipeline smoke tests
+  - .gitignore: removed test_protocols.py from ignore list
+
+PST-74: tests/test_parse_controller.py expanded (+30 tests, 93 total)
+  - TestProtocolCountHelpers: protocol/parsed/to-be-parsed count helpers + clear
+  - TestProtocolTypeSplitDicts: auto/force modes, empty list, unclear type
+  - TestAcceptedFilteredProtocolDicts: structure, accumulation, clear
+
+PST-75: tests/integration/test_protocol_ptu2_integration.py (new, 40 tests)
+  - TestGetAllProtocolsListIntegration: directory scanning, subdirs, exclusions
+  - TestProtocolFlagFilteringIntegration: error/clean/mixed protocol pipeline
+  - TestPtu2FileDiscoveryIntegration: stem matching, multi-protocol, cross-link
+  - TestTxAntDiagDiscoveryIntegration: TxAnt/Diagram match, PTU2 excluded
+  - TestCombinedPtu2TxAntDiagIntegration: both searches, multi-protocol sets
+  - TestRealFixtureFilesSmoke: end-to-end on real measurement_data/ files

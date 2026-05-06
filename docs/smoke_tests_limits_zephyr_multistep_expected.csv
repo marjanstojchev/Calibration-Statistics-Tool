@@ -1,0 +1,29 @@
+Name,Status,Objective,Precondition,Test Script (Step),Test Script (Test Data),Test Script (Expected Result),Labels,Priority
+ST-01 Config files present in config/ subfolder,Draft,Verify all limits config files are deployed in the correct location.,Application installed / repository checked out.,Open the config/ folder in the project root.,,Config folder is accessible.,limits, smoke, pst-28,High
+ST-01 Config files present in config/ subfolder,,,,Confirm BurnInLimits.yaml exists.,,BurnInLimits.yaml is present and not empty.,,,
+ST-01 Config files present in config/ subfolder,,,,Confirm CalLimits.yaml exists.,,CalLimits.yaml is present and not empty.,,,
+ST-01 Config files present in config/ subfolder,,,,Confirm BurnInLimGroups.yaml exists.,,BurnInLimGroups.yaml is present and not empty.,,,
+ST-01 Config files present in config/ subfolder,,,,Confirm CalLimGroups.yaml exists.,,CalLimGroups.yaml is present and not empty.,,,
+ST-01 Config files present in config/ subfolder,,,,Confirm StatisticsLimitsConfig.json exists.,,StatisticsLimitsConfig.json is present and not empty.,,,
+ST-02 BurnIn limits file loads without error,Draft,Verify BurnInLimits.yaml is valid YAML and loads on parse.,ST-01 passes.,Launch the application.,config/BurnInLimits.yaml,Application launches without error.,limits, smoke, pst-28,High
+ST-02 BurnIn limits file loads without error,,,,Open the Parse tab.,config/BurnInLimits.yaml,Parse tab is displayed.,,,
+ST-02 BurnIn limits file loads without error,,,,Set the BurnIn Limits path field to config/BurnInLimits.yaml.,config/BurnInLimits.yaml,Path is set without error.,,,
+ST-02 BurnIn limits file loads without error,,,,Click Parse Data.,config/BurnInLimits.yaml,Parse operation starts.,,,
+ST-02 BurnIn limits file loads without error,,,,Check the log / status area for errors.,config/BurnInLimits.yaml,No YAML parse error in the log. Application does not crash.,,,
+ST-03 Cal limits file loads without error,Draft,Verify CalLimits.yaml is valid YAML and loads on parse.,ST-01 passes.,Launch the application.,config/CalLimits.yaml,Application launches without error.,limits, smoke, pst-28,High
+ST-03 Cal limits file loads without error,,,,Open the Parse tab.,config/CalLimits.yaml,Parse tab is displayed.,,,
+ST-03 Cal limits file loads without error,,,,Set the Cal Limits path field to config/CalLimits.yaml.,config/CalLimits.yaml,Path is set without error.,,,
+ST-03 Cal limits file loads without error,,,,Click Parse Data.,config/CalLimits.yaml,Parse operation starts.,,,
+ST-03 Cal limits file loads without error,,,,Check the log / status area for errors.,config/CalLimits.yaml,No YAML parse error in the log. Application does not crash.,,,
+ST-04 BurnIn groups combobox populated after Parse Data,Draft,Verify the BurnIn group combobox is filled from BurnInLimGroups.yaml after parsing.,ST-02 passes. At least one BurnIn _Protocol.txt file available.,Launch the application.,config/BurnInLimits.yaml,Application launches without error.,limits, smoke, pst-28,High
+ST-04 BurnIn groups combobox populated after Parse Data,,,,Set the BurnIn Limits path to config/BurnInLimits.yaml.,config/BurnInLimits.yaml,Path is set without error.,,,
+ST-04 BurnIn groups combobox populated after Parse Data,,,,Add at least one BurnIn _Protocol.txt file in the protocol file list.,config/BurnInLimits.yaml,Protocol file is added to the list.,,,
+ST-04 BurnIn groups combobox populated after Parse Data,,,,Click Parse Data.,config/BurnInLimits.yaml,Parse operation starts.,,,
+ST-04 BurnIn groups combobox populated after Parse Data,,,,Switch to the Statistics tab.,config/BurnInLimits.yaml,Statistics tab is displayed.,,,
+ST-04 BurnIn groups combobox populated after Parse Data,,,,Inspect the BurnIn Groups combobox.,config/BurnInLimits.yaml,Combobox contains one or more group names from BurnInLimGroups.yaml. Combobox is enabled.,,,
+ST-05 Cal groups combobox populated after Parse Data,Draft,Verify the Cal group combobox is filled from CalLimGroups.yaml after parsing.,ST-03 passes. At least one Calibration _Protocol.txt file available.,Launch the application.,config/CalLimits.yaml,Application launches without error.,limits, smoke, pst-28,High
+ST-05 Cal groups combobox populated after Parse Data,,,,Set the Cal Limits path to config/CalLimits.yaml.,config/CalLimits.yaml,Path is set without error.,,,
+ST-05 Cal groups combobox populated after Parse Data,,,,Add at least one Calibration _Protocol.txt file.,config/CalLimits.yaml,Protocol file is added to the list.,,,
+ST-05 Cal groups combobox populated after Parse Data,,,,Click Parse Data.,config/CalLimits.yaml,Parse operation starts.,,,
+ST-05 Cal groups combobox populated after Parse Data,,,,Switch to the Statistics tab.,config/CalLimits.yaml,Statistics tab is displayed.,,,
+ST-05 Cal groups combobox populated after Parse Data,,,,Inspect the Cal Groups combobox.,config/CalLimits.yaml,Combobox contains one or more group names from CalLimGroups.yaml. Combobox is enabled.,,,
