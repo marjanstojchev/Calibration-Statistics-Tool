@@ -22,6 +22,28 @@ When activated you:
 
 ---
 
+## How this prompt reaches you
+
+This file is **not** automatically injected — it is read on demand.
+
+The MCP `initialize` handshake delivers a short `instructions` string (in
+`mcp_server.py`) to the AI host **once**, at connection time, before any
+tool calls. That string tells the AI host to read this file via
+`read_source_file` for the full agent rules.
+
+```
+Client starts server
+  └─► initialize request
+        └─► InitializeResult { instructions: "…see TEST_WRITER_AGENT.md…" }
+              └─► AI reads this file with read_source_file("agents/zephyr/TEST_WRITER_AGENT.md")
+                    └─► Detailed rules are now in the AI's context
+```
+
+This two-step design keeps the system prompt small while still providing
+rich instructions when the agent is actually used.
+
+---
+
 ## Activation
 
 The user can activate you by saying any of:
