@@ -337,3 +337,84 @@ class TestSlideListHelpers:
         assert lst[0] is pc.AllGraphsConf1
         assert lst[1] is pc.AllGraphsConf2
         assert lst[2] is pc.AllGraphsConf3
+
+
+# --------------------------------------------------------------------------- #
+# Hullkurven config
+# --------------------------------------------------------------------------- #
+
+class TestHullkurvenConfig:
+
+    def test_hullkurven_data_conf_defaults(self, pc):
+        assert pc.hullkurvenDataConf['AzDiag'] == 1
+        assert pc.hullkurvenDataConf['ElDiag'] == 1
+        assert pc.hullkurvenDataConf['minSigma'] == -10
+        assert pc.hullkurvenDataConf['maxSigma'] == 10
+        assert pc.hullkurvenDataConf['sigmaStep'] == 5
+        assert pc.hullkurvenDataConf['reserveDb'] == 2
+        assert pc.hullkurvenDataConf['patternLimitsMethod'] == 0
+        assert pc.hullkurvenDataConf['minPhaseFactor'] == 5
+        assert pc.hullkurvenDataConf['maxPhaseFactor'] == 5
+        assert pc.hullkurvenDataConf['phaseFactorStep'] == 2
+
+    def test_hullkurven_plot_setup_defaults(self, pc):
+        assert pc.hullkurvenPlotSetup['xScaleSizeAuto'] == 0
+        assert pc.hullkurvenPlotSetup['xScaleSizeAz'] == 90
+        assert pc.hullkurvenPlotSetup['xScaleSizeEl'] == 45
+        assert pc.hullkurvenPlotSetup['yLimitsAntTypeSeparately'] == 1
+
+    def test_set_hullkurven_az_diag_true(self, pc):
+        pc.set_hullkurven_az_diag(True)
+        assert pc.hullkurvenDataConf['AzDiag'] == 1
+
+    def test_set_hullkurven_az_diag_false(self, pc):
+        pc.set_hullkurven_az_diag(False)
+        assert pc.hullkurvenDataConf['AzDiag'] == 0
+
+    def test_set_hullkurven_el_diag_true(self, pc):
+        pc.set_hullkurven_el_diag(True)
+        assert pc.hullkurvenDataConf['ElDiag'] == 1
+
+    def test_set_hullkurven_el_diag_false(self, pc):
+        pc.set_hullkurven_el_diag(False)
+        assert pc.hullkurvenDataConf['ElDiag'] == 0
+
+    def test_set_hullkurven_min_sigma(self, pc):
+        pc.set_hullkurven_min_sigma(-5)
+        assert pc.hullkurvenDataConf['minSigma'] == -5
+
+    def test_set_hullkurven_max_sigma(self, pc):
+        pc.set_hullkurven_max_sigma(15)
+        assert pc.hullkurvenDataConf['maxSigma'] == 15
+
+    def test_set_hullkurven_min_phase_factor(self, pc):
+        pc.set_hullkurven_min_phase_factor(3)
+        assert pc.hullkurvenDataConf['minPhaseFactor'] == 3
+
+    def test_set_hullkurven_max_phase_factor(self, pc):
+        pc.set_hullkurven_max_phase_factor(8)
+        assert pc.hullkurvenDataConf['maxPhaseFactor'] == 8
+
+    def test_set_hullkurven_pattern_method_sigma(self, pc):
+        pc.set_hullkurven_pattern_method(0)
+        assert pc.hullkurvenDataConf['patternLimitsMethod'] == 0
+
+    def test_set_hullkurven_pattern_method_minmax(self, pc):
+        pc.set_hullkurven_pattern_method(1)
+        assert pc.hullkurvenDataConf['patternLimitsMethod'] == 1
+
+    def test_set_hullkurven_x_scale_auto_on(self, pc):
+        pc.set_hullkurven_x_scale_auto(True)
+        assert pc.hullkurvenPlotSetup['xScaleSizeAuto'] == 1
+
+    def test_set_hullkurven_x_scale_auto_off(self, pc):
+        pc.set_hullkurven_x_scale_auto(False)
+        assert pc.hullkurvenPlotSetup['xScaleSizeAuto'] == 0
+
+    def test_set_hullkurven_x_scale_az(self, pc):
+        pc.set_hullkurven_x_scale_az(60.0)
+        assert pc.hullkurvenPlotSetup['xScaleSizeAz'] == 60.0
+
+    def test_set_hullkurven_x_scale_el(self, pc):
+        pc.set_hullkurven_x_scale_el(30.0)
+        assert pc.hullkurvenPlotSetup['xScaleSizeEl'] == 30.0

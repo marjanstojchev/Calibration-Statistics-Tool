@@ -72,6 +72,29 @@ class PlotController:
         }
         self.diagramConfigList: list = [1, 2, 3, 4]
 
+        # ------------------------------------------------------------------ #
+        # Hullkurven (envelope curve) data and plot config
+        # ------------------------------------------------------------------ #
+        self.hullkurvenDataConf: dict = {
+            'AzDiag': 1,           # Generate azimuth diagrams
+            'ElDiag': 1,           # Generate elevation diagrams
+            'minSigma': -10,       # Minimum sigma for pattern limits
+            'maxSigma': 10,        # Maximum sigma for pattern limits
+            'sigmaStep': 5,        # Sigma adjustment step
+            'reserveDb': 2,        # dB reserve offset
+            'patternLimitsMethod': 0,  # 0 = sigma-based, 1 = min/max-based
+            'minPhaseFactor': 5,   # Phase limits minimum factor
+            'maxPhaseFactor': 5,   # Phase limits maximum factor
+            'phaseFactorStep': 2,  # Phase factor adjustment step
+        }
+
+        self.hullkurvenPlotSetup: dict = {
+            'xScaleSizeAuto': 0,          # 1 = auto x-axis, 0 = manual
+            'xScaleSizeAz': 90,           # Az x-axis half-range (degrees)
+            'xScaleSizeEl': 45,           # El x-axis half-range (degrees)
+            'yLimitsAntTypeSeparately': 1, # Y-axis per antenna type
+        }
+
         # Runtime accumulation lists — rebuilt on each evaluation run
         self.twoGraphSetupList:      list = []
         self.threeGraphSetupList:    list = []
@@ -313,3 +336,37 @@ class PlotController:
 
     def set_sensor_muster_enabled(self, enabled: bool) -> None:
         self.plotSetup['useSensorMuster'] = 1 if enabled else 0
+
+    # ====================================================================== #
+    # Hullkurven config
+    # ====================================================================== #
+
+    def set_hullkurven_az_diag(self, enabled: bool) -> None:
+        self.hullkurvenDataConf['AzDiag'] = 1 if enabled else 0
+
+    def set_hullkurven_el_diag(self, enabled: bool) -> None:
+        self.hullkurvenDataConf['ElDiag'] = 1 if enabled else 0
+
+    def set_hullkurven_min_sigma(self, value: int) -> None:
+        self.hullkurvenDataConf['minSigma'] = value
+
+    def set_hullkurven_max_sigma(self, value: int) -> None:
+        self.hullkurvenDataConf['maxSigma'] = value
+
+    def set_hullkurven_min_phase_factor(self, value: int) -> None:
+        self.hullkurvenDataConf['minPhaseFactor'] = value
+
+    def set_hullkurven_max_phase_factor(self, value: int) -> None:
+        self.hullkurvenDataConf['maxPhaseFactor'] = value
+
+    def set_hullkurven_pattern_method(self, btn_id: int) -> None:
+        self.hullkurvenDataConf['patternLimitsMethod'] = btn_id
+
+    def set_hullkurven_x_scale_auto(self, auto: bool) -> None:
+        self.hullkurvenPlotSetup['xScaleSizeAuto'] = 1 if auto else 0
+
+    def set_hullkurven_x_scale_az(self, size: float) -> None:
+        self.hullkurvenPlotSetup['xScaleSizeAz'] = size
+
+    def set_hullkurven_x_scale_el(self, size: float) -> None:
+        self.hullkurvenPlotSetup['xScaleSizeEl'] = size

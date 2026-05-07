@@ -103,6 +103,7 @@ qt.setCurvesInputConfPathLabel.setToolTip(aux.setcurvesinputconffilepath)
 qt.setCurvesInputConfPathLabel.setText(aux.setcurvesinputconffilepath)
 
 aux.createDirectory(aux.mergeOutputPath)
+aux.createDirectory(aux.huellKurvenOutputPath)
 aux.clearAll(aux.mergeOutputPath)
 _merge_combine = os.path.join(aux.mergeOutputPath, 'combine.pptx')
 aux.copyFile(_merge_combine, _merge_combine)
@@ -117,6 +118,7 @@ import ui.handlers.sys_diag_handlers    as sys_diag_h
 import ui.handlers.tx_ant_diag_handlers as tx_h
 import ui.handlers.ant_pat_handlers     as ant_h
 import ui.handlers.stats_handlers       as stats_h
+import ui.handlers.hullkurven_handlers  as hull_h
 
 ctx = AppContext(qt=qt, mv=view, plc=plc, pc=pc)
 
@@ -125,12 +127,14 @@ sys_diag_h.init_widgets(ctx)
 tx_h.init_widgets(ctx)
 ant_h.init_widgets(ctx)
 stats_h.init_widgets(ctx)
+hull_h.init_widgets(ctx)
 
 parse_h.wire(ctx)
 sys_diag_h.wire(ctx)
 tx_h.wire(ctx)
 ant_h.wire(ctx)
 stats_h.wire(ctx)
+hull_h.wire(ctx)
 
 qt.parseProtMergePPTXBtn.clicked.connect(lambda: None)  # merge: stub (feature removed)
 

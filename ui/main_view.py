@@ -102,6 +102,10 @@ class MainView:
         self._absorb(vars(_apt))
         self.mainTabWidget.insertTab(4, self.antPatTab, 'Antenna Patterns')
 
+        import tabs.hullkurven_tab as _hkt
+        self._absorb(vars(_hkt))
+        self.mainTabWidget.insertTab(3, self.hullkurvenTab, 'Hullkurven')
+
         # ------------------------------------------------------------------ #
         # Statistics Tab
         # ------------------------------------------------------------------ #
