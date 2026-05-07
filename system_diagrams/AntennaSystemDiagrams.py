@@ -232,7 +232,7 @@ def fillInPTU(parseDataList, sysDiagLogger):
         desiredDiagList  = dp.getDiagramList(antennaTypesList[0], parseDataList)
         qt.SysDiaInterTableProtocol.clearContents()
         qt.SysDiaInterTableParam.clearContents()
-        qt.mainTabWidget.setCurrentIndex(8)
+        qt.mainTabWidget.setCurrentIndex(qt.tab_index_of('System Diagrams Interactive'))
 
         for antTypeIdx in range(len(antennaTypesList)):
             ptu2ListPerAntennaType = dp.getPtu2ListPerAntennaType(antennaTypesList[antTypeIdx], parseDataList)
@@ -587,12 +587,14 @@ def TurnOnOff():
         SysDiaInterTableProtCellClicked(row, 0)
 
 def ClearData():
-    RePlot['x']        = []
-    RePlot['y']        = []
-    RePlot['label']    = []
-    RePlot['xsec']     = []
-    RePlot['ysec']     = []
-    RePlot['labelsec'] = []
+    RePlot['x']            = []
+    RePlot['y']            = []
+    RePlot['label']        = []
+    RePlot['graphtype']    = []
+    RePlot['xsec']         = []
+    RePlot['ysec']         = []
+    RePlot['labelsec']     = []
+    RePlot['graphtypesec'] = []
     qt.SysDiaInterTableParam.clearContents()
     qt.SysDiaInterTableParam.setRowCount(0)
     qt.SysDiaInterTableProtocol.clearContents()
