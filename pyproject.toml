@@ -48,6 +48,9 @@ dev = [
     "ruff>=0.1.0",
     "mypy>=1.0.0",
 ]
+test-writer = [
+    "mcp>=1.23.0",
+]
 docs = [
     "sphinx>=5.0.0",
 ]
@@ -55,9 +58,12 @@ docs = [
 [project.gui-scripts]
 calibration-tool = "main:run"
 
+[project.scripts]
+test-writer-mcp = "agents.zephyr.mcp_server:run_server"
+
 [tool.setuptools]
 py-modules = ["main"]
-packages = ["shared", "ui", "system_diagrams", "tx_diagrams", "antenna_patterns"]
+packages = ["shared", "ui", "system_diagrams", "tx_diagrams", "antenna_patterns", "agents", "agents.zephyr"]
 
 [tool.ruff]
 line-length = 120

@@ -21,3 +21,6 @@ description: Agent behavior practices for better workflow and interaction.
 ## Detailed behavior
 - Use upon asking to with simply asking you 'detailed behavior' or similar
 
+## Zephyr test-writer agent
+- Agent-specific skill/instructions are now grouped under agents/zephyr/.
+

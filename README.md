@@ -119,6 +119,68 @@ ruff check .
 Detailed architecture documentation is in [docs/](docs/):
 - `docs/mvc_architecture.md` — MVC design, dependency injection, layer boundaries
 
+## Test Writer Agent (Jira Zephyr)
+
+The `agents/zephyr` package analyses the Python source tree and generates
+**manual test cases** as a CSV file that can be imported directly into
+**Jira Zephyr Scale** (*Test Cases → Import → CSV*).
+
+### Quick start
+
+```bash
+# Generate Unit + Integration test cases for the shared/ module
+python -m agents.zephyr.mcp_server \
+    --source shared/ \
+    --level Unit \
+    --level Integration \
+    --output zephyr_tests.csv
+```
+
+Or from Python:
+
+```python
+from test_writer import TestWriterAgent
+
+agent = TestWriterAgent(
+    source_paths=["shared/", "ui/handlers/"],
+    levels=["Unit", "Integration", "System"],
+    output_csv="zephyr_tests.csv",
+)
+path = agent.run()
+print(f"Generated: {path}")
+```
+
+### CLI reference
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--source PATH` | `.` | Directory or `.py` file to scan. Repeatable. |
+| `--level LEVEL` | `Unit, Integration` | Testing level: `Unit`, `Integration`, `System`, `Smoke`, `Regression`, `Acceptance`. Repeatable. |
+| `--output FILE` | `zephyr_tests.csv` | Output CSV path. |
+| `--root DIR` | `cwd` | Repo root for module-name resolution. |
+| `--prefix PREFIX` | `Calibration-Statistics-Tool` | Jira component prefix. |
+| `--skip-dir NAME` | — | Directory name to skip. Repeatable. |
+
+### CSV format
+
+The generated file follows the **Zephyr Scale CSV import** schema:
+
+| Column | Description |
+|--------|-------------|
+| Name | Test case name (e.g. `[Unit] shared.models — MyClass`) |
+| Status | `Draft` / `Approved` / `Deprecated` |
+| Priority | `High` / `Medium` / `Low` |
+| Component | Jira component (`<prefix>/<top-level-package>`) |
+| Labels | Comma-separated: level, symbol kind, package |
+| Precondition | Environment prerequisites |
+| Objective | One-sentence description of what is verified |
+| Folder | Zephyr folder path (`/<Level>/<module/path>`) |
+| Test Script (Step) | Step action text |
+| Test Script (Step Data) | Input data for the step |
+| Test Script (Expected Result) | Expected outcome |
+
+---
+
 ## License
 
 MIT License - see LICENSE file for details.
