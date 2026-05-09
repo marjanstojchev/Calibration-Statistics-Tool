@@ -11,6 +11,29 @@ Start the server (stdio transport)::
 
 Or register it in ``.mcp.json`` / ``.vscode/mcp.json`` and let your IDE
 start it automatically.
+
+---------------------------------------------------------------------------
+When is the ``instructions=`` prompt sent?
+---------------------------------------------------------------------------
+The ``instructions`` string passed to ``FastMCP(...)`` below is **not** a
+tool call or a chat message — it is part of the MCP protocol handshake.
+
+Timeline:
+  1. The MCP client (VS Code / GitHub Copilot, Claude Desktop, Cursor, …)
+     starts this server process and sends an ``initialize`` JSON-RPC request.
+  2. The server responds with an ``InitializeResult`` that includes the
+     ``instructions`` string inside ``serverInfo``.
+  3. The AI host injects those instructions into its *system prompt* **once**,
+     before any tool calls or user messages occur for that session.
+  4. Every subsequent tool call (``list_source_files``, ``read_source_file``,
+     ``write_csv``, …) happens in the same session and the instructions remain
+     in context for the entire connection lifetime.
+
+Practical consequence: the ``instructions`` text here is intentionally kept
+short (it just orients the AI and points it at TEST_WRITER_AGENT.md).
+The detailed agent rules live in ``TEST_WRITER_AGENT.md`` so they can be
+read on-demand via ``read_source_file`` without bloating the system prompt.
+---------------------------------------------------------------------------
 """
 from __future__ import annotations
 
