@@ -45,8 +45,8 @@ sysDiagRowIdx = 0
 sysDiagColIdx = 0
 
 sysDiagStartPushBtn = QPushButton('Start')
-sysDiagStartPushBtn.setFixedSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
-sysDiagStartPushBtn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+sysDiagStartPushBtn.setMinimumSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
+sysDiagStartPushBtn.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 sysDiagLayout.addWidget(sysDiagStartPushBtn, sysDiagRowIdx, sysDiagColIdx)
 
 ### Input Data Setup GroupBox
@@ -104,7 +104,7 @@ sysDiagInputSetupFrameRowIdx  = 0
 sysDiagInputSetupFrameColIdx += 1
 
 sysDiagInputSetupVLine = QFrame()
-sysDiagInputSetupVLine.setFixedWidth(V_LINE_WIDTH)
+sysDiagInputSetupVLine.setMinimumWidth(V_LINE_WIDTH)
 sysDiagInputSetupVLine.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.MinimumExpanding)
 sysDiagInputSetupVLine.setStyleSheet(lineStyle)
 sysDiagInputSetupDiagFrameLayout.addWidget(sysDiagInputSetupVLine, sysDiagInputSetupFrameRowIdx, sysDiagInputSetupFrameColIdx, 5, 1)
@@ -141,7 +141,7 @@ sysDiagInputSetupFrameRowIdx  = 0
 sysDiagInputSetupFrameColIdx += 1
 
 sysDiagInputSetupVLine = QFrame()
-sysDiagInputSetupVLine.setFixedWidth(V_LINE_WIDTH)
+sysDiagInputSetupVLine.setMinimumWidth(V_LINE_WIDTH)
 sysDiagInputSetupVLine.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.MinimumExpanding)
 sysDiagInputSetupVLine.setStyleSheet(lineStyle)
 sysDiagInputSetupDiagFrameLayout.addWidget(sysDiagInputSetupVLine, sysDiagInputSetupFrameRowIdx, sysDiagInputSetupFrameColIdx, 5, 1)
@@ -253,7 +253,7 @@ sysDiagInputSetupDiagConfigRowIdx = 0
 sysDiagInputSetupDiagConfigColIdx = 1
 
 sysDiagInputSetupHLine = QFrame()
-sysDiagInputSetupHLine.setFixedHeight(H_LINE_HEIGHT)
+sysDiagInputSetupHLine.setMinimumHeight(H_LINE_HEIGHT)
 sysDiagInputSetupHLine.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
 sysDiagInputSetupHLine.setStyleSheet(lineStyle)
 sysDiagInputSetupDiagConfigLayout.addWidget(sysDiagInputSetupHLine, sysDiagInputSetupDiagConfigRowIdx, sysDiagInputSetupDiagConfigColIdx, 1, 2)
@@ -291,7 +291,7 @@ sysDiagInputSetupDiagConfigLayout.addWidget(sysDiagInputSetupDiagConfigDesRangeH
 sysDiagInputSetupDiagConfigRowIdx += 1
 
 sysDiagInputSetupDiagConfigDesRangeHighLEdit = QLineEdit()
-sysDiagInputSetupDiagConfigDesRangeHighLEdit.setFixedSize(LEDIT_BTN_H_SIZE, LEDIT_BTN_V_SIZE)
+sysDiagInputSetupDiagConfigDesRangeHighLEdit.setMinimumSize(LEDIT_BTN_H_SIZE, LEDIT_BTN_V_SIZE)
 sysDiagInputSetupDiagConfigDesRangeHighLEdit.setValidator(sysDiagInputSetupDiagConfigDesRangeIntValidator)
 sysDiagInputSetupDiagConfigDesRangeHighLEdit.setMaxLength(3)
 sysDiagInputSetupDiagConfigLayout.addWidget(sysDiagInputSetupDiagConfigDesRangeHighLEdit, sysDiagInputSetupDiagConfigRowIdx, sysDiagInputSetupDiagConfigColIdx)
@@ -363,7 +363,7 @@ sysDiagPlotSetupFrameLayout.addWidget(sysDiagPlotSetupScriptModeRadio2)
 
 #####
 sysDiagPlotSetupHLine = QFrame()
-sysDiagPlotSetupHLine.setFixedHeight(H_LINE_HEIGHT)
+sysDiagPlotSetupHLine.setMinimumHeight(H_LINE_HEIGHT)
 sysDiagPlotSetupHLine.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
 sysDiagPlotSetupHLine.setStyleSheet(lineStyle)
 sysDiagPlotSetupFrameLayout.addWidget(sysDiagPlotSetupHLine)
@@ -385,7 +385,7 @@ sysDiagPlotSetupFrameLayout.addWidget(sysDiagPlotSetupImgGenRadio2)
 
 #####
 sysDiagPlotSetupHLine = QFrame()
-sysDiagPlotSetupHLine.setFixedHeight(H_LINE_HEIGHT)
+sysDiagPlotSetupHLine.setMinimumHeight(H_LINE_HEIGHT)
 sysDiagPlotSetupHLine.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
 sysDiagPlotSetupHLine.setStyleSheet(lineStyle)
 sysDiagPlotSetupFrameLayout.addWidget(sysDiagPlotSetupHLine)
@@ -398,7 +398,7 @@ sysDiagPlotSetupFrameLayout.addWidget(sysDiagPlotSetup3GraphLayoutImgCheckBox)
 
 #####
 sysDiagPlotSetupHLine = QFrame()
-sysDiagPlotSetupHLine.setFixedHeight(H_LINE_HEIGHT)
+sysDiagPlotSetupHLine.setMinimumHeight(H_LINE_HEIGHT)
 sysDiagPlotSetupHLine.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
 sysDiagPlotSetupHLine.setStyleSheet(lineStyle)
 sysDiagPlotSetupFrameLayout.addWidget(sysDiagPlotSetupHLine)
@@ -413,13 +413,13 @@ sysDiagPlotSetupFrameLayout.addWidget(sysDiagPlotSetupImageDpiLabel)
 sysDiagPlotSetupImageDpiLEdit = QLineEdit()
 sysDiagPlotSetupImageDpiLEdit.setValidator(sysDiagPlotSetupImageDpiIntValidator)
 sysDiagPlotSetupImageDpiLEdit.setMaxLength(3)
-sysDiagPlotSetupImageDpiLEdit.setFixedSize(LEDIT_BTN_H_SIZE, LEDIT_BTN_V_SIZE)
+sysDiagPlotSetupImageDpiLEdit.setMinimumSize(LEDIT_BTN_H_SIZE, LEDIT_BTN_V_SIZE)
 sysDiagPlotSetupImageDpiLEdit.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 sysDiagPlotSetupFrameLayout.addWidget(sysDiagPlotSetupImageDpiLEdit)
 
 ####
 sysDiagPlotSetupVLine = QFrame()
-sysDiagPlotSetupVLine.setFixedWidth(V_LINE_WIDTH)
+sysDiagPlotSetupVLine.setMinimumWidth(V_LINE_WIDTH)
 sysDiagPlotSetupVLine.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.MinimumExpanding)
 sysDiagPlotSetupVLine.setStyleSheet(lineStyle)
 sysDiagPlotSetupLayout.addWidget(sysDiagPlotSetupVLine)
@@ -448,7 +448,7 @@ sysDiagPlotSetupScalingLayout.addWidget(sysDiagPlotSetupScalingXScaleAzLabel)
 sysDiagPlotSetupScalingXScaleAzLEdit = QLineEdit()
 sysDiagPlotSetupScalingXScaleAzLEdit.setValidator(sysDiagPlotSetupScalingXScaleIntValidator)
 sysDiagPlotSetupScalingXScaleAzLEdit.setMaxLength(3)
-sysDiagPlotSetupScalingXScaleAzLEdit.setFixedSize(LEDIT_BTN_H_SIZE, LEDIT_BTN_V_SIZE)
+sysDiagPlotSetupScalingXScaleAzLEdit.setMinimumSize(LEDIT_BTN_H_SIZE, LEDIT_BTN_V_SIZE)
 sysDiagPlotSetupScalingXScaleAzLEdit.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 sysDiagPlotSetupScalingLayout.addWidget(sysDiagPlotSetupScalingXScaleAzLEdit)
 
@@ -459,13 +459,13 @@ sysDiagPlotSetupScalingLayout.addWidget(sysDiagPlotSetupScalingXScaleElLabel)
 sysDiagPlotSetupScalingXScaleElLEdit = QLineEdit()
 sysDiagPlotSetupScalingXScaleElLEdit.setValidator(sysDiagPlotSetupScalingXScaleIntValidator)
 sysDiagPlotSetupScalingXScaleElLEdit.setMaxLength(3)
-sysDiagPlotSetupScalingXScaleElLEdit.setFixedSize(LEDIT_BTN_H_SIZE, LEDIT_BTN_V_SIZE)
+sysDiagPlotSetupScalingXScaleElLEdit.setMinimumSize(LEDIT_BTN_H_SIZE, LEDIT_BTN_V_SIZE)
 sysDiagPlotSetupScalingXScaleElLEdit.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 sysDiagPlotSetupScalingLayout.addWidget(sysDiagPlotSetupScalingXScaleElLEdit)
 
 #####
 sysDiagPlotSetupHLine = QFrame()
-sysDiagPlotSetupHLine.setFixedHeight(H_LINE_HEIGHT)
+sysDiagPlotSetupHLine.setMinimumHeight(H_LINE_HEIGHT)
 sysDiagPlotSetupHLine.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
 sysDiagPlotSetupHLine.setStyleSheet(lineStyle)
 sysDiagPlotSetupScalingLayout.addWidget(sysDiagPlotSetupHLine)
@@ -487,7 +487,7 @@ sysDiagPlotSetupScalingLayout.addWidget(sysDiagPlotSetupScalingYLimitRadio2)
 
 #####
 sysDiagPlotSetupHLine = QFrame()
-sysDiagPlotSetupHLine.setFixedHeight(H_LINE_HEIGHT)
+sysDiagPlotSetupHLine.setMinimumHeight(H_LINE_HEIGHT)
 sysDiagPlotSetupHLine.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
 sysDiagPlotSetupHLine.setStyleSheet(lineStyle)
 sysDiagPlotSetupScalingLayout.addWidget(sysDiagPlotSetupHLine)
@@ -501,13 +501,13 @@ sysDiagPlotSetupScalingLayout.addWidget(sysDiagPlotSetupScalingDiffPhDiffLabel)
 
 sysDiagPlotSetupScalingDiffPhDiffLEdit = QLineEdit()
 sysDiagPlotSetupScalingDiffPhDiffLEdit.setValidator(sysDiagPlotSetupScalingDiffPhDiffDoubleValidator)
-sysDiagPlotSetupScalingDiffPhDiffLEdit.setFixedSize(LEDIT_BTN_H_SIZE, LEDIT_BTN_V_SIZE)
+sysDiagPlotSetupScalingDiffPhDiffLEdit.setMinimumSize(LEDIT_BTN_H_SIZE, LEDIT_BTN_V_SIZE)
 sysDiagPlotSetupScalingDiffPhDiffLEdit.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 sysDiagPlotSetupScalingLayout.addWidget(sysDiagPlotSetupScalingDiffPhDiffLEdit)
 
 ####
 sysDiagPlotSetupVLine = QFrame()
-sysDiagPlotSetupVLine.setFixedWidth(V_LINE_WIDTH)
+sysDiagPlotSetupVLine.setMinimumWidth(V_LINE_WIDTH)
 sysDiagPlotSetupVLine.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.MinimumExpanding)
 sysDiagPlotSetupVLine.setStyleSheet(lineStyle)
 sysDiagPlotSetupLayout.addWidget(sysDiagPlotSetupVLine)
@@ -586,7 +586,7 @@ for _key, _val in graphConfig.items():
 
 #####
 sysDiagPlotSetupHLine = QFrame()
-sysDiagPlotSetupHLine.setFixedHeight(H_LINE_HEIGHT)
+sysDiagPlotSetupHLine.setMinimumHeight(H_LINE_HEIGHT)
 sysDiagPlotSetupHLine.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
 sysDiagPlotSetupHLine.setStyleSheet(lineStyle)
 sysDiagPlotSetupGraphConfLayout.addWidget(sysDiagPlotSetupHLine)
@@ -635,12 +635,12 @@ sysDiagPlotWindowGeneralLayout.addWidget(sysDiagPlotWindowInputModeRadio2)
 sysDiagPlotWindowInputModeGroup.addButton(sysDiagPlotWindowInputModeRadio2, 1)
 
 sysDiagPlotWindowInputModeLEdit = QLineEdit()
-sysDiagPlotWindowInputModeLEdit.setFixedSize(LEDIT_BTN_H_SIZE, LEDIT_BTN_V_SIZE)
+sysDiagPlotWindowInputModeLEdit.setMinimumSize(LEDIT_BTN_H_SIZE, LEDIT_BTN_V_SIZE)
 sysDiagPlotWindowInputModeLEdit.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 sysDiagPlotWindowGeneralLayout.addWidget(sysDiagPlotWindowInputModeLEdit)
 
 sysDiagPlotWindowHLine = QFrame()
-sysDiagPlotWindowHLine.setFixedHeight(H_LINE_HEIGHT)
+sysDiagPlotWindowHLine.setMinimumHeight(H_LINE_HEIGHT)
 sysDiagPlotWindowHLine.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
 sysDiagPlotWindowHLine.setStyleSheet(lineStyle)
 sysDiagPlotWindowGeneralLayout.addWidget(sysDiagPlotWindowHLine)
@@ -666,7 +666,7 @@ sysDiagPlotWindowAntTypValidator.setRange(0, 999)
 sysDiagPlotWindowAntTypLEdit = QLineEdit()
 sysDiagPlotWindowAntTypLEdit.setValidator(sysDiagPlotWindowAntTypValidator)
 sysDiagPlotWindowAntTypLEdit.setMaxLength(3)
-sysDiagPlotWindowAntTypLEdit.setFixedSize(LEDIT_BTN_H_SIZE, LEDIT_BTN_V_SIZE)
+sysDiagPlotWindowAntTypLEdit.setMinimumSize(LEDIT_BTN_H_SIZE, LEDIT_BTN_V_SIZE)
 sysDiagPlotWindowAntTypLEdit.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 sysDiagPlotWindowGeneralLayout.addWidget(sysDiagPlotWindowAntTypLEdit)
 
@@ -680,7 +680,7 @@ sysDiagPlotWindowDiagNumValidator.setRange(0, 200)
 sysDiagPlotWindowDiagNumLEdit = QLineEdit()
 sysDiagPlotWindowDiagNumLEdit.setValidator(sysDiagPlotWindowDiagNumValidator)
 sysDiagPlotWindowDiagNumLEdit.setMaxLength(3)
-sysDiagPlotWindowDiagNumLEdit.setFixedSize(LEDIT_BTN_H_SIZE, LEDIT_BTN_V_SIZE)
+sysDiagPlotWindowDiagNumLEdit.setMinimumSize(LEDIT_BTN_H_SIZE, LEDIT_BTN_V_SIZE)
 sysDiagPlotWindowDiagNumLEdit.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 sysDiagPlotWindowGeneralLayout.addWidget(sysDiagPlotWindowDiagNumLEdit)
 
@@ -694,13 +694,13 @@ sysDiagPlotWindowRxChValidator.setRange(0, 11)
 sysDiagPlotWindowRxChLEdit = QLineEdit()
 sysDiagPlotWindowRxChLEdit.setValidator(sysDiagPlotWindowRxChValidator)
 sysDiagPlotWindowRxChLEdit.setMaxLength(2)
-sysDiagPlotWindowRxChLEdit.setFixedSize(LEDIT_BTN_H_SIZE, LEDIT_BTN_V_SIZE)
+sysDiagPlotWindowRxChLEdit.setMinimumSize(LEDIT_BTN_H_SIZE, LEDIT_BTN_V_SIZE)
 sysDiagPlotWindowRxChLEdit.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 sysDiagPlotWindowGeneralLayout.addWidget(sysDiagPlotWindowRxChLEdit)
 
 ####
 sysDiagPlotWindowVLine = QFrame()
-sysDiagPlotWindowVLine.setFixedWidth(V_LINE_WIDTH)
+sysDiagPlotWindowVLine.setMinimumWidth(V_LINE_WIDTH)
 sysDiagPlotWindowVLine.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.MinimumExpanding)
 sysDiagPlotWindowVLine.setStyleSheet(lineStyle)
 sysDiagPlotWindowLayout.addWidget(sysDiagPlotWindowVLine)
@@ -789,7 +789,7 @@ sysDiagSlideConfTwoGraphGraphicLayout.addWidget(sysDiagSlideConfTwoGraphLabel, 0
 sysDiagSlideConfTwoGraphBigFrame = QFrame()
 sysDiagSlideConfTwoGraphBigFrame.setObjectName('TwoGraphBig')
 sysDiagSlideConfTwoGraphBigFrame.setStyleSheet(slideSymbolStyle)
-sysDiagSlideConfTwoGraphBigFrame.setFixedSize(80, 60)
+sysDiagSlideConfTwoGraphBigFrame.setMinimumSize(80, 60)
 sysDiagSlideConfTwoGraphBigFrame.setGraphicsEffect(shadowTwoGraphBig)
 sysDiagSlideConfTwoGraphBigFrame.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 sysDiagSlideConfTwoGraphGraphicLayout.addWidget(sysDiagSlideConfTwoGraphBigFrame, 1, 0, 1, 1)
@@ -797,7 +797,7 @@ sysDiagSlideConfTwoGraphGraphicLayout.addWidget(sysDiagSlideConfTwoGraphBigFrame
 sysDiagSlideConfTwoGraphSmallFrame = QFrame()
 sysDiagSlideConfTwoGraphSmallFrame.setObjectName('TwoGraphSmall')
 sysDiagSlideConfTwoGraphSmallFrame.setStyleSheet(slideSymbolStyle)
-sysDiagSlideConfTwoGraphSmallFrame.setFixedSize(60, 45)
+sysDiagSlideConfTwoGraphSmallFrame.setMinimumSize(60, 45)
 sysDiagSlideConfTwoGraphSmallFrame.setGraphicsEffect(shadowTwoGraphSmall)
 sysDiagSlideConfTwoGraphSmallFrame.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 sysDiagSlideConfTwoGraphGraphicLayout.addWidget(sysDiagSlideConfTwoGraphSmallFrame, 1, 1, 1, 1)
@@ -847,7 +847,7 @@ sysDiagSlideConfTwoGraphComboBox22.setCurrentIndex(2)
 
 ####
 sysDiagSlideConfVLine = QFrame()
-sysDiagSlideConfVLine.setFixedWidth(V_LINE_WIDTH)
+sysDiagSlideConfVLine.setMinimumWidth(V_LINE_WIDTH)
 sysDiagSlideConfVLine.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.MinimumExpanding)
 sysDiagSlideConfVLine.setStyleSheet(lineStyle)
 sysDiagSlideConfLayout.addWidget(sysDiagSlideConfVLine)
@@ -876,28 +876,28 @@ sysDiagSlideConfFourGraphGraphicLayout.addWidget(sysDiagSlideConfFourGraphLabel,
 
 sysDiagSlideConfFourGraphFrame00 = QFrame()
 sysDiagSlideConfFourGraphFrame00.setStyleSheet(slideSymbolStyle)
-sysDiagSlideConfFourGraphFrame00.setFixedSize(60, 45)
+sysDiagSlideConfFourGraphFrame00.setMinimumSize(60, 45)
 sysDiagSlideConfFourGraphFrame00.setGraphicsEffect(shadowFourGraph00)
 sysDiagSlideConfFourGraphFrame00.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
 sysDiagSlideConfFourGraphGraphicLayout.addWidget(sysDiagSlideConfFourGraphFrame00, 1, 0, 1, 1)
 
 sysDiagSlideConfFourGraphFrame01 = QFrame()
 sysDiagSlideConfFourGraphFrame01.setStyleSheet(slideSymbolStyle)
-sysDiagSlideConfFourGraphFrame01.setFixedSize(60, 45)
+sysDiagSlideConfFourGraphFrame01.setMinimumSize(60, 45)
 sysDiagSlideConfFourGraphFrame01.setGraphicsEffect(shadowFourGraph01)
 sysDiagSlideConfFourGraphFrame01.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
 sysDiagSlideConfFourGraphGraphicLayout.addWidget(sysDiagSlideConfFourGraphFrame01, 1, 1, 1, 1, alignment=Qt.AlignLeft)
 
 sysDiagSlideConfFourGraphFrame10 = QFrame()
 sysDiagSlideConfFourGraphFrame10.setStyleSheet(slideSymbolStyle)
-sysDiagSlideConfFourGraphFrame10.setFixedSize(60, 45)
+sysDiagSlideConfFourGraphFrame10.setMinimumSize(60, 45)
 sysDiagSlideConfFourGraphFrame10.setGraphicsEffect(shadowFourGraph10)
 sysDiagSlideConfFourGraphFrame10.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
 sysDiagSlideConfFourGraphGraphicLayout.addWidget(sysDiagSlideConfFourGraphFrame10, 2, 0, 1, 1)
 
 sysDiagSlideConfFourGraphFrame11 = QFrame()
 sysDiagSlideConfFourGraphFrame11.setStyleSheet(slideSymbolStyle)
-sysDiagSlideConfFourGraphFrame11.setFixedSize(60, 45)
+sysDiagSlideConfFourGraphFrame11.setMinimumSize(60, 45)
 sysDiagSlideConfFourGraphFrame11.setGraphicsEffect(shadowFourGraph11)
 sysDiagSlideConfFourGraphFrame11.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
 sysDiagSlideConfFourGraphGraphicLayout.addWidget(sysDiagSlideConfFourGraphFrame11, 2, 1, 1, 1, alignment=Qt.AlignLeft)
@@ -949,7 +949,7 @@ sysDiagSlideConfFourGraphComboBox3.setCurrentIndex(0)
 
 ####
 sysDiagSlideConfVLine = QFrame()
-sysDiagSlideConfVLine.setFixedWidth(V_LINE_WIDTH)
+sysDiagSlideConfVLine.setMinimumWidth(V_LINE_WIDTH)
 sysDiagSlideConfVLine.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.MinimumExpanding)
 sysDiagSlideConfVLine.setStyleSheet(lineStyle)
 sysDiagSlideConfLayout.addWidget(sysDiagSlideConfVLine)
@@ -977,21 +977,21 @@ sysDiagSlideConfThreeGraphGraphicLayout.addWidget(sysDiagSlideConfThreeGraphLabe
 
 sysDiagSlideConfThreeGraphFrame1 = QFrame()
 sysDiagSlideConfThreeGraphFrame1.setStyleSheet(slideSymbolStyle)
-sysDiagSlideConfThreeGraphFrame1.setFixedSize(45, 45)
+sysDiagSlideConfThreeGraphFrame1.setMinimumSize(45, 45)
 sysDiagSlideConfThreeGraphFrame1.setGraphicsEffect(shadowThreeGraph1)
 sysDiagSlideConfThreeGraphFrame1.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 sysDiagSlideConfThreeGraphGraphicLayout.addWidget(sysDiagSlideConfThreeGraphFrame1, 1, 0, 1, 1, alignment=Qt.AlignLeft | Qt.AlignTop)
 
 sysDiagSlideConfThreeGraphFrame2 = QFrame()
 sysDiagSlideConfThreeGraphFrame2.setStyleSheet(slideSymbolStyle)
-sysDiagSlideConfThreeGraphFrame2.setFixedSize(45, 45)
+sysDiagSlideConfThreeGraphFrame2.setMinimumSize(45, 45)
 sysDiagSlideConfThreeGraphFrame2.setGraphicsEffect(shadowThreeGraph2)
 sysDiagSlideConfThreeGraphFrame2.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 sysDiagSlideConfThreeGraphGraphicLayout.addWidget(sysDiagSlideConfThreeGraphFrame2, 1, 1, 1, 1, alignment=Qt.AlignLeft | Qt.AlignTop)
 
 sysDiagSlideConfThreeGraphFrame3 = QFrame()
 sysDiagSlideConfThreeGraphFrame3.setStyleSheet(slideSymbolStyle)
-sysDiagSlideConfThreeGraphFrame3.setFixedSize(45, 45)
+sysDiagSlideConfThreeGraphFrame3.setMinimumSize(45, 45)
 sysDiagSlideConfThreeGraphFrame3.setGraphicsEffect(shadowThreeGraph3)
 sysDiagSlideConfThreeGraphFrame3.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 sysDiagSlideConfThreeGraphGraphicLayout.addWidget(sysDiagSlideConfThreeGraphFrame3, 1, 2, 1, 1, alignment=Qt.AlignLeft | Qt.AlignTop)
@@ -1043,7 +1043,7 @@ sysDiagSlideConfThreeGraphComboBox3.setCurrentIndex(0)
 
 ####
 sysDiagSlideConfVLine = QFrame()
-sysDiagSlideConfVLine.setFixedWidth(V_LINE_WIDTH)
+sysDiagSlideConfVLine.setMinimumWidth(V_LINE_WIDTH)
 sysDiagSlideConfVLine.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.MinimumExpanding)
 sysDiagSlideConfVLine.setStyleSheet(lineStyle)
 sysDiagSlideConfLayout.addWidget(sysDiagSlideConfVLine)
@@ -1074,7 +1074,7 @@ sysDiagSlideConfGeneralSubFrame1Layout.addWidget(sysDiagSlideConfGeneralAllGraph
 
 #####
 sysDiagSlideConfHLine = QFrame()
-sysDiagSlideConfHLine.setFixedHeight(H_LINE_HEIGHT)
+sysDiagSlideConfHLine.setMinimumHeight(H_LINE_HEIGHT)
 sysDiagSlideConfHLine.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
 sysDiagSlideConfHLine.setStyleSheet(lineStyle)
 sysDiagSlideConfGeneralSubFrame1Layout.addWidget(sysDiagSlideConfHLine)
@@ -1094,7 +1094,7 @@ sysDiagSlideConfGeneralSubFrame1Layout.addWidget(sysDiagSlideConfGeneralSensorNu
 sysDiagSlideConfGeneralSensorNumSlideLEdit = QLineEdit()
 sysDiagSlideConfGeneralSensorNumSlideLEdit.setValidator(sysDiagSlideConfGeneralSensorNumSlideIntValidator)
 sysDiagSlideConfGeneralSensorNumSlideLEdit.setMaxLength(3)
-sysDiagSlideConfGeneralSensorNumSlideLEdit.setFixedSize(LEDIT_BTN_H_SIZE, LEDIT_BTN_V_SIZE)
+sysDiagSlideConfGeneralSensorNumSlideLEdit.setMinimumSize(LEDIT_BTN_H_SIZE, LEDIT_BTN_V_SIZE)
 sysDiagSlideConfGeneralSensorNumSlideLEdit.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 sysDiagSlideConfGeneralSubFrame1Layout.addWidget(sysDiagSlideConfGeneralSensorNumSlideLEdit)
 

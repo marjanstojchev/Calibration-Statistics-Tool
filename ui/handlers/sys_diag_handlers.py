@@ -10,12 +10,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from PySide6.QtCore import QThread
 from shared import safeparse as sp
 
 if TYPE_CHECKING:  # pragma: no cover
     from ui.handlers.app_context import AppContext
 
 import logconfig
+from ui.workers import SysDiagWorker
 
 parseDataLog = logconfig.mainLoadDataLogger.logger
 
@@ -672,22 +674,45 @@ def sys_diag_data_update_and_evaluation(ctx: "AppContext") -> None:
         if ctx.qt.sysDiagPlotWindowAllGraphsCheckBox3.isChecked():
             allOnOneSlideGraphList.append(ctx.plc.AllGraphsConf3)
 
-    antSysDiag.start_data_evaluation(
-        ctx.pc.sysDiagParsedDataDict["parsedDataList"],
-        ctx.plc.plotSetup,
-        ctx.plc.chirpConfig,
-        ctx.plc.graphConfig,
-        ctx.plc.diagramConfig,
-        twoGraphSetupList,
-        fourGraphSetupList,
-        threeGraphSetupList,
-        allOnOneSlideGraphList,
-        diagramConfigList,
-        logconfig.antSysDiagLogger,
-        aux.antSysDiagOutputPath,
-        "Antenna_diagrams.pptx",
-        "./assets/template.pptx",
+    ctx.qt.sysDiagStartPushBtn.setEnabled(False)
+
+    worker = SysDiagWorker(
+        parsed_data_list=ctx.pc.sysDiagParsedDataDict["parsedDataList"],
+        plot_setup=ctx.plc.plotSetup,
+        chirp_config=ctx.plc.chirpConfig,
+        graph_config=ctx.plc.graphConfig,
+        diagram_config=ctx.plc.diagramConfig,
+        two_graph_setup_list=twoGraphSetupList,
+        four_graph_setup_list=fourGraphSetupList,
+        three_graph_setup_list=threeGraphSetupList,
+        all_on_one_slide_graph_list=allOnOneSlideGraphList,
+        diagram_config_list=diagramConfigList,
+        logger=logconfig.antSysDiagLogger,
+        output_path=aux.antSysDiagOutputPath,
+        pptx_name="Antenna_diagrams.pptx",
+        template_path="./assets/template.pptx",
     )
+    thread = QThread()
+    worker.moveToThread(thread)
+
+    def _on_finished() -> None:
+        parseDataLog.info("System diagram evaluation finished.")
+        ctx.qt.sysDiagStartPushBtn.setEnabled(True)
+
+    def _on_error(msg: str) -> None:
+        parseDataLog.error(f"SysDiag worker error: {msg}")
+        ctx.qt.sysDiagStartPushBtn.setEnabled(True)
+
+    thread.started.connect(worker.run)
+    worker.finished.connect(_on_finished)
+    worker.error.connect(_on_error)
+    worker.finished.connect(thread.quit)
+    worker.error.connect(thread.quit)
+    worker.finished.connect(worker.deleteLater)
+    worker.error.connect(worker.deleteLater)
+    thread.finished.connect(thread.deleteLater)
+
+    thread.start()
 
 
 def wire(ctx: "AppContext") -> None:

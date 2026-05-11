@@ -29,7 +29,7 @@ import plotdata
 from ui_constants import (
     V_LAYOUT_SPACING, H_LAYOUT_SPACING, LIM_GROUPS_TABLE_ROWS,
     PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE, LEDIT_BTN_PATH_H_SIZE, LEDIT_BTN_V_SIZE,
-    plotFrameStyle, color_list, color_list_rev,
+    plotFrameStyle, color_list, color_list_rev, MAX_LOG_ROWS,
 )
 from ui_theme import (
     LOG_LEVEL_BG_COLORS, LOG_LEVEL_FG_COLORS,
@@ -466,6 +466,11 @@ class QTableLogHandler(logging.Handler):
         self.logTable.setItem(self.logTableRow, 1, levelItem)
         self.logTable.setItem(self.logTableRow, 2, msg_item)
         self.logTableRow += 1
+
+        # Trim oldest rows when the cap is exceeded to prevent unbounded growth
+        while self.logTable.rowCount() > MAX_LOG_ROWS:
+            self.logTable.removeRow(0)
+            self.logTableRow -= 1
 
         # Auto-scroll to the latest row
         self.logTable.scrollToBottom()

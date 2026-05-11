@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from PySide6.QtCore import QThread
 from shared import safeparse as sp
 from shared import auxiliary as aux
 
@@ -17,6 +18,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from ui.handlers.app_context import AppContext
 
 import logconfig
+from ui.workers import TxAntDiagWorker
 
 parseDataLog = logconfig.mainLoadDataLogger.logger
 
@@ -129,15 +131,39 @@ def txantdiag_data_update_and_evaluation(ctx: "AppContext") -> None:
 
     txAntDiagLogger = logconfig.txAntDiagLogger
     parsedDataList  = ctx.pc.txAntDiagParsedDataDict["parsedDataList"]
-    txAntDiag.start_data_evaluation(
-        parsedDataList,
-        txAntDiag.plotSetup,
-        txAntDiag.graphConfig,
-        txAntDiagLogger,
-        aux.txAntDiagOutputPath,
-        "TxAnt_Diagrams.pptx",
-        "./assets/template.pptx",
+
+    ctx.qt.txAntDiagStartPushBtn.setEnabled(False)
+
+    worker = TxAntDiagWorker(
+        parsed_data_list=parsedDataList,
+        plot_setup=txAntDiag.plotSetup,
+        graph_config=txAntDiag.graphConfig,
+        logger=txAntDiagLogger,
+        output_path=aux.txAntDiagOutputPath,
+        pptx_name="TxAnt_Diagrams.pptx",
+        template_path="./assets/template.pptx",
     )
+    thread = QThread()
+    worker.moveToThread(thread)
+
+    def _on_finished() -> None:
+        parseDataLog.info("TxAntDiag evaluation finished.")
+        ctx.qt.txAntDiagStartPushBtn.setEnabled(True)
+
+    def _on_error(msg: str) -> None:
+        parseDataLog.error(f"TxAntDiag worker error: {msg}")
+        ctx.qt.txAntDiagStartPushBtn.setEnabled(True)
+
+    thread.started.connect(worker.run)
+    worker.finished.connect(_on_finished)
+    worker.error.connect(_on_error)
+    worker.finished.connect(thread.quit)
+    worker.error.connect(thread.quit)
+    worker.finished.connect(worker.deleteLater)
+    worker.error.connect(worker.deleteLater)
+    thread.finished.connect(thread.deleteLater)
+
+    thread.start()
 
 
 # ---------------------------------------------------------------------------

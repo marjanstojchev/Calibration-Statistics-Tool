@@ -12,12 +12,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from PySide6.QtCore import QThread
 from shared import safeparse as sp
 
 if TYPE_CHECKING:  # pragma: no cover
     from ui.handlers.app_context import AppContext
 
 import logconfig
+from ui.workers import AntPatWorker
 
 parseDataLog = logconfig.mainLoadDataLogger.logger
 
@@ -207,11 +209,33 @@ def antpat_data_update_and_evaluation(ctx: "AppContext") -> None:
     parseDataLog.debug("conf0: " + str(antPat1.conf0))
     parseDataLog.debug("ptu2InputConfList: " + str(antPat1.ptu2InputConfList))
 
-    # Only antPat1 (YAML v1) is available — versions 0 and 2 were removed
-    antPat1.start_data_evaluation(
-        ctx.pc.sysDiagParsedDataDict["parsedDataList"],
-        logconfig.antPatLogger,
+    ctx.qt.antPatStartPushBtn.setEnabled(False)
+
+    worker = AntPatWorker(
+        parsed_data_list=ctx.pc.sysDiagParsedDataDict["parsedDataList"],
+        logger=logconfig.antPatLogger,
     )
+    thread = QThread()
+    worker.moveToThread(thread)
+
+    def _on_finished() -> None:
+        parseDataLog.info("Antenna pattern evaluation finished.")
+        ctx.qt.antPatStartPushBtn.setEnabled(True)
+
+    def _on_error(msg: str) -> None:
+        parseDataLog.error(f"AntPat worker error: {msg}")
+        ctx.qt.antPatStartPushBtn.setEnabled(True)
+
+    thread.started.connect(worker.run)
+    worker.finished.connect(_on_finished)
+    worker.error.connect(_on_error)
+    worker.finished.connect(thread.quit)
+    worker.error.connect(thread.quit)
+    worker.finished.connect(worker.deleteLater)
+    worker.error.connect(worker.deleteLater)
+    thread.finished.connect(thread.deleteLater)
+
+    thread.start()
 
 
 # ---------------------------------------------------------------------------

@@ -53,14 +53,14 @@ parseProtLayout.addWidget(parseProtParseDataFrame, 0, 0, 1, 2, alignment=Qt.Alig
 #### Parse Protocols - Parse Data PushButton
 parseProtParseDataPushBtn = QPushButton('Parse Data')
 parseProtParseDataPushBtn.setObjectName('1')
-parseProtParseDataPushBtn.setFixedSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
-parseProtParseDataPushBtn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+parseProtParseDataPushBtn.setMinimumSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
+parseProtParseDataPushBtn.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 parseProtParseDataFrameLayout.addWidget(parseProtParseDataPushBtn)
 
 #### Parse Protocols - Clear Data PushButton
 parseProtClearDataPushBtn = QPushButton('Clear Data')
-parseProtClearDataPushBtn.setFixedSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
-parseProtClearDataPushBtn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+parseProtClearDataPushBtn.setMinimumSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
+parseProtClearDataPushBtn.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 parseProtParseDataFrameLayout.addWidget(parseProtClearDataPushBtn)
 
 ###### Write Statistic Frame
@@ -75,20 +75,20 @@ parseProtLayout.addWidget(parseProtParseDataFrame, 1, 0, 1, 2, alignment=Qt.Alig
 
 #####
 parseProtWriteStatsPushBtn = QPushButton('Parse / Write Statistic')
-parseProtWriteStatsPushBtn.setFixedSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
-parseProtWriteStatsPushBtn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+parseProtWriteStatsPushBtn.setMinimumSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
+parseProtWriteStatsPushBtn.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 parseProtParseDataFrameLayout.addWidget(parseProtWriteStatsPushBtn)
 
 #####
 parseProtClearStatsDataBtn = QPushButton('Clear Statistic Data')
-parseProtClearStatsDataBtn.setFixedSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
-parseProtClearStatsDataBtn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+parseProtClearStatsDataBtn.setMinimumSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
+parseProtClearStatsDataBtn.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 parseProtParseDataFrameLayout.addWidget(parseProtClearStatsDataBtn)
 
 # New
 parseProtMergePPTXBtn = QPushButton('Merge PPTX')
-parseProtMergePPTXBtn.setFixedSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
-parseProtMergePPTXBtn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+parseProtMergePPTXBtn.setMinimumSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
+parseProtMergePPTXBtn.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 parseProtParseDataFrameLayout.addWidget(parseProtMergePPTXBtn)
 
 #### Parse Protocols GroupBox
@@ -182,7 +182,7 @@ parseProtBurnInCalGroup.addButton(parseProtBurnInCalGroupRadio3, 2)
 
 #### Parse Protocols - Import Protocols - File List PushButton
 parseProtImportProtFListPushBtn = QPushButton('Protocol File List')
-parseProtImportProtFListPushBtn.setFixedSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
+parseProtImportProtFListPushBtn.setMinimumSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
 parseProtImportProtFListPushBtn.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 parseProtGroupBoxFrameLayout.addWidget(parseProtImportProtFListPushBtn, stretch=0)
 
@@ -197,13 +197,13 @@ parseProtImportProtDirPathFDialog.setFileMode(QFileDialog.Directory)
 
 #### Parse Protocols - Import Protocols - Directory PushButton
 parseProtImportProtDirPathPushBtn = QPushButton('Protocol Directory')
-parseProtImportProtDirPathPushBtn.setFixedSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
+parseProtImportProtDirPathPushBtn.setMinimumSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
 parseProtImportProtDirPathPushBtn.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 parseProtGroupBoxFrameLayout.addWidget(parseProtImportProtDirPathPushBtn, stretch=0)
 
 ####
 parseProtHLine = QFrame()
-parseProtHLine.setFixedHeight(H_LINE_HEIGHT)
+parseProtHLine.setMinimumHeight(H_LINE_HEIGHT)
 parseProtHLine.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
 parseProtHLine.setStyleSheet(lineStyle)
 parseProtGroupBoxFrameLayout.addWidget(parseProtHLine)
@@ -215,7 +215,7 @@ parseProtGroupBoxFrameLayout.addWidget(parseProtAddAndParseSepLabel, stretch=0)
 
 #### Parse Protocols - Import PTU-2 Files PushButton
 parseProtAddAndParsePtu2PushBtn = QPushButton('PTU-2 Files')
-parseProtAddAndParsePtu2PushBtn.setFixedSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
+parseProtAddAndParsePtu2PushBtn.setMinimumSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
 parseProtAddAndParsePtu2PushBtn.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 parseProtGroupBoxFrameLayout.addWidget(parseProtAddAndParsePtu2PushBtn, stretch=0)
 
@@ -226,7 +226,7 @@ parseProtAddAndParsePtu2FDialog.setNameFilter("PTU-2 Files (*ptu2.txt)")
 
 #### Parse Protocols - Import Tx-Ant. Diag. Files PushButton
 parseProtAddAndParseTxAntDiagPushBtn = QPushButton('Tx-Ant. Diag. Files')
-parseProtAddAndParseTxAntDiagPushBtn.setFixedSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
+parseProtAddAndParseTxAntDiagPushBtn.setMinimumSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
 parseProtAddAndParseTxAntDiagPushBtn.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 parseProtGroupBoxFrameLayout.addWidget(parseProtAddAndParseTxAntDiagPushBtn, stretch=0)
 
@@ -236,7 +236,7 @@ parseProtAddAndParseTxAntDiagFDialog.setNameFilter("Tx-Ant. Diag. Files (*Diagra
 
 ####
 parseProtHLine = QFrame()
-parseProtHLine.setFixedHeight(H_LINE_HEIGHT)
+parseProtHLine.setMinimumHeight(H_LINE_HEIGHT)
 parseProtHLine.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
 parseProtHLine.setStyleSheet(lineStyle)
 parseProtGroupBoxFrameLayout.addWidget(parseProtHLine)
@@ -249,7 +249,7 @@ parseProtGroupBoxFrameLayout.addWidget(parseProtSensorMusterCheckBox)
 
 #####
 parseProtSensorMusterLEdit = QLineEdit()
-parseProtSensorMusterLEdit.setFixedSize(LEDIT_BTN_H_SIZE, LEDIT_BTN_V_SIZE)
+parseProtSensorMusterLEdit.setMinimumSize(LEDIT_BTN_H_SIZE, LEDIT_BTN_V_SIZE)
 parseProtSensorMusterLEdit.setPlaceholderText('(ex: rf dsp PT)')
 parseProtGroupBoxFrameLayout.addWidget(parseProtSensorMusterLEdit)
 
@@ -257,7 +257,7 @@ parseProtGroupBoxFrameLayout.addWidget(parseProtSensorMusterLEdit)
 ### Parse Protocols Stats GroupBox
 parseProtStatsGroupBox = QGroupBox('Data Stats')
 parseProtStatsGroupBox.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Minimum)
-parseProtStatsGroupBox.setFixedWidth(210)
+parseProtStatsGroupBox.setMinimumWidth(210)
 parseProtStatsGroupBoxLayout = QHBoxLayout()
 parseProtStatsGroupBoxLayout.setSpacing(V_LAYOUT_SPACING)
 parseProtStatsGroupBoxLayout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
@@ -296,7 +296,7 @@ parseProtGroupBoxStatsFrameLayout.addWidget(parseProtMeasLimitsExcLabel)
 
 ####
 parseProtHLine = QFrame()
-parseProtHLine.setFixedHeight(H_LINE_HEIGHT)
+parseProtHLine.setMinimumHeight(H_LINE_HEIGHT)
 parseProtHLine.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
 parseProtHLine.setStyleSheet(lineStyle)
 parseProtGroupBoxStatsFrameLayout.addWidget(parseProtHLine)
@@ -318,7 +318,7 @@ parseProtGroupBoxStatsFrameLayout.addWidget(parseProtTxAntDiagFilesLabel)
 
 ####
 parseProtHLine = QFrame()
-parseProtHLine.setFixedHeight(H_LINE_HEIGHT)
+parseProtHLine.setMinimumHeight(H_LINE_HEIGHT)
 parseProtHLine.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
 parseProtHLine.setStyleSheet(lineStyle)
 parseProtGroupBoxStatsFrameLayout.addWidget(parseProtHLine)
@@ -342,7 +342,7 @@ parseProtGroupBoxStatsFrameLayout.addWidget(parseProtSepParTxAntDiagFilesLabel)
 ### Parse Protocols Data
 parseProtProtDataGroupBox = QGroupBox('Protocols Data')
 parseProtProtDataGroupBox.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
-parseProtProtDataGroupBox.setFixedWidth(210)
+parseProtProtDataGroupBox.setMinimumWidth(210)
 parseProtProtDataGroupBoxLayout = QVBoxLayout()
 parseProtProtDataGroupBoxLayout.setSpacing(V_LAYOUT_SPACING)
 parseProtProtDataGroupBoxLayout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
@@ -374,15 +374,15 @@ parseProtProtDataBurnInLayout.addWidget(parseProtProtDataBurnInInclCheckBox)
 
 #####
 parseProtProtDataBurnInHLine = QFrame()
-parseProtProtDataBurnInHLine.setFixedHeight(H_LINE_HEIGHT)
+parseProtProtDataBurnInHLine.setMinimumHeight(H_LINE_HEIGHT)
 parseProtProtDataBurnInHLine.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
 parseProtProtDataBurnInHLine.setStyleSheet(lineStyle)
 parseProtProtDataBurnInLayout.addWidget(parseProtProtDataBurnInHLine)
 
 #####
 parseProtProtDataInFileBurnInPushBtn = QPushButton('Load Input Limits File')
-parseProtProtDataInFileBurnInPushBtn.setFixedSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
-parseProtProtDataInFileBurnInPushBtn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+parseProtProtDataInFileBurnInPushBtn.setMinimumSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
+parseProtProtDataInFileBurnInPushBtn.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 parseProtProtDataBurnInLayout.addWidget(parseProtProtDataInFileBurnInPushBtn)
 
 #####
@@ -401,15 +401,15 @@ parseProtProtDataBurnInLayout.addWidget(parseProtProtDataBurnInExtCheckBox)
 
 #####
 parseProtProtDataBurnInHLine = QFrame()
-parseProtProtDataBurnInHLine.setFixedHeight(H_LINE_HEIGHT)
+parseProtProtDataBurnInHLine.setMinimumHeight(H_LINE_HEIGHT)
 parseProtProtDataBurnInHLine.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
 parseProtProtDataBurnInHLine.setStyleSheet(lineStyle)
 parseProtProtDataBurnInLayout.addWidget(parseProtProtDataBurnInHLine)
 
 #####
 parseProtProtDataLimGroupsBurnInPushBtn = QPushButton('Load Limits Groups File')
-parseProtProtDataLimGroupsBurnInPushBtn.setFixedSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
-parseProtProtDataLimGroupsBurnInPushBtn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+parseProtProtDataLimGroupsBurnInPushBtn.setMinimumSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
+parseProtProtDataLimGroupsBurnInPushBtn.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 parseProtProtDataBurnInLayout.addWidget(parseProtProtDataLimGroupsBurnInPushBtn)
 
 #####
@@ -441,15 +441,15 @@ parseProtProtDataCalLayout.addWidget(parseProtProtDataCalInclCheckBox)
 
 #####
 parseProtProtDataCalHLine = QFrame()
-parseProtProtDataCalHLine.setFixedHeight(H_LINE_HEIGHT)
+parseProtProtDataCalHLine.setMinimumHeight(H_LINE_HEIGHT)
 parseProtProtDataCalHLine.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
 parseProtProtDataCalHLine.setStyleSheet(lineStyle)
 parseProtProtDataCalLayout.addWidget(parseProtProtDataCalHLine)
 
 #####
 parseProtProtDataInFileCalPushBtn = QPushButton('Load Input Limits File')
-parseProtProtDataInFileCalPushBtn.setFixedSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
-parseProtProtDataInFileCalPushBtn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+parseProtProtDataInFileCalPushBtn.setMinimumSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
+parseProtProtDataInFileCalPushBtn.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 parseProtProtDataCalLayout.addWidget(parseProtProtDataInFileCalPushBtn)
 
 #####
@@ -467,15 +467,15 @@ parseProtProtDataCalLayout.addWidget(parseProtProtDataCalExtCheckBox)
 
 #####
 parseProtProtDataCalHLine = QFrame()
-parseProtProtDataCalHLine.setFixedHeight(H_LINE_HEIGHT)
+parseProtProtDataCalHLine.setMinimumHeight(H_LINE_HEIGHT)
 parseProtProtDataCalHLine.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
 parseProtProtDataCalHLine.setStyleSheet(lineStyle)
 parseProtProtDataCalLayout.addWidget(parseProtProtDataCalHLine)
 
 #####
 parseProtProtDataLimGroupsCalPushBtn = QPushButton('Load Limits Groups File')
-parseProtProtDataLimGroupsCalPushBtn.setFixedSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
-parseProtProtDataLimGroupsCalPushBtn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+parseProtProtDataLimGroupsCalPushBtn.setMinimumSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
+parseProtProtDataLimGroupsCalPushBtn.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 parseProtProtDataCalLayout.addWidget(parseProtProtDataLimGroupsCalPushBtn)
 
 #####
@@ -520,7 +520,7 @@ parseProtProgresFrameLayout.addWidget(parseProtProgresLabel, stretch=3)
 
 parseProtProgresBar = QProgressBar()
 progBarFormatStr    = ''
-parseProtProgresBar.setFixedWidth(PROGRESS_BAR_H_SIZE)
+parseProtProgresBar.setMinimumWidth(PROGRESS_BAR_H_SIZE)
 parseProtProgresBar.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 parseProtProgresBar.setTextVisible(True)
 parseProtProgresFrameLayout.addWidget(parseProtProgresBar, stretch=1)

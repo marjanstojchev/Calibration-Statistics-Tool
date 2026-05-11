@@ -35,8 +35,8 @@ txAntDiagRowIdx = 0
 txAntDiagColIdx = 0
 
 txAntDiagStartPushBtn = QPushButton('Start')
-txAntDiagStartPushBtn.setFixedSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
-txAntDiagStartPushBtn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+txAntDiagStartPushBtn.setMinimumSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
+txAntDiagStartPushBtn.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 txAntDiagLayout.addWidget(txAntDiagStartPushBtn, txAntDiagRowIdx, txAntDiagColIdx)
 
 #### Input Data Setup GroupBox
@@ -84,7 +84,7 @@ txAntDiagInputSetupAngleGroup.addButton(txAntDiagInputSetupAngleSetupRadio2, 1)
 
 #####
 txAntDiagInputSetupHLine = QFrame()
-txAntDiagInputSetupHLine.setFixedHeight(H_LINE_HEIGHT)
+txAntDiagInputSetupHLine.setMinimumHeight(H_LINE_HEIGHT)
 txAntDiagInputSetupHLine.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
 txAntDiagInputSetupHLine.setStyleSheet(lineStyle)
 txAntDiagInputSetupGroupBoxFrameLayout.addWidget(txAntDiagInputSetupHLine)
@@ -111,7 +111,7 @@ txAntDiagInputSetupSensorOrientGroup.setId(txAntDiagInputSetupSensorOrientRadio2
 
 #####
 txAntDiagInputSetupHLine = QFrame()
-txAntDiagInputSetupHLine.setFixedHeight(H_LINE_HEIGHT)
+txAntDiagInputSetupHLine.setMinimumHeight(H_LINE_HEIGHT)
 txAntDiagInputSetupHLine.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
 txAntDiagInputSetupHLine.setStyleSheet(lineStyle)
 txAntDiagInputSetupGroupBoxFrameLayout.addWidget(txAntDiagInputSetupHLine)
@@ -158,13 +158,13 @@ txAntDiagPlotSetupSensorNumSlideLEdit = QLineEdit()
 # FIX: use local validator instead of cross-tab sysDiagPlotSetupImageDpiIntValidator
 txAntDiagPlotSetupSensorNumSlideLEdit.setValidator(txAntDiagPlotSetupSensorNumSlideIntValidator)
 txAntDiagPlotSetupSensorNumSlideLEdit.setMaxLength(3)
-txAntDiagPlotSetupSensorNumSlideLEdit.setFixedSize(LEDIT_BTN_H_SIZE, LEDIT_BTN_V_SIZE)
+txAntDiagPlotSetupSensorNumSlideLEdit.setMinimumSize(LEDIT_BTN_H_SIZE, LEDIT_BTN_V_SIZE)
 txAntDiagPlotSetupSensorNumSlideLEdit.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 txAntDiagPlotSetupGroupBoxFrameLayout.addWidget(txAntDiagPlotSetupSensorNumSlideLEdit)
 
 ####
 txAntDiagInputSetupHLine = QFrame()
-txAntDiagInputSetupHLine.setFixedHeight(H_LINE_HEIGHT)
+txAntDiagInputSetupHLine.setMinimumHeight(H_LINE_HEIGHT)
 txAntDiagInputSetupHLine.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
 txAntDiagInputSetupHLine.setStyleSheet(lineStyle)
 txAntDiagPlotSetupGroupBoxFrameLayout.addWidget(txAntDiagInputSetupHLine)
@@ -180,13 +180,13 @@ txAntDiagPlotSetupGraphsPerSlideLEdit = QLineEdit()
 # FIX: use local validator instead of cross-tab sysDiagPlotSetupImageDpiIntValidator
 txAntDiagPlotSetupGraphsPerSlideLEdit.setValidator(txAntDiagPlotSetupGraphsPerSliideIntValidator)
 txAntDiagPlotSetupGraphsPerSlideLEdit.setMaxLength(1)
-txAntDiagPlotSetupGraphsPerSlideLEdit.setFixedSize(LEDIT_BTN_H_SIZE, LEDIT_BTN_V_SIZE)
+txAntDiagPlotSetupGraphsPerSlideLEdit.setMinimumSize(LEDIT_BTN_H_SIZE, LEDIT_BTN_V_SIZE)
 txAntDiagPlotSetupGraphsPerSlideLEdit.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 txAntDiagPlotSetupGroupBoxFrameLayout.addWidget(txAntDiagPlotSetupGraphsPerSlideLEdit)
 
 #####
 txAntDiagInputSetupHLine = QFrame()
-txAntDiagInputSetupHLine.setFixedHeight(H_LINE_HEIGHT)
+txAntDiagInputSetupHLine.setMinimumHeight(H_LINE_HEIGHT)
 txAntDiagInputSetupHLine.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
 txAntDiagInputSetupHLine.setStyleSheet(lineStyle)
 txAntDiagPlotSetupGroupBoxFrameLayout.addWidget(txAntDiagInputSetupHLine)
@@ -201,13 +201,13 @@ txAntDiagPlotSetupGroupBoxFrameLayout.addWidget(txAntDiagPlotSetupImageDpiLabel)
 txAntDiagPlotSetupImageDpiLEdit = QLineEdit()
 txAntDiagPlotSetupImageDpiLEdit.setValidator(txAntDiagPlotSetupImageDpiIntValidator)
 txAntDiagPlotSetupImageDpiLEdit.setMaxLength(3)
-txAntDiagPlotSetupImageDpiLEdit.setFixedSize(LEDIT_BTN_H_SIZE, LEDIT_BTN_V_SIZE)
+txAntDiagPlotSetupImageDpiLEdit.setMinimumSize(LEDIT_BTN_H_SIZE, LEDIT_BTN_V_SIZE)
 txAntDiagPlotSetupImageDpiLEdit.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 txAntDiagPlotSetupGroupBoxFrameLayout.addWidget(txAntDiagPlotSetupImageDpiLEdit)
 
 #####
 txAntDiagPlotSetupVLine = QFrame()
-txAntDiagPlotSetupVLine.setFixedWidth(V_LINE_WIDTH)
+txAntDiagPlotSetupVLine.setMinimumWidth(V_LINE_WIDTH)
 txAntDiagPlotSetupVLine.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.MinimumExpanding)
 txAntDiagPlotSetupVLine.setStyleSheet(lineStyle)
 txAntDiagPlotSetupLayout.addWidget(txAntDiagPlotSetupVLine)
@@ -236,7 +236,7 @@ txAntDiagPlotSetupGroupBoxScalingFrameLayout.addWidget(txAntDiagPlotSetupScaling
 txAntDiagPlotSetupScalingXScaleAzLEdit = QLineEdit()
 txAntDiagPlotSetupScalingXScaleAzLEdit.setValidator(txAntDiagPlotSetupScalingXScaleIntValidator)
 txAntDiagPlotSetupScalingXScaleAzLEdit.setMaxLength(3)
-txAntDiagPlotSetupScalingXScaleAzLEdit.setFixedSize(LEDIT_BTN_H_SIZE, LEDIT_BTN_V_SIZE)
+txAntDiagPlotSetupScalingXScaleAzLEdit.setMinimumSize(LEDIT_BTN_H_SIZE, LEDIT_BTN_V_SIZE)
 txAntDiagPlotSetupScalingXScaleAzLEdit.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 txAntDiagPlotSetupGroupBoxScalingFrameLayout.addWidget(txAntDiagPlotSetupScalingXScaleAzLEdit)
 
@@ -246,13 +246,13 @@ txAntDiagPlotSetupGroupBoxScalingFrameLayout.addWidget(txAntDiagPlotSetupScaling
 txAntDiagPlotSetupScalingXScaleElLEdit = QLineEdit()
 txAntDiagPlotSetupScalingXScaleElLEdit.setValidator(txAntDiagPlotSetupScalingXScaleIntValidator)
 txAntDiagPlotSetupScalingXScaleElLEdit.setMaxLength(3)
-txAntDiagPlotSetupScalingXScaleElLEdit.setFixedSize(LEDIT_BTN_H_SIZE, LEDIT_BTN_V_SIZE)
+txAntDiagPlotSetupScalingXScaleElLEdit.setMinimumSize(LEDIT_BTN_H_SIZE, LEDIT_BTN_V_SIZE)
 txAntDiagPlotSetupScalingXScaleElLEdit.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 txAntDiagPlotSetupGroupBoxScalingFrameLayout.addWidget(txAntDiagPlotSetupScalingXScaleElLEdit)
 
 #####
 txAntDiagPlotSetupScalingHLine = QFrame()
-txAntDiagPlotSetupScalingHLine.setFixedHeight(H_LINE_HEIGHT)
+txAntDiagPlotSetupScalingHLine.setMinimumHeight(H_LINE_HEIGHT)
 txAntDiagPlotSetupScalingHLine.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
 txAntDiagPlotSetupScalingHLine.setStyleSheet(lineStyle)
 txAntDiagPlotSetupGroupBoxScalingFrameLayout.addWidget(txAntDiagPlotSetupScalingHLine)
@@ -270,7 +270,7 @@ txAntDiagPlotSetupGroupBoxScalingFrameLayout.addWidget(txAntDiagPlotSetupScaling
 
 #####
 txAntDiagPlotSetupVLine = QFrame()
-txAntDiagPlotSetupVLine.setFixedWidth(V_LINE_WIDTH)
+txAntDiagPlotSetupVLine.setMinimumWidth(V_LINE_WIDTH)
 txAntDiagPlotSetupVLine.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.MinimumExpanding)
 txAntDiagPlotSetupVLine.setStyleSheet(lineStyle)
 txAntDiagPlotSetupLayout.addWidget(txAntDiagPlotSetupVLine)

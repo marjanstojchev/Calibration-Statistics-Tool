@@ -49,6 +49,7 @@ from ui_theme import (  # noqa: E402, F401 — intentional star-like re-export
     MARGINS_MAIN,
     MARGINS_TAB,
     MARGINS_GROUPBOX,
+    MAX_LOG_ROWS,
     # Window chrome
     WINDOW_TITLE,
     WINDOW_MIN_W,
@@ -78,4 +79,6 @@ from ui_theme import (  # noqa: E402, F401 — intentional star-like re-export
     LOG_LEVEL_BG_COLORS, LOG_LEVEL_FG_COLORS,
     # Public API
     apply_theme,
+    configure_hidpi,
+    dpi_scale,
 )

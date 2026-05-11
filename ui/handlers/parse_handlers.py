@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 import auxiliary as aux
 import data_processing as dp
 import protocolsTest as protocolFilter
+from PySide6.QtCore import QThread
 from PySide6.QtWidgets import QTableWidgetItem
 from shared.parse_helpers import (
     collect_unparsed_protocols,
@@ -23,6 +24,7 @@ from shared.parse_helpers import (
     walk_protocol_files,
 )
 from ui.handlers.stats_handlers import clear_stats_ui, update_stats_nav_buttons
+from ui.workers import ParseWorker
 
 if TYPE_CHECKING:  # pragma: no cover
     from ui.handlers.app_context import AppContext
@@ -531,58 +533,87 @@ def parseData(ctx: "AppContext") -> None:
 
     progBarLabelStr, protToBeParsedListLen = setup_progress_bar(ctx)
 
-    sysDiagDataList, txAntDiagDataList, sysDiagParsedDataList, txAntDiagParsedDataList = _load_protocol_data(
-        ctx, filteredSysDiagList, filteredTxAntDiagList, progBarLabelStr, protToBeParsedListLen,
+    import TxAntDiagrams as _txAntDiag  # noqa: PLC0415
+    worker = ParseWorker(
+        filtered_sys_diag_list=filteredSysDiagList,
+        filtered_tx_ant_diag_list=filteredTxAntDiagList,
+        plot_setup=ctx.plc.plotSetup,
+        tx_ant_plot_setup=_txAntDiag.plotSetup,
+        protocol_path_dict=ctx.pc.protToBeParsedDict,
+        prog_bar_label_str=progBarLabelStr,
+        prot_to_be_parsed_list_len=protToBeParsedListLen,
     )
+    thread = QThread()
+    worker.moveToThread(thread)
 
-    merge_into_parsed_dicts(
-        sysDiagParsedDataList, txAntDiagParsedDataList,
-        ctx.pc.sysDiagParsedDataDict, ctx.pc.txAntDiagParsedDataDict,
-    )
+    # Disable the parse button to prevent double-clicks
+    ctx.qt.parseProtParseDataPushBtn.setEnabled(False)
 
-    ctx.mv.set_parsed_loaded_label(
-        len(ctx.pc.parsedProtDict["protocolPathTypeDictList"]),
-        len(ctx.pc.protocolPathDict["protocolPathTypeDictList"]),
-    )
-    ctx.mv.set_ptu2_files_label(len(ctx.pc.sysDiagParsedDataDict["parsedDataList"]))
-    ctx.mv.set_tx_ant_diag_files_label(len(ctx.pc.txAntDiagParsedDataDict["parsedDataList"]))
+    def _on_progress(bar_val: int, label_txt: str) -> None:
+        ctx.mv.set_progress_bar(bar_val)
+        ctx.mv.set_progress_label(label_txt)
 
-    _populate_accepted_protocols_table(ctx, sysDiagDataList, txAntDiagDataList)
+    def _on_finished(
+        sysDiagDataList: list,
+        txAntDiagDataList: list,
+        sysDiagParsedDataList: list,
+        txAntDiagParsedDataList: list,
+    ) -> None:
+        merge_into_parsed_dicts(
+            sysDiagParsedDataList, txAntDiagParsedDataList,
+            ctx.pc.sysDiagParsedDataDict, ctx.pc.txAntDiagParsedDataDict,
+        )
+        ctx.mv.set_parsed_loaded_label(
+            len(ctx.pc.parsedProtDict["protocolPathTypeDictList"]),
+            len(ctx.pc.protocolPathDict["protocolPathTypeDictList"]),
+        )
+        ctx.mv.set_ptu2_files_label(len(ctx.pc.sysDiagParsedDataDict["parsedDataList"]))
+        ctx.mv.set_tx_ant_diag_files_label(len(ctx.pc.txAntDiagParsedDataDict["parsedDataList"]))
+        _populate_accepted_protocols_table(ctx, sysDiagDataList, txAntDiagDataList)
+        ctx.pc.parse_protocol_limits(
+            burn_in_limits_path=ctx.qt.parseProtProtDataInFileBurnInLabel.text(),
+            cal_limits_path=ctx.qt.parseProtProtDataInFileCalLabel.text(),
+            include_burn_in=ctx.qt.parseProtProtDataBurnInInclCheckBox.isChecked(),
+            include_cal=ctx.qt.parseProtProtDataCalInclCheckBox.isChecked(),
+            extend_burn_in=ctx.qt.parseProtProtDataBurnInExtCheckBox.isChecked(),
+            extend_cal=ctx.qt.parseProtProtDataCalExtCheckBox.isChecked(),
+        )
+        ctx.pc.build_limits_rows()
+        ctx.pc.build_limits_groups(
+            burn_in_lim_groups_path=ctx.qt.parseProtProtDataLimGroupsBurnInLabel.text(),
+            cal_lim_groups_path=ctx.qt.parseProtProtDataLimGroupsCalLabel.text(),
+            include_burn_in=ctx.qt.parseProtProtDataBurnInInclCheckBox.isChecked(),
+            include_cal=ctx.qt.parseProtProtDataCalInclCheckBox.isChecked(),
+            extend_burn_in_groups=ctx.qt.parseProtProtDataBurnInLimGroupsExtCheckBox.isChecked(),
+            extend_cal_groups=ctx.qt.parseProtProtDataCalLimGroupsExtCheckBox.isChecked(),
+        )
+        burn_in_group_names = [g.name for g in ctx.pc.burnInLimitsGroupDict['limitsGroupList']]
+        cal_group_names     = [g.name for g in ctx.pc.calLimitsGroupDict['limitsGroupList']]
+        ctx.mv.populate_burn_in_groups(burn_in_group_names)
+        ctx.mv.populate_cal_groups(cal_group_names)
+        update_stats_nav_buttons(ctx)
+        ctx.mv.set_progress_label(
+            f'Parsing finished. Protocols parsed: {len(ctx.pc.protToBeParsedDict["protocolPathTypeDictList"])}.'
+        )
+        ctx.pc.protToBeParsedDict["protocolPathTypeDictList"][:] = []
+        ctx.qt.parseProtParseDataPushBtn.setEnabled(True)
 
-    ctx.pc.parse_protocol_limits(
-        burn_in_limits_path=ctx.qt.parseProtProtDataInFileBurnInLabel.text(),
-        cal_limits_path=ctx.qt.parseProtProtDataInFileCalLabel.text(),
-        include_burn_in=ctx.qt.parseProtProtDataBurnInInclCheckBox.isChecked(),
-        include_cal=ctx.qt.parseProtProtDataCalInclCheckBox.isChecked(),
-        extend_burn_in=ctx.qt.parseProtProtDataBurnInExtCheckBox.isChecked(),
-        extend_cal=ctx.qt.parseProtProtDataCalExtCheckBox.isChecked(),
-    )
+    def _on_error(msg: str) -> None:
+        parseDataLog.error(f"Parse worker error: {msg}")
+        ctx.mv.set_progress_label(f"Parse error: {msg}")
+        ctx.qt.parseProtParseDataPushBtn.setEnabled(True)
 
-    ctx.pc.build_limits_rows()
-    ctx.pc.build_limits_groups(
-        burn_in_lim_groups_path=ctx.qt.parseProtProtDataLimGroupsBurnInLabel.text(),
-        cal_lim_groups_path=ctx.qt.parseProtProtDataLimGroupsCalLabel.text(),
-        include_burn_in=ctx.qt.parseProtProtDataBurnInInclCheckBox.isChecked(),
-        include_cal=ctx.qt.parseProtProtDataCalInclCheckBox.isChecked(),
-        extend_burn_in_groups=ctx.qt.parseProtProtDataBurnInLimGroupsExtCheckBox.isChecked(),
-        extend_cal_groups=ctx.qt.parseProtProtDataCalLimGroupsExtCheckBox.isChecked(),
-    )
+    thread.started.connect(worker.run)
+    worker.progress.connect(_on_progress)
+    worker.finished.connect(_on_finished)
+    worker.error.connect(_on_error)
+    worker.finished.connect(thread.quit)
+    worker.error.connect(thread.quit)
+    worker.finished.connect(worker.deleteLater)
+    worker.error.connect(worker.deleteLater)
+    thread.finished.connect(thread.deleteLater)
 
-    burn_in_group_names = [
-        g.name for g in ctx.pc.burnInLimitsGroupDict['limitsGroupList']
-    ]
-    cal_group_names = [
-        g.name for g in ctx.pc.calLimitsGroupDict['limitsGroupList']
-    ]
-    ctx.mv.populate_burn_in_groups(burn_in_group_names)
-    ctx.mv.populate_cal_groups(cal_group_names)
-
-    update_stats_nav_buttons(ctx)
-
-    ctx.mv.set_progress_label(
-        f'Parsing finished. Protocols parsed: {len(ctx.pc.protToBeParsedDict["protocolPathTypeDictList"])}.'
-    )
-    ctx.pc.protToBeParsedDict["protocolPathTypeDictList"][:] = []
+    thread.start()
 
 
 def importDbProtocolsList(ctx: "AppContext") -> None:

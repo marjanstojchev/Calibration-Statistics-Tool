@@ -71,14 +71,19 @@ SCROLLBAR_HANDLE_HOVER = "#4d6890"
 
 # ============================================================================
 # § 2  LAYOUT / SPACING CONSTANTS  (replaces legacy ui_constants values)
+#
+#  All pixel values are *logical* pixels at 96 DPI (1× scale).
+#  Use dpi_scale() at runtime to convert to physical pixels — see § 7.
+#  Buttons / inputs use *minimum* sizes so they can grow; they are no
+#  longer hard-capped with setFixedSize.
 # ============================================================================
 PROGRESS_BAR_H_SIZE    = 260
-PUSH_BTN_H_SIZE        = 128   # Horizontal min for fixed-size buttons
-PUSH_BTN_V_SIZE        = 28    # Vertical size for fixed-size buttons
-LEDIT_BTN_H_SIZE       = 112   # Small line-edit
-LEDIT_BTN_PATH_H_SIZE  = 300   # Wide path line-edit
-LABEL_PATH_H_SIZE      = 340   # Path-label display width
-LEDIT_BTN_V_SIZE       = 24    # Line-edit vertical size
+PUSH_BTN_H_SIZE        = 128   # Minimum horizontal size for buttons
+PUSH_BTN_V_SIZE        = 28    # Minimum vertical size for buttons
+LEDIT_BTN_H_SIZE       = 112   # Small line-edit minimum width
+LEDIT_BTN_PATH_H_SIZE  = 300   # Wide path line-edit minimum width
+LABEL_PATH_H_SIZE      = 340   # Path-label minimum display width
+LEDIT_BTN_V_SIZE       = 24    # Line-edit minimum vertical size
 H_LAYOUT_SPACING       = 10
 V_LAYOUT_SPACING       = 10
 GRID_LAYOUT_SPACING    = 10
@@ -92,6 +97,9 @@ H_LINE_HEIGHT          = 1
 MARGINS_MAIN           = (10, 10, 10, 10)
 MARGINS_TAB            = (8, 8, 8, 8)
 MARGINS_GROUPBOX       = (8, 18, 8, 8)
+
+# Log table
+MAX_LOG_ROWS           = 500   # Oldest rows are trimmed beyond this limit
 
 # ============================================================================
 # § 3  WINDOW CHROME
@@ -908,6 +916,54 @@ NavigationToolbar2QT QToolButton:checked {{
 # ============================================================================
 # § 7  PUBLIC API
 # ============================================================================
+
+def configure_hidpi(app_class) -> None:
+    """Set HiDPI attributes on the QApplication *class* before instantiation.
+
+    Must be called **before** ``QApplication(sys.argv)`` is created::
+
+        configure_hidpi(QApplication)
+        app = QApplication(sys.argv)
+
+    On Qt 6 the high-DPI handling is automatic, but the rounding policy
+    needs to be set explicitly to avoid blurry half-pixel rendering on
+    fractional scale factors (e.g. 125%, 150%, 175%).
+    """
+    from PySide6.QtCore import Qt
+    from PySide6.QtGui import QGuiApplication
+
+    # Qt 6: automatic high-DPI — just configure the rounding policy
+    try:
+        QGuiApplication.setHighDpiScaleFactorRoundingPolicy(
+            Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
+        )
+    except AttributeError:
+        pass  # Older Qt builds that don't expose this API
+
+
+def dpi_scale(logical_px: int) -> int:
+    """Scale *logical_px* by the primary screen's device-pixel ratio.
+
+    Returns the input unchanged if called before ``QApplication`` exists
+    (safe to call at module level — it gracefully falls back to 1×).
+
+    Usage::
+
+        btn.setMinimumSize(dpi_scale(PUSH_BTN_H_SIZE), dpi_scale(PUSH_BTN_V_SIZE))
+    """
+    try:
+        from PySide6.QtWidgets import QApplication
+        app = QApplication.instance()
+        if app is not None:
+            screen = app.primaryScreen()
+            if screen is not None:
+                ratio = screen.devicePixelRatio()
+                if ratio > 1.0:
+                    return int(logical_px * ratio)
+    except Exception:
+        pass
+    return logical_px
+
 
 def apply_theme(app) -> None:
     """Apply the global THEME_QSS stylesheet to a QApplication instance.

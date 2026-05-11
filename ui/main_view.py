@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
     QHeaderView, QFileDialog, QComboBox, QRadioButton, QLineEdit,
     QDialog, QDialogButtonBox, QGraphicsDropShadowEffect, QButtonGroup,
     QStyledItemDelegate, QCompleter, QVBoxLayout, QHBoxLayout, QGridLayout,
-    QSizePolicy,
+    QSizePolicy, QSplitter, QScrollArea,
 )
 from PySide6.QtGui import *
 from PySide6.QtCore import *
@@ -32,7 +32,7 @@ import plotdata
 
 from ui_constants import *
 from ui_theme import (
-    apply_theme,
+    apply_theme, configure_hidpi,
     WINDOW_TITLE, WINDOW_MIN_W, WINDOW_MIN_H,
     MARGINS_MAIN,
 )
@@ -45,10 +45,28 @@ from widgets import (
 )
 
 
+class _CloseEventFilter(QObject):
+    """QObject event filter that intercepts QEvent.Close on mainWidget."""
+
+    def __init__(self, on_close_cb, parent: QObject | None = None) -> None:
+        super().__init__(parent)
+        self._on_close = on_close_cb
+
+    def eventFilter(self, obj: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Close:
+            self._on_close()
+        return False  # let the event propagate normally
+
+
 class MainView:
     """PST-67: Qt View layer — all widget construction owned by this class."""
 
     def __init__(self) -> None:
+        # ------------------------------------------------------------------ #
+        # HiDPI — must happen before QApplication is created
+        # ------------------------------------------------------------------ #
+        configure_hidpi(QApplication)
+
         # ------------------------------------------------------------------ #
         # Application + top-level labels
         # ------------------------------------------------------------------ #
@@ -94,8 +112,8 @@ class MainView:
         mainTabWidgetLayout.setAlignment(Qt.AlignTop)
         mainTabWidgetLayout.setSpacing(H_LAYOUT_SPACING)
         self.mainTabWidget.setLayout(mainTabWidgetLayout)
-        self.mainTabWidget.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum)
-        mainWidgetLayout.addWidget(self.mainTabWidget)
+        self.mainTabWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        # Note: mainTabWidget is added to mainSplitter below, NOT directly to mainWidgetLayout
 
         # ------------------------------------------------------------------ #
         # Tab modules — absorb all public names as instance attributes
@@ -106,15 +124,24 @@ class MainView:
 
         import tabs.sys_diag_tab as _sdt
         self._absorb(vars(_sdt))
-        self.mainTabWidget.insertTab(1, self.sysDiagTab, 'System Diagrams')
+        _sys_scroll = QScrollArea()
+        _sys_scroll.setWidget(self.sysDiagTab)
+        _sys_scroll.setWidgetResizable(True)
+        self.mainTabWidget.insertTab(1, _sys_scroll, 'System Diagrams')
 
         import tabs.tx_ant_diag_tab as _tat
         self._absorb(vars(_tat))
-        self.mainTabWidget.insertTab(2, self.txAntDiagTab, 'Tx-Antenna Diagrams')
+        _tx_scroll = QScrollArea()
+        _tx_scroll.setWidget(self.txAntDiagTab)
+        _tx_scroll.setWidgetResizable(True)
+        self.mainTabWidget.insertTab(2, _tx_scroll, 'Tx-Antenna Diagrams')
 
         import tabs.ant_pat_tab as _apt
         self._absorb(vars(_apt))
-        self.mainTabWidget.insertTab(4, self.antPatTab, 'Antenna Patterns')
+        _ant_scroll = QScrollArea()
+        _ant_scroll.setWidget(self.antPatTab)
+        _ant_scroll.setWidgetResizable(True)
+        self.mainTabWidget.insertTab(4, _ant_scroll, 'Antenna Patterns')
 
         # ------------------------------------------------------------------ #
         # Statistics Tab
@@ -154,11 +181,11 @@ class MainView:
         statsLayout.addWidget(statsButtonFrame, 1, 0, 1, 1)
 
         self.statsClearBtn = QPushButton('Clear')
-        self.statsClearBtn.setFixedSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
+        self.statsClearBtn.setMinimumSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
         statsButtonFrameLayout.addWidget(self.statsClearBtn, stretch=1, alignment=Qt.AlignLeft)
 
         self.statsSeriesDistBtn = QPushButton('Statistical Series')
-        self.statsSeriesDistBtn.setFixedSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
+        self.statsSeriesDistBtn.setMinimumSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
         statsButtonFrameLayout.addWidget(self.statsSeriesDistBtn, stretch=1, alignment=Qt.AlignLeft)
 
         self.statsGroupsTypeButtonGroup = QButtonGroup()
@@ -174,15 +201,15 @@ class MainView:
         self.statsGroupsTypeButtonGroup.addButton(self.statsGroupsTypeCalRadio, 1)
 
         self.statsGroupBackBtn = QPushButton('< Group')
-        self.statsGroupBackBtn.setFixedSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
+        self.statsGroupBackBtn.setMinimumSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
         statsButtonFrameLayout.addWidget(self.statsGroupBackBtn, stretch=1, alignment=Qt.AlignLeft)
 
         self.statsGroupForwardBtn = QPushButton('Group >')
-        self.statsGroupForwardBtn.setFixedSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
+        self.statsGroupForwardBtn.setMinimumSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
         statsButtonFrameLayout.addWidget(self.statsGroupForwardBtn, stretch=1, alignment=Qt.AlignLeft)
 
         self.statsGroupSaveBtn = QPushButton('Save Group')
-        self.statsGroupSaveBtn.setFixedSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
+        self.statsGroupSaveBtn.setMinimumSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
         statsButtonFrameLayout.addWidget(self.statsGroupSaveBtn, stretch=1, alignment=Qt.AlignLeft)
         statsButtonFrameLayout.addWidget(QLabel('Group Name: '), alignment=Qt.AlignLeft)
 
@@ -200,7 +227,7 @@ class MainView:
         statsLayout.addWidget(statsGroupPptxFrame, 1, 1, 1, 1)
 
         self.statsGroupPptxBtn = QPushButton('Export .pptx')
-        self.statsGroupPptxBtn.setFixedSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
+        self.statsGroupPptxBtn.setMinimumSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
         statsGroupPptxFrameLayout.addWidget(self.statsGroupPptxBtn, stretch=1, alignment=Qt.AlignRight)
 
         statsInputConfFrame = QFrame()
@@ -212,8 +239,8 @@ class MainView:
         statsLayout.addWidget(statsInputConfFrame, 1, 1, 1, 1)
 
         self.statsInputConfBtn = QPushButton('Load Input Config File')
-        self.statsInputConfBtn.setFixedSize(140, PUSH_BTN_V_SIZE)
-        self.statsInputConfBtn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.statsInputConfBtn.setMinimumSize(140, PUSH_BTN_V_SIZE)
+        self.statsInputConfBtn.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
         statsInputConfFrameLayout.addWidget(self.statsInputConfBtn, stretch=1, alignment=Qt.AlignRight)
 
         self.statsInputConfPathLabel = QLabel('Import input config ')
@@ -278,15 +305,15 @@ class MainView:
         SysDiaInterLayout.addWidget(SysDiaInterStartFrame, 0, 0, 1, 1)
 
         self.SysDiaInterStartBtn = QPushButton('Start')
-        self.SysDiaInterStartBtn.setFixedSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
+        self.SysDiaInterStartBtn.setMinimumSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
         SysDiaInterStartFrameLayout.addWidget(self.SysDiaInterStartBtn, stretch=1, alignment=Qt.AlignLeft)
 
         self.SysDiaInterClrGrBtn = QPushButton('Clear')
-        self.SysDiaInterClrGrBtn.setFixedSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
+        self.SysDiaInterClrGrBtn.setMinimumSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
         SysDiaInterStartFrameLayout.addWidget(self.SysDiaInterClrGrBtn, stretch=1, alignment=Qt.AlignRight)
 
         self.SysDiaInterSwitchBtn = QPushButton('On/Off')
-        self.SysDiaInterSwitchBtn.setFixedSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
+        self.SysDiaInterSwitchBtn.setMinimumSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
         SysDiaInterStartFrameLayout.addWidget(self.SysDiaInterSwitchBtn, stretch=0, alignment=Qt.AlignRight)
 
         self.SysDiaInterPlotFrame = PlotFrameSysDia()
@@ -297,21 +324,20 @@ class MainView:
         self.mainTabWidget.insertTab(8, self.SysDiaInterTab, 'System Diagrams Interactive')
 
         # ------------------------------------------------------------------ #
-        # Log table (below tab widget)
+        # Log table — in a vertical splitter below the tab widget
         # ------------------------------------------------------------------ #
         self.mainTabWidget.setCurrentIndex(0)
 
         mainLogTableFrame = QFrame()
-        mainLogTableFrame.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        mainLogTableFrame.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         mainLogTableFrameLayout = QHBoxLayout()
         mainLogTableFrameLayout.setAlignment(Qt.AlignTop)
         mainLogTableFrameLayout.setSpacing(H_LAYOUT_SPACING)
         mainLogTableFrame.setLayout(mainLogTableFrameLayout)
-        mainWidgetLayout.addWidget(mainLogTableFrame)
 
-        self.mainLogTableClearBtn = QPushButton('Clear')
-        self.mainLogTableClearBtn.setFixedSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
-        mainLogTableFrameLayout.addWidget(self.mainLogTableClearBtn, stretch=1)
+        self.mainLogTableClearBtn = QPushButton('Clear Log')
+        self.mainLogTableClearBtn.setMinimumSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
+        mainLogTableFrameLayout.addWidget(self.mainLogTableClearBtn, stretch=0)
 
         self.mainLogTableHandler = QTableLogHandler()
         self.mainLogTable = self.mainLogTableHandler.logTable
@@ -319,10 +345,42 @@ class MainView:
         self.mainLogTableHeader.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         self.mainLogTableHeader.setSectionResizeMode(1, QHeaderView.ResizeToContents)
         self.mainLogTableHeader.setSectionResizeMode(2, QHeaderView.Stretch)
-        self.mainLogTable.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
-        mainLogTableFrameLayout.addWidget(self.mainLogTable, stretch=3)
+        self.mainLogTable.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        mainLogTableFrameLayout.addWidget(self.mainLogTable, stretch=1)
+
+        # Vertical splitter: tab area (top, stretchy) + log table (bottom, collapsible)
+        self.mainSplitter = QSplitter(Qt.Vertical)
+        self.mainSplitter.addWidget(self.mainTabWidget)
+        self.mainSplitter.addWidget(mainLogTableFrame)
+        self.mainSplitter.setStretchFactor(0, 4)   # tab area gets 4× the space
+        self.mainSplitter.setStretchFactor(1, 1)   # log panel gets 1×
+        self.mainSplitter.setCollapsible(1, True)  # log panel can be collapsed
+        mainWidgetLayout.addWidget(self.mainSplitter)
+
+        # ------------------------------------------------------------------ #
+        # Restore window geometry + splitter state from previous session
+        # ------------------------------------------------------------------ #
+        self._settings = QSettings("CalibrationStatsTool", "MainWindow")
+        _geom = self._settings.value("geometry")
+        if _geom:
+            self.mainWidget.restoreGeometry(_geom)
+        else:
+            self.mainWidget.resize(WINDOW_DEF_W, WINDOW_DEF_H)
+
+        _splitter_state = self._settings.value("splitterState")
+        if _splitter_state:
+            self.mainSplitter.restoreState(_splitter_state)
+
+        # Install event filter on mainWidget to capture closeEvent for state save
+        self._close_filter = _CloseEventFilter(self._save_window_state, self.mainWidget)
+        self.mainWidget.installEventFilter(self._close_filter)
 
         self.mainWidget.show()
+
+    def _save_window_state(self) -> None:
+        """Persist geometry and splitter state to QSettings."""
+        self._settings.setValue("geometry", self.mainWidget.saveGeometry())
+        self._settings.setValue("splitterState", self.mainSplitter.saveState())
 
     # ------------------------------------------------------------------ #
     # Namespace absorb helper
@@ -341,6 +399,12 @@ class MainView:
     def show(self) -> None:
         """Show the main application window."""
         self.mainWidget.show()
+
+    def close_and_save_state(self) -> None:
+        """Persist window geometry and splitter state, then close."""
+        self._settings.setValue("geometry", self.mainWidget.saveGeometry())
+        self._settings.setValue("splitterState", self.mainSplitter.saveState())
+        self.mainWidget.close()
 
     def exec_(self) -> int:
         """Start the Qt event loop and return exit code."""
