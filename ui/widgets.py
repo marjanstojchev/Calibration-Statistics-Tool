@@ -31,6 +31,11 @@ from ui_constants import (
     PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE, LEDIT_BTN_PATH_H_SIZE, LEDIT_BTN_V_SIZE,
     plotFrameStyle, color_list, color_list_rev,
 )
+from ui_theme import (
+    LOG_LEVEL_BG_COLORS, LOG_LEVEL_FG_COLORS,
+    dialogLEditErrorStyle, dialogLEditCorrectStyle,
+    dialogLabelErrorStyle, dialogLabelCorrectStyle,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -67,35 +72,6 @@ def show_datapoints(sel):
 class Match(enum.Enum):
     Contains   = 0
     ExactMatch = 0
-
-
-# ---------------------------------------------------------------------------
-# Dialog styles
-# ---------------------------------------------------------------------------
-
-dialogLEditErrorStyle = '''
-.QLineEdit{
-    border: 1px solid red
-}
-'''
-
-dialogLEditCorrectStyle = '''
-.QLineEdit{
-    border: 1px solid grey
-}
-'''
-
-dialogLabelErrorStyle = '''
-.QLabel{
-    color: red
-}
-'''
-
-dialogLabelCorrectStyle = '''
-.QLabel{
-    color: black
-}
-'''
 
 
 # ---------------------------------------------------------------------------
@@ -457,33 +433,46 @@ class QTableLogHandler(logging.Handler):
         self.logTableRow = 0
 
     def emit(self, record):
-        msgStr      = str(record.msg)
+        msgStr       = str(record.msg)
         levelnameStr = str(record.levelname)
-        timeStr     = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        timeMsStr   = "%s,%03d" % (timeStr, record.msecs)
+        timeStr      = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        timeMsStr    = "%s,%03d" % (timeStr, record.msecs)
 
         levelItem = QTableWidgetItem(levelnameStr)
-        _color_map = {
-            'NOTSET':   'lightgrey',
-            'INFO':     'lavender',
-            'DEBUG':    'cyan',
-            'WARNING':  'yellow',
-            'ERROR':    'red',
-            'CRITICAL': 'black',
-        }
-        bg = _color_map.get(levelnameStr)
-        if bg:
-            levelItem.setBackground(QBrush(QColor(bg)))
-        if levelnameStr == 'CRITICAL':
-            levelItem.setForeground(QBrush(QColor('white')))
+
+        # Background colour — semantic dark-theme tints
+        bg_hex = LOG_LEVEL_BG_COLORS.get(levelnameStr)
+        if bg_hex:
+            levelItem.setBackground(QBrush(QColor(bg_hex)))
+
+        # Foreground (text) colour — readable on the dark background
+        fg_hex = LOG_LEVEL_FG_COLORS.get(levelnameStr)
+        if fg_hex:
+            levelItem.setForeground(QBrush(QColor(fg_hex)))
+
+        time_item  = QTableWidgetItem(timeMsStr)
+        msg_item   = QTableWidgetItem(msgStr)
+
+        # Propagate the same row colouring to all three cells for visual unity
+        if bg_hex:
+            time_item.setBackground(QBrush(QColor(bg_hex)))
+            msg_item.setBackground(QBrush(QColor(bg_hex)))
+        if fg_hex:
+            time_item.setForeground(QBrush(QColor(fg_hex)))
+            msg_item.setForeground(QBrush(QColor(fg_hex)))
 
         self.logTable.insertRow(self.logTableRow)
-        self.logTable.setItem(self.logTableRow, 0, QTableWidgetItem(timeMsStr))
+        self.logTable.setItem(self.logTableRow, 0, time_item)
         self.logTable.setItem(self.logTableRow, 1, levelItem)
-        self.logTable.setItem(self.logTableRow, 2, QTableWidgetItem(msgStr))
+        self.logTable.setItem(self.logTableRow, 2, msg_item)
         self.logTableRow += 1
 
+        # Auto-scroll to the latest row
+        self.logTable.scrollToBottom()
+
     def clearTable(self):
-        self.logTable.clear()
-        self.logTable.setRowCount(10)
+        self.logTable.clearContents()
+        self.logTable.setRowCount(0)
         self.logTableRow = 0
+        # Restore headers lost by clearContents()
+        self.logTable.setHorizontalHeaderLabels(['Time', 'Level', 'Message'])

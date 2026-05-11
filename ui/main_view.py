@@ -31,6 +31,11 @@ import numpy as np
 import plotdata
 
 from ui_constants import *
+from ui_theme import (
+    apply_theme,
+    WINDOW_TITLE, WINDOW_MIN_W, WINDOW_MIN_H,
+    MARGINS_MAIN,
+)
 from widgets import (
     getGraphColor, show_datapoints, Match,
     dialogLEditErrorStyle, dialogLEditCorrectStyle,
@@ -51,12 +56,21 @@ class MainView:
         self.setCurvesInputConfPathLabel = QLabel()
 
         # ------------------------------------------------------------------ #
+        # Apply global theme  (must happen before any widgets are shown)
+        # ------------------------------------------------------------------ #
+        apply_theme(self.app)
+
+        # ------------------------------------------------------------------ #
         # Main window widget + layout
         # ------------------------------------------------------------------ #
         self.mainWidget = QWidget()
+        self.mainWidget.setWindowTitle(WINDOW_TITLE)
+        self.mainWidget.setMinimumSize(WINDOW_MIN_W, WINDOW_MIN_H)
+        _ml, _mt, _mr, _mb = MARGINS_MAIN
         mainWidgetLayout = QVBoxLayout()
         mainWidgetLayout.setAlignment(Qt.AlignTop)
         mainWidgetLayout.setSpacing(V_LAYOUT_SPACING)
+        mainWidgetLayout.setContentsMargins(_ml, _mt, _mr, _mb)
         self.mainWidget.setLayout(mainWidgetLayout)
 
         # ------------------------------------------------------------------ #
