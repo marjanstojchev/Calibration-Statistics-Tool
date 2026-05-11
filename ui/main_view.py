@@ -329,6 +329,17 @@ class MainView:
                 setattr(self, k, v)
 
     # ------------------------------------------------------------------ #
+    # Tab helpers
+    # ------------------------------------------------------------------ #
+
+    def tab_index_of(self, title: str) -> int:
+        """Return the actual tab index whose text equals *title*, or -1."""
+        for i in range(self.mainTabWidget.count()):
+            if self.mainTabWidget.tabText(i) == title:
+                return i
+        return -1
+
+    # ------------------------------------------------------------------ #
     # Application lifecycle
     # ------------------------------------------------------------------ #
 
