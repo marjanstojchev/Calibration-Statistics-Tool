@@ -1,3 +1,11 @@
+TestSeriesVariation:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas0BurnInLimitDopplerGenSpeedChirp0[m/s]
+    - Meas0BurnInLimitDopplerGenSpeedChirp1[m/s]
+    - Meas1BurnInLimitDopplerGenSpeedChirp0[m/s]
+    - Meas1BurnInLimitDopplerGenSpeedChirp1[m/s]
 Meas3BurnInLimitDopplerGenRangeChirp:
   Limits:
     Contains: []
@@ -78,14 +86,14 @@ Meas4BurnInLimitDopplerGenAngleChirp:
   Limits:
     Contains: []
     ExactMatch:
-    - Meas4BurnInLimitDopplerGenAngleChirp1[°]
-    - Meas4BurnInLimitDopplerGenAngleChirp0[°]
+    - Meas4BurnInLimitDopplerGenAngleChirp1[ï¿½]
+    - Meas4BurnInLimitDopplerGenAngleChirp0[ï¿½]
 Meas2BurnInLimitDopplerGenAngleChirp:
   Limits:
     Contains: []
     ExactMatch:
-    - Meas2BurnInLimitDopplerGenAngleChirp1[°]
-    - Meas2BurnInLimitDopplerGenAngleChirp0[°]
+    - Meas2BurnInLimitDopplerGenAngleChirp1[ï¿½]
+    - Meas2BurnInLimitDopplerGenAngleChirp0[ï¿½]
 Meas4BurnInLimitDopplerGenRangeMaxDevChirp:
   Limits:
     Contains: []
@@ -210,8 +218,8 @@ Meas0BurnInLimitDopplerGenAngleChirp:
   Limits:
     Contains: []
     ExactMatch:
-    - Meas0BurnInLimitDopplerGenAngleChirp0[°]
-    - Meas0BurnInLimitDopplerGenAngleChirp1[°]
+    - Meas0BurnInLimitDopplerGenAngleChirp0[ï¿½]
+    - Meas0BurnInLimitDopplerGenAngleChirp1[ï¿½]
 Meas4BurnInLimitDopplerGenSpeedMaxDevChirp:
   Limits:
     Contains: []
@@ -229,8 +237,8 @@ Meas1BurnInLimitDopplerGenAngleMaxDevChirp:
   Limits:
     Contains: []
     ExactMatch:
-    - Meas1BurnInLimitDopplerGenAngleMaxDevChirp1[°]
-    - Meas1BurnInLimitDopplerGenAngleMaxDevChirp0[°]
+    - Meas1BurnInLimitDopplerGenAngleMaxDevChirp1[ï¿½]
+    - Meas1BurnInLimitDopplerGenAngleMaxDevChirp0[ï¿½]
 Meas2BurnInLimitMaxNoiseChirp:
   Limits:
     Contains: []
@@ -265,8 +273,8 @@ Meas1BurnInLimitDopplerGenAngleChirp:
   Limits:
     Contains: []
     ExactMatch:
-    - Meas1BurnInLimitDopplerGenAngleChirp0[°]
-    - Meas1BurnInLimitDopplerGenAngleChirp1[°]
+    - Meas1BurnInLimitDopplerGenAngleChirp0[ï¿½]
+    - Meas1BurnInLimitDopplerGenAngleChirp1[ï¿½]
 Sensor0Diag_status_HAL00_bu1_Bit:
   Limits:
     Contains: []
@@ -375,8 +383,8 @@ Meas2BurnInLimitDopplerGenAngleMaxDevChirp:
   Limits:
     Contains: []
     ExactMatch:
-    - Meas2BurnInLimitDopplerGenAngleMaxDevChirp1[°]
-    - Meas2BurnInLimitDopplerGenAngleMaxDevChirp0[°]
+    - Meas2BurnInLimitDopplerGenAngleMaxDevChirp1[ï¿½]
+    - Meas2BurnInLimitDopplerGenAngleMaxDevChirp0[ï¿½]
 PDITabCheckIPv4GatewayByte:
   Limits:
     Contains: []
@@ -431,8 +439,8 @@ Meas3BurnInLimitDopplerGenAngleMaxDevChirp:
   Limits:
     Contains: []
     ExactMatch:
-    - Meas3BurnInLimitDopplerGenAngleMaxDevChirp0[°]
-    - Meas3BurnInLimitDopplerGenAngleMaxDevChirp1[°]
+    - Meas3BurnInLimitDopplerGenAngleMaxDevChirp0[ï¿½]
+    - Meas3BurnInLimitDopplerGenAngleMaxDevChirp1[ï¿½]
 Meas2BurnInLimitDopplerGenSpeedMaxDevChirp:
   Limits:
     Contains: []
@@ -467,8 +475,8 @@ Meas3BurnInLimitDopplerGenAngleChirp:
   Limits:
     Contains: []
     ExactMatch:
-    - Meas3BurnInLimitDopplerGenAngleChirp0[°]
-    - Meas3BurnInLimitDopplerGenAngleChirp1[°]
+    - Meas3BurnInLimitDopplerGenAngleChirp0[ï¿½]
+    - Meas3BurnInLimitDopplerGenAngleChirp1[ï¿½]
 Meas4BurnInLimitDopplerGenAmplitudeChirp:
   Limits:
     Contains: []
@@ -491,8 +499,8 @@ Meas4BurnInLimitDopplerGenAngleMaxDevChirp:
   Limits:
     Contains: []
     ExactMatch:
-    - Meas4BurnInLimitDopplerGenAngleMaxDevChirp1[°]
-    - Meas4BurnInLimitDopplerGenAngleMaxDevChirp0[°]
+    - Meas4BurnInLimitDopplerGenAngleMaxDevChirp1[ï¿½]
+    - Meas4BurnInLimitDopplerGenAngleMaxDevChirp0[ï¿½]
 Meas2BurnInLimitDopplerGenSpeedChirp:
   Limits:
     Contains: []
@@ -511,8 +519,8 @@ Meas0BurnInLimitDopplerGenAngleMaxDevChirp:
   Limits:
     Contains: []
     ExactMatch:
-    - Meas0BurnInLimitDopplerGenAngleMaxDevChirp0[°]
-    - Meas0BurnInLimitDopplerGenAngleMaxDevChirp1[°]
+    - Meas0BurnInLimitDopplerGenAngleMaxDevChirp0[ï¿½]
+    - Meas0BurnInLimitDopplerGenAngleMaxDevChirp1[ï¿½]
 Meas1BurnInLimitDopplerGenSpeedMaxDevChirp:
   Limits:
     Contains: []
@@ -580,10 +588,10 @@ BurnInLimitDopplerGenAngleMaxDevPtuPos0Chirp:
   Limits:
     Contains: []
     ExactMatch:
-    - BurnInLimitDopplerGenAngleMaxDevPtuPos0Chirp0[°]
-    - BurnInLimitDopplerGenAngleMaxDevPtuPos0Chirp1[°]
-    - BurnInLimitDopplerGenAngleMaxDevPtuPos0Chirp2[°]
-    - BurnInLimitDopplerGenAngleMaxDevPtuPos0Chirp3[°]
+    - BurnInLimitDopplerGenAngleMaxDevPtuPos0Chirp0[ï¿½]
+    - BurnInLimitDopplerGenAngleMaxDevPtuPos0Chirp1[ï¿½]
+    - BurnInLimitDopplerGenAngleMaxDevPtuPos0Chirp2[ï¿½]
+    - BurnInLimitDopplerGenAngleMaxDevPtuPos0Chirp3[ï¿½]
 BurnInLimitDopplerGenRangeMaxDevPtuPos0Chirp:
   Limits:
     Contains: []
@@ -651,10 +659,10 @@ BurnInLimitDopplerGenAngleMaxDevPtuPos1Chirp:
   Limits:
     Contains: []
     ExactMatch:
-    - BurnInLimitDopplerGenAngleMaxDevPtuPos1Chirp0[°]
-    - BurnInLimitDopplerGenAngleMaxDevPtuPos1Chirp1[°]
-    - BurnInLimitDopplerGenAngleMaxDevPtuPos1Chirp2[°]
-    - BurnInLimitDopplerGenAngleMaxDevPtuPos1Chirp3[°]
+    - BurnInLimitDopplerGenAngleMaxDevPtuPos1Chirp0[ï¿½]
+    - BurnInLimitDopplerGenAngleMaxDevPtuPos1Chirp1[ï¿½]
+    - BurnInLimitDopplerGenAngleMaxDevPtuPos1Chirp2[ï¿½]
+    - BurnInLimitDopplerGenAngleMaxDevPtuPos1Chirp3[ï¿½]
 BurnInLimitDopplerGenRangeMaxDevPtuPos1Chirp:
   Limits:
     Contains: []
@@ -715,10 +723,10 @@ BurnInLimitDopplerGenAngleMaxDevPtuPos2Chirp:
   Limits:
     Contains: []
     ExactMatch:
-    - BurnInLimitDopplerGenAngleMaxDevPtuPos2Chirp0[°]
-    - BurnInLimitDopplerGenAngleMaxDevPtuPos2Chirp1[°]
-    - BurnInLimitDopplerGenAngleMaxDevPtuPos2Chirp2[°]
-    - BurnInLimitDopplerGenAngleMaxDevPtuPos2Chirp3[°]
+    - BurnInLimitDopplerGenAngleMaxDevPtuPos2Chirp0[ï¿½]
+    - BurnInLimitDopplerGenAngleMaxDevPtuPos2Chirp1[ï¿½]
+    - BurnInLimitDopplerGenAngleMaxDevPtuPos2Chirp2[ï¿½]
+    - BurnInLimitDopplerGenAngleMaxDevPtuPos2Chirp3[ï¿½]
 BurnInLimitDopplerGenRangeMaxDevPtuPos2Chirp:
   Limits:
     Contains: []
@@ -752,12 +760,12 @@ Meas0BurnInLimitDopplerGenElevationChirp:
   Limits:
     Contains: []
     ExactMatch:
-    - Meas0BurnInLimitDopplerGenElevationChirp0[°]
+    - Meas0BurnInLimitDopplerGenElevationChirp0[ï¿½]
 Meas0BurnInLimitDopplerGenElevationMaxDevChirp:
   Limits:
     Contains: []
     ExactMatch:
-    - Meas0BurnInLimitDopplerGenElevationMaxDevChirp0[°]
+    - Meas0BurnInLimitDopplerGenElevationMaxDevChirp0[ï¿½]
 Meas1BurnInLimitCycleDurationMaxDevChirp:
   Limits:
     Contains: []
@@ -767,12 +775,12 @@ Meas1BurnInLimitDopplerGenElevationChirp:
   Limits:
     Contains: []
     ExactMatch:
-    - Meas1BurnInLimitDopplerGenElevationChirp0[°]
+    - Meas1BurnInLimitDopplerGenElevationChirp0[ï¿½]
 Meas1BurnInLimitDopplerGenElevationMaxDevChirp:
   Limits:
     Contains: []
     ExactMatch:
-    - Meas1BurnInLimitDopplerGenElevationMaxDevChirp0[°]
+    - Meas1BurnInLimitDopplerGenElevationMaxDevChirp0[ï¿½]
 Meas2BurnInLimitCycleDurationMaxDevChirp:
   Limits:
     Contains: []
@@ -782,12 +790,12 @@ Meas2BurnInLimitDopplerGenElevationChirp:
   Limits:
     Contains: []
     ExactMatch:
-    - Meas2BurnInLimitDopplerGenElevationChirp0[°]
+    - Meas2BurnInLimitDopplerGenElevationChirp0[ï¿½]
 Meas2BurnInLimitDopplerGenElevationMaxDevChirp:
   Limits:
     Contains: []
     ExactMatch:
-    - Meas2BurnInLimitDopplerGenElevationMaxDevChirp0[°]
+    - Meas2BurnInLimitDopplerGenElevationMaxDevChirp0[ï¿½]
 Meas3BurnInLimitCycleDurationMaxDevChirp:
   Limits:
     Contains: []
@@ -797,12 +805,12 @@ Meas3BurnInLimitDopplerGenElevationChirp:
   Limits:
     Contains: []
     ExactMatch:
-    - Meas3BurnInLimitDopplerGenElevationChirp0[°]
+    - Meas3BurnInLimitDopplerGenElevationChirp0[ï¿½]
 Meas3BurnInLimitDopplerGenElevationMaxDevChirp:
   Limits:
     Contains: []
     ExactMatch:
-    - Meas3BurnInLimitDopplerGenElevationMaxDevChirp0[°]
+    - Meas3BurnInLimitDopplerGenElevationMaxDevChirp0[ï¿½]
 Meas4BurnInLimitCycleDurationMaxDevChirp:
   Limits:
     Contains: []
@@ -812,12 +820,12 @@ Meas4BurnInLimitDopplerGenElevationChirp:
   Limits:
     Contains: []
     ExactMatch:
-    - Meas4BurnInLimitDopplerGenElevationChirp0[°]
+    - Meas4BurnInLimitDopplerGenElevationChirp0[ï¿½]
 Meas4BurnInLimitDopplerGenElevationMaxDevChirp:
   Limits:
     Contains: []
     ExactMatch:
-    - Meas4BurnInLimitDopplerGenElevationMaxDevChirp0[°]
+    - Meas4BurnInLimitDopplerGenElevationMaxDevChirp0[ï¿½]
 Sensor0ModSwBootloaderVersionDigit:
   Limits:
     Contains: []
@@ -831,3 +839,19 @@ Sensor0ModSwBootloaderVersionDigit:
     - Sensor0ModSwBootloaderVersionDigit7
     - Sensor0ModSwBootloaderVersionDigit8
     - Sensor0ModSwBootloaderVersionDigit9
+SmokeTest:
+  Limits:
+    Contains: []
+    ExactMatch:
+    - Meas2BurnInLimitDopplerGenAmplitudeChirp0[db]
+    - Meas2BurnInLimitDopplerGenAmplitudeChirp1[db]
+    - Meas2BurnInLimitDopplerGenAmplitudeChirp2[db]
+    - Meas4BurnInLimitNoiseChirp0[1]
+DopplerGenSpeed:
+  Limits:
+    Contains:
+    - Meas0BurnInLimitDopplerGenSpeedChirp0[m/s]
+    - Meas0BurnInLimitDopplerGenSpeedChirp1[m/s]
+    - Meas1BurnInLimitDopplerGenSpeedChirp0[m/s]
+    - Meas1BurnInLimitDopplerGenSpeedChirp1[m/s]
+    ExactMatch: []

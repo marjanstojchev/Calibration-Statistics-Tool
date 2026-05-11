@@ -165,6 +165,7 @@ class LimitsGroupsSaveDialog(QDialog):
         self.addLineButton = QPushButton('Add Line')
         self.addLineButton.setFixedSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
         self.addLineFrameLayout.addWidget(self.addLineButton, alignment=Qt.AlignBottom)
+        self.addLineButton.clicked.connect(self.addLine)
 
         self.gridLayout.addWidget(self.addLineFrame, 1, 1, 1, 1, alignment=Qt.AlignBottom)
 
@@ -192,6 +193,7 @@ class LimitsGroupsSaveDialog(QDialog):
         self.buttonBox.button(QDialogButtonBox.Ok).setText('Save')
         self.buttonBox.button(QDialogButtonBox.Ok).setFixedSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
         self.buttonBox.button(QDialogButtonBox.Cancel).setFixedSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
+        self.buttonBox.rejected.connect(self.reject)
         self.gridLayout.addWidget(self.buttonBox, 2, 1, 1, 1)
 
     def initTable(self):

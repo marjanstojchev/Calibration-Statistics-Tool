@@ -1,0 +1,40 @@
+Date:;2024-02-04
+Time:;07:45:00
+CalStart:;2024-02-04-07:45:00
+CalEnd:;2024-02-04-11:10:00
+Duration[s]:;12300
+Product-Serial:;UMRR-11.00.04-32346
+RF-Serial:;32346
+Dsp-Serial:;87891
+Calibration DSP softwareinfo:;DSP_V2.1.0_Build205
+PtuOffset: AZ[°]:;0.1
+PtuOffset: EL[°]:;0.2
+
+E=0;
+K=0;
+Gen26_UseBurnInMeas[1];3
+
+Burn16a_BurnInMeasSpeedList[km/h]:;30;50;80;100;120;150;180
+Burn16c_BurnInMeasPtuPosAzimuthList[°]:;-90;-60;-30;0;30;60;90
+Burn16d_BurnInPtuPosElevationList[°]:;-30;-15;0;15;30
+
+Measurment Durations:
+
+##### MeasurmentLimit #####
+TxAntDiagram_Level_Max[dBm]:	-9.0	-7.5	1	Max limit burn-in
+
+##### Measurements #####
+(3a) TxAnt0 raw frequency table -  measpoints
+TxAnt[1];Freq[MHz];Level[dB];
+0;76500.0;-15.2;
+
+(9) limit values results:
+MeasurmentLimit: BurnIn;BurnInLimitDopplerGenSpeedPtuPos0Chirp0[m/s];45.5;max: 55.0;min: 30.0;MeasResultMeasOk;1;BurnIn speed limit pos 0 chirp 0
+MeasurmentLimit: BurnIn;BurnInLimitDopplerGenSpeedPtuPos0Chirp1[m/s];47.0;max: 55.0;min: 30.0;MeasResultMeasOk;1;BurnIn speed limit pos 0 chirp 1
+MeasurmentLimit: BurnIn;Meas1BurnInLimitDopplerGenSpeedChirp1[m/s];46.5;max: 55.0;min: 30.0;MeasResultMeasOk;1;BurnIn speed chirp 1 repeated value
+MeasurmentLimit: BurnIn;BurnInLimitDopplerGenAmplitudePtuPos0Chirp0[db];-12.0;max: -8.0;min: -20.0;MeasResultMeasOk;1;BurnIn amplitude pos 0 chirp 0
+MeasurmentLimit: BurnIn;BurnInLimitDopplerGenAmplitudePtuPos0Chirp1[db];-12.4;max: -8.0;min: -20.0;MeasResultMeasOk;1;BurnIn amplitude pos 0 chirp 1
+MeasurmentLimit: BurnIn;Meas1BurnInLimitNoiseChirp0[1];0.012;max: 0.05;min: 0.0;MeasResultMeasOk;1;BurnIn noise chirp meas 1 pos 0
+MeasurmentLimit: BurnIn;Meas1BurnInLimitNoiseChirp1[1];0.010;max: 0.05;min: 0.0;MeasResultMeasOk;1;BurnIn noise chirp meas 1 pos 1
+MeasurmentLimit: BurnIn;Meas4BurnInLimitNoiseChirp0[1];0.014;max: 0.05;min: 0.0;MeasResultMeasOk;1;BurnIn noise chirp meas 4 pos 0
+MeasurmentLimit: BurnIn;Meas4BurnInLimitNoiseChirp1[1];0.013;max: 0.05;min: 0.0;MeasResultMeasOk;1;BurnIn noise chirp meas 4 pos 1

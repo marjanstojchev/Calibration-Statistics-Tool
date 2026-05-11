@@ -8,6 +8,10 @@ Wires:
 """
 from __future__ import annotations
 
+from collections import Counter
+import json
+from datetime import datetime
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import QTableWidgetItem, QHeaderView
@@ -132,6 +136,42 @@ def _collect_plot_data(parsed_list: list, limit_name: str) -> tuple[list[int], l
         prot_idx_list = prot_idx_list[:len(plot_data)]
 
     return prot_idx_list, plot_data
+
+
+def _plot_statistical_series(ax, values: list[float]) -> None:
+    """Render values in a way that preserves exact frequencies for sparse data."""
+    sorted_values = sorted(values)
+    counts = Counter(sorted_values)
+    unique_values = sorted(counts)
+
+    # Sparse or low-cardinality data is better shown as exact frequency bars.
+    if len(sorted_values) <= 20 or len(unique_values) <= 12:
+        heights = [counts[val] for val in unique_values]
+
+        if len(unique_values) == 1:
+            center = unique_values[0]
+            width = max(abs(center) * 0.05, 0.5)
+        else:
+            min_gap = min(
+                unique_values[idx + 1] - unique_values[idx]
+                for idx in range(len(unique_values) - 1)
+            )
+            width = max(min_gap * 0.6, 0.1)
+
+        ax.bar(unique_values, heights, width=width, color='steelblue', edgecolor='black', alpha=0.85)
+
+        # Show each raw value on the baseline so repeated values remain visible.
+        ax.scatter(sorted_values, [0.05] * len(sorted_values), color='navy', s=20, zorder=3)
+        ax.set_ylabel('Count')
+        ax.set_xlabel('Measured value')
+        return
+
+    # Broader distributions still use a histogram, but with bounded bin count.
+    nof_bins = max(8, min(20, int(len(sorted_values) ** 0.5) + 2))
+    ax.hist(sorted_values, bins=nof_bins, color='steelblue', edgecolor='black', alpha=0.8)
+    ax.scatter(sorted_values, [0.05] * len(sorted_values), color='navy', s=14, alpha=0.7, zorder=3)
+    ax.set_ylabel('Frequency')
+    ax.set_xlabel('Measured value')
 
 
 # ---------------------------------------------------------------------------
@@ -516,12 +556,17 @@ def _on_group_save(ctx: "AppContext") -> None:
 
         table_row += 1
 
-    # Wire Save button once
-    try:
-        dialog.buttonBox.accepted.disconnect()
-    except RuntimeError:
-        pass
-    dialog.buttonBox.accepted.connect(lambda: _dialog_save(ctx))
+    # Wire Save button once per dialog open to avoid duplicate saves.
+    prev_cb = getattr(dialog, '_save_callback', None)
+    if prev_cb is not None:
+        try:
+            dialog.buttonBox.accepted.disconnect(prev_cb)
+        except Exception:
+            pass
+
+    callback = lambda: _dialog_save(ctx)
+    dialog._save_callback = callback
+    dialog.buttonBox.accepted.connect(callback)
     dialog.exec_()
 
 
@@ -553,17 +598,168 @@ def _dialog_save(ctx: "AppContext") -> None:
             continue
         combo = dialog.table.cellWidget(r, 1)
         match = combo.currentText() if combo else 'ExactMatch'
-        for row_obj in rows:
-            if row_obj.limitName == lim_name and row_obj.protType == prot_type:
-                new_group.limitsRowMatchDictList.append({'row': row_obj, 'match': match})
-                break
+
+        if match == 'Contains':
+            for row_obj in rows:
+                if lim_name in row_obj.limitName and row_obj.protType == prot_type:
+                    new_group.limitsRowMatchDictList.append({'row': row_obj, 'match': match})
+        else:
+            for row_obj in rows:
+                if row_obj.limitName == lim_name and row_obj.protType == prot_type:
+                    new_group.limitsRowMatchDictList.append({'row': row_obj, 'match': match})
+                    break
+
+    if not new_group.limitsRowMatchDictList:
+        dialog.errorLabel.setText('No valid limits selected for this group.')
+        return
 
     grp_dict['limitsGroupList'].append(new_group)
     grp_dict['activeGroupIndex'] = len(grp_dict['limitsGroupList']) - 1
+
+    if dialog.saveToFileCheckBox.isChecked():
+        try:
+            _save_group_to_yaml(ctx, new_group)
+        except Exception as exc:
+            dialog.errorLabel.setText(f'Failed to save YAML: {exc}')
+            return
+
     set_limits_group_active(ctx, new_group)
     update_stats_nav_buttons(ctx)
-    dialog.close()
+    dialog.accept()
     _log.info(f"Saved new limits group '{group_name}' ({prot_type})")
+
+
+def _save_group_to_yaml(ctx: "AppContext", limits_group) -> None:
+    """Persist a newly created limits group to the active YAML file path."""
+    from shared import auxiliary as aux
+    from shared.parseProtocols import ParseInputLimitsGroups
+
+    prot_type = limits_group.protType
+    parser = ParseInputLimitsGroups()
+
+    if prot_type == 'BurnIn':
+        file_path = ctx.qt.parseProtProtDataLimGroupsBurnInLabel.text()
+        if not file_path or file_path == 'No file set.':
+            file_path = aux.burnInLimGroupsFilePath
+            ctx.mv.set_burn_in_lim_groups_file(file_path)
+
+        parser.loadBurnInInputLimitsGroupsDictYAML(file_path)
+        if parser.burnInErrorStatus == 1:
+            raise ValueError(f'Failed to load BurnIn limits groups YAML: {file_path}')
+
+        parser.saveToActualBurnInLimitsGroupsDict(limits_group, alreadyExtended=0)
+        parser.saveLimitsGroupsDictYAML(parser.burnInInputLimitsGroupsDict, file_path)
+    else:
+        file_path = ctx.qt.parseProtProtDataLimGroupsCalLabel.text()
+        if not file_path or file_path == 'No file set.':
+            file_path = aux.calLimGroupsFilePath
+            ctx.mv.set_cal_lim_groups_file(file_path)
+
+        parser.loadCalInputLimitsGroupsDictYAML(file_path)
+        if parser.calErrorStatus == 1:
+            raise ValueError(f'Failed to load Calibration limits groups YAML: {file_path}')
+
+        parser.saveToActualCalLimitsGroupsDict(limits_group, alreadyExtended=0)
+        parser.saveLimitsGroupsDictYAML(parser.calInputLimitsGroupsDict, file_path)
+
+    _log.info(f"Persisted limits group '{limits_group.name}' to: {file_path}")
+
+
+def _on_stats_input_config_load(ctx: "AppContext") -> None:
+    """Load and validate the statistics input config JSON file path."""
+    try:
+        if ctx.qt.statsInputConfFDialog.exec_() != 1:
+            return
+
+        selected = ctx.qt.statsInputConfFDialog.selectedFiles()
+        if not selected:
+            return
+
+        file_path = selected[0]
+        with open(file_path, 'r', encoding='utf-8') as handle:
+            loaded = json.load(handle)
+
+        if not isinstance(loaded, dict):
+            raise ValueError('Invalid statistics config: root must be a JSON object.')
+
+        ctx.mv.set_stats_input_conf_path(file_path)
+        _log.info(f'Statistics input config loaded: {file_path}')
+    except Exception as exc:
+        _log.error(f'Failed to load statistics config: {exc}')
+
+
+def _on_stats_group_pptx_export(ctx: "AppContext") -> None:
+    """Export the current statistics plot to a one-slide PPTX in output/."""
+    try:
+        from pptx import Presentation
+        from pptx.util import Inches
+
+        output_dir = Path('output')
+        output_dir.mkdir(parents=True, exist_ok=True)
+        stamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        png_path = output_dir / f'stats_plot_{stamp}.png'
+        pptx_path = output_dir / f'stats_plot_{stamp}.pptx'
+
+        # Persist current matplotlib canvas and embed it in a single-slide deck.
+        ctx.mv.statsPlotFrame.figure.savefig(str(png_path), dpi=180, bbox_inches='tight')
+
+        prs = Presentation()
+        slide = prs.slides.add_slide(prs.slide_layouts[5])
+        slide.shapes.title.text = 'Statistics Plot Export'
+        slide.shapes.add_picture(str(png_path), Inches(0.5), Inches(1.3), width=Inches(9.0))
+        prs.save(str(pptx_path))
+
+        _log.info(f'Statistics PPTX exported: {pptx_path}')
+    except Exception as exc:
+        _log.error(f'Failed to export statistics PPTX: {exc}')
+
+
+def _on_statistical_series(ctx: "AppContext") -> None:
+    """Render a histogram for the selected (or first active) limits row."""
+    col_map = ctx.mv.statsTableColMapping
+    selected = ctx.qt.statsTable.selectedIndexes()
+    row_idx = selected[0].row() if selected else -1
+
+    if row_idx < 0:
+        for i, row_obj in enumerate(ctx.pc.limitsRowListDict['limitsRowList']):
+            if row_obj.graph != -1:
+                row_idx = i
+                break
+
+    if row_idx < 0 or row_idx >= ctx.qt.statsTable.rowCount():
+        _log.warning('Statistical Series: select or enable at least one limit row first.')
+        return
+
+    name_item = ctx.qt.statsTable.item(row_idx, col_map['limitName'])
+    type_item = ctx.qt.statsTable.item(row_idx, col_map['protType'])
+    if name_item is None or type_item is None:
+        _log.warning('Statistical Series: invalid row selection.')
+        return
+
+    limit_name = str(name_item.data(Qt.DisplayRole))
+    prot_type = str(type_item.data(Qt.DisplayRole))
+    parsed_dict = ctx.pc.calParsedProtDict if prot_type == 'Calibration' else ctx.pc.burnInParsedProtDict
+    parsed_list = _get_prot_list(parsed_dict)
+    _, values = _collect_plot_data(parsed_list, limit_name)
+    row_obj = ctx.pc.limitsRowListDict['limitsRowList'][row_idx]
+
+    if not values:
+        _log.warning(f'Statistical Series: no values available for {limit_name}.')
+        return
+
+    ctx.mv.statsPlotFrame.clear()
+    ax = ctx.mv.statsPlotFrame.ax1
+    _plot_statistical_series(ax, values)
+
+    ax.set_title(f'Statistical Series - {limit_name} (n={len(values)})')
+    ax.axvline(row_obj.mean, color='darkorange', linestyle='--', linewidth=1.5, label=f'Mean {row_obj.mean:.3f}')
+    if row_obj.lowerLimit != 0.0 or row_obj.upperLimit != 0.0:
+        ax.axvline(row_obj.lowerLimit, color='crimson', linestyle=':', linewidth=1.2, label=f'Lower {row_obj.lowerLimit:.3f}')
+        ax.axvline(row_obj.upperLimit, color='forestgreen', linestyle=':', linewidth=1.2, label=f'Upper {row_obj.upperLimit:.3f}')
+
+    ax.legend(loc='best')
+    ctx.mv.statsPlotFrame.canvas.draw()
+    _log.info(f'Statistical Series rendered for: {limit_name}')
 
 
 # ---------------------------------------------------------------------------
@@ -584,16 +780,12 @@ def write_statistic(ctx: "AppContext") -> None:
 
     Called by the 'Parse / Write Statistic' button.
     """
-    # Switch to Statistics Protocols sub-tab so the user sees the tables fill
-    ctx.qt.mainTabWidget.setCurrentIndex(0)
-    ctx.qt.parseProtTableTabWidget.setCurrentIndex(4)
-
     ctx.pc.compute_limits_stats()
     fill_stats_table(ctx)
     _fill_stats_protocol_tables(ctx)
 
-    # Switch to main Statistics tab
-    ctx.qt.mainTabWidget.setCurrentIndex(6)
+    # Select the Statistics tab directly instead of relying on a fixed tab index.
+    ctx.qt.mainTabWidget.setCurrentWidget(ctx.qt.statsTab)
     _log.info('write_statistic: complete.')
 
 
@@ -661,6 +853,15 @@ def wire(ctx: "AppContext") -> None:
     )
     ctx.qt.statsGroupSaveBtn.clicked.connect(
         lambda: _on_group_save(ctx)
+    )
+    ctx.qt.statsSeriesDistBtn.clicked.connect(
+        lambda: _on_statistical_series(ctx)
+    )
+    ctx.qt.statsInputConfBtn.clicked.connect(
+        lambda: _on_stats_input_config_load(ctx)
+    )
+    ctx.qt.statsGroupPptxBtn.clicked.connect(
+        lambda: _on_stats_group_pptx_export(ctx)
     )
 
     # Group type radio buttons

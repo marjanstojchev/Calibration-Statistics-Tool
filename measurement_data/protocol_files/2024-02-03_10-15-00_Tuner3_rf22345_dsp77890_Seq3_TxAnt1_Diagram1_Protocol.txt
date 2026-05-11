@@ -1,0 +1,60 @@
+Date:;2024-02-03
+Time:;10:15:00
+CalStart:;2024-02-03-10:15:00
+CalEnd:;2024-02-03-10:35:20
+Duration[s]:;1220
+Product-Serial:;UMRR-11.00.04-22345
+RF-Serial:;22345
+Dsp-Serial:;77890
+Calibration DSP softwareinfo:;DSP_V2.1.0_Build123
+Calibration DSP software Compile Info:;2024-01-10 14:30:22
+Modular Software:;ModSoft_V1.5.2
+PtuOffset: AZ[°]:;0.2
+PtuOffset: EL[°]:;-0.1
+
+E=0;
+K=0;
+Gen26_UseBurnInMeas[1];0
+
+Burn16a_BurnInMeasSpeedList[km/h]:;50;80;120;150
+Burn16c_BurnInMeasPtuPosAzimuthList[°]:;-45;-30;0;30;45
+Burn16d_BurnInPtuPosElevationList[°]:;-15;0;15
+
+Measurment Durations:
+
+##### MeasurmentLimit #####
+##### PowerOutput #####
+TxAntDiagram_Level_Max[dBm]:	-10.0	-8.0	1	Power output maximum limit
+TxAntDiagram_Level_Min[dBm]:	-25.0	-20.0	1	Power output minimum limit
+TxPowerLevel[dBm]:	-15.3	-12.1	1	TX power level
+##### FrequencyAccuracy #####
+CenterFreq_Deviation_Max[MHz]:	1.0	2.0	1	Center frequency deviation maximum
+CenterFreq_Deviation_Min[MHz]:	-2.0	-1.0	1	Center frequency deviation minimum
+##### PhaseAccuracy #####
+DiffPhase_Deviation_Max[°]:	5.0	8.0	1	Differential phase deviation maximum
+DiffPhase_Deviation_Min[°]:	-8.0	-5.0	1	Differential phase deviation minimum
+
+##### Measurements #####
+(3a) TxAnt0 raw frequency table -  measpoints
+TxAnt[1];Freq[MHz];Level[dB];Level-Powermeter[dB];FreqSensorSetting[MHz];Time[ms];tx_pow_val;Number [1];Centerfreq [Mhz];Span [MHz];Level meas (Spec)[dB];Level meas (Powermeter)[dB];
+0;76500.0;-15.1;-15.4;76500.0;125.5;127;1;76500.0;1000.0;-15.0;-15.3;
+0;76600.0;-15.7;-16.0;76600.0;135.2;129;2;76600.0;1000.0;-15.6;-15.9;
+0;76700.0;-16.0;-16.3;76700.0;145.8;131;3;76700.0;1000.0;-15.9;-16.2;
+
+(9) limit values results:
+MeasurmentLimit: SignalQuality;Signal_to_noise_channel0[1];12.9;max: 25.0;min: 5.0;MeasResultMeasOk;1;Signal to noise ratio channel 0
+MeasurmentLimit: SignalQuality;Signal_to_noise_channel1[1];13.5;max: 25.0;min: 5.0;MeasResultMeasOk;1;Signal to noise ratio channel 1
+MeasurmentLimit: SignalQuality;Signal_to_noise_channel2[1];12.0;max: 25.0;min: 5.0;MeasResultMeasOk;1;Signal to noise ratio channel 2
+MeasurmentLimit: SignalQuality;Signal_to_noise_channel3[1];12.3;max: 25.0;min: 5.0;MeasResultMeasOk;1;Signal to noise ratio channel 3
+MeasurmentLimit: SignalQuality;Signal_offset_channel0[1];0.14;max: 0.5;min: -0.5;MeasResultMeasOk;1;Signal offset channel 0
+MeasurmentLimit: SignalQuality;Signal_offset_channel1[1];0.16;max: 0.5;min: -0.5;MeasResultMeasOk;1;Signal offset channel 1
+MeasurmentLimit: SignalQuality;Signal_offset_channel2[1];-0.10;max: 0.5;min: -0.5;MeasResultMeasOk;1;Signal offset channel 2
+MeasurmentLimit: SignalQuality;Signal_offset_channel3[1];0.20;max: 0.5;min: -0.5;MeasResultMeasOk;1;Signal offset channel 3
+MeasurmentLimit: SignalQuality;Max_noise_channel0[1];0.036;max: 0.1;min: 0.0;MeasResultMeasOk;1;Max noise channel 0
+MeasurmentLimit: SignalQuality;Max_noise_channel1[1];0.039;max: 0.1;min: 0.0;MeasResultMeasOk;1;Max noise channel 1
+MeasurmentLimit: SignalQuality;Max_noise_channel2[1];0.032;max: 0.1;min: 0.0;MeasResultMeasOk;1;Max noise channel 2
+MeasurmentLimit: SignalQuality;Max_noise_channel3[1];0.041;max: 0.1;min: 0.0;MeasResultMeasOk;1;Max noise channel 3
+MeasurmentLimit: SignalQuality;Signal_channel0[1];86.0;max: 100.0;min: 50.0;MeasResultMeasOk;1;Signal channel 0
+MeasurmentLimit: SignalQuality;Signal_channel1[1];88.1;max: 100.0;min: 50.0;MeasResultMeasOk;1;Signal channel 1
+MeasurmentLimit: SignalQuality;Signal_channel2[1];84.4;max: 100.0;min: 50.0;MeasResultMeasOk;1;Signal channel 2
+MeasurmentLimit: SignalQuality;Signal_channel3[1];86.8;max: 100.0;min: 50.0;MeasResultMeasOk;1;Signal channel 3
