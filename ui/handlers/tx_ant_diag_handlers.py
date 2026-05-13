@@ -8,6 +8,8 @@ the "##TxAnt Diagrams" section.
 """
 from __future__ import annotations
 
+import copy
+import threading
 from typing import TYPE_CHECKING
 
 from shared import safeparse as sp
@@ -128,16 +130,39 @@ def txantdiag_data_update_and_evaluation(ctx: "AppContext") -> None:
         txAntDiag.plotSetup["graphsPerSlide"] = int(ctx.qt.txAntDiagPlotSetupGraphsPerSlideLEdit.text())
 
     txAntDiagLogger = logconfig.txAntDiagLogger
-    parsedDataList  = ctx.pc.txAntDiagParsedDataDict["parsedDataList"]
-    txAntDiag.start_data_evaluation(
-        parsedDataList,
-        txAntDiag.plotSetup,
-        txAntDiag.graphConfig,
-        txAntDiagLogger,
-        aux.txAntDiagOutputPath,
-        "TxAnt_Diagrams.pptx",
-        "./assets/template.pptx",
-    )
+    parsedDataList  = list(ctx.pc.txAntDiagParsedDataDict.get("parsedDataList", []))
+    plotSetup = copy.deepcopy(txAntDiag.plotSetup)
+    graphConfig = copy.deepcopy(txAntDiag.graphConfig)
+
+    ctx.qt.txAntDiagStartPushBtn.setEnabled(False)
+    worker_done = {"done": False}
+
+    def _run_eval() -> None:
+        try:
+            txAntDiag.start_data_evaluation(
+                parsedDataList,
+                plotSetup,
+                graphConfig,
+                txAntDiagLogger,
+                aux.txAntDiagOutputPath,
+                "TxAnt_Diagrams.pptx",
+                "./assets/template.pptx",
+            )
+        except Exception as exc:
+            parseDataLog.exception("Tx antenna diagram evaluation failed: %s", exc)
+        finally:
+            worker_done["done"] = True
+
+    worker = threading.Thread(target=_run_eval, name="tx-ant-eval", daemon=True)
+    worker.start()
+
+    def _reenable_start_button() -> None:
+        if worker_done["done"]:
+            ctx.qt.txAntDiagStartPushBtn.setEnabled(True)
+            return
+        ctx.qt.QTimer.singleShot(100, _reenable_start_button)
+
+    ctx.qt.QTimer.singleShot(100, _reenable_start_button)
 
 
 # ---------------------------------------------------------------------------

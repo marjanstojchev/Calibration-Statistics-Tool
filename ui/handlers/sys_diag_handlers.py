@@ -8,6 +8,8 @@ same widget-initialisation that used to run at import time in main.py.
 """
 from __future__ import annotations
 
+import copy
+import threading
 from typing import TYPE_CHECKING
 
 from shared import safeparse as sp
@@ -18,6 +20,26 @@ if TYPE_CHECKING:  # pragma: no cover
 import logconfig
 
 parseDataLog = logconfig.mainLoadDataLogger.logger
+
+
+def _resolve_sys_diag_parsed_data(ctx: "AppContext") -> list:
+    """Return the best available parsed PTU2 list for system-diagram workflows."""
+    primary = ctx.pc.sysDiagParsedDataDict.get("parsedDataList", [])
+    if primary:
+        return list(primary)
+
+    # Fallback for cases where PTU2 was parsed via the separate flow and
+    # the primary sys-diag list was not synchronised yet.
+    fallback = ctx.pc.separatePtu2ParsedDataDict.get("parsedDataList", [])
+    if fallback:
+        parseDataLog.warning(
+            "sysDiagParsedDataDict is empty; using separatePtu2ParsedDataDict fallback (%d entries).",
+            len(fallback),
+        )
+        return list(fallback)
+
+    parseDataLog.warning("No parsed PTU2 data available for System Diagrams.")
+    return []
 
 
 # ---------------------------------------------------------------------------
@@ -672,22 +694,48 @@ def sys_diag_data_update_and_evaluation(ctx: "AppContext") -> None:
         if ctx.qt.sysDiagPlotWindowAllGraphsCheckBox3.isChecked():
             allOnOneSlideGraphList.append(ctx.plc.AllGraphsConf3)
 
-    antSysDiag.start_data_evaluation(
-        ctx.pc.sysDiagParsedDataDict["parsedDataList"],
-        ctx.plc.plotSetup,
-        ctx.plc.chirpConfig,
-        ctx.plc.graphConfig,
-        ctx.plc.diagramConfig,
-        twoGraphSetupList,
-        fourGraphSetupList,
-        threeGraphSetupList,
-        allOnOneSlideGraphList,
-        diagramConfigList,
-        logconfig.antSysDiagLogger,
-        aux.antSysDiagOutputPath,
-        "Antenna_diagrams.pptx",
-        "./assets/template.pptx",
-    )
+    parsed_data_list = _resolve_sys_diag_parsed_data(ctx)
+    plot_setup = copy.deepcopy(ctx.plc.plotSetup)
+    chirp_config = copy.deepcopy(ctx.plc.chirpConfig)
+    graph_config = copy.deepcopy(ctx.plc.graphConfig)
+    diagram_config = copy.deepcopy(ctx.plc.diagramConfig)
+
+    ctx.qt.sysDiagStartPushBtn.setEnabled(False)
+    worker_done = {"done": False}
+
+    def _run_eval() -> None:
+        try:
+            antSysDiag.start_data_evaluation(
+                parsed_data_list,
+                plot_setup,
+                chirp_config,
+                graph_config,
+                diagram_config,
+                copy.deepcopy(twoGraphSetupList),
+                copy.deepcopy(fourGraphSetupList),
+                copy.deepcopy(threeGraphSetupList),
+                copy.deepcopy(allOnOneSlideGraphList),
+                list(diagramConfigList),
+                logconfig.antSysDiagLogger,
+                aux.antSysDiagOutputPath,
+                "Antenna_diagrams.pptx",
+                "./assets/template.pptx",
+            )
+        except Exception as exc:
+            parseDataLog.exception("System diagrams evaluation failed: %s", exc)
+        finally:
+            worker_done["done"] = True
+
+    worker = threading.Thread(target=_run_eval, name="sys-diag-eval", daemon=True)
+    worker.start()
+
+    def _reenable_start_button() -> None:
+        if worker_done["done"]:
+            ctx.qt.sysDiagStartPushBtn.setEnabled(True)
+            return
+        ctx.qt.QTimer.singleShot(100, _reenable_start_button)
+
+    ctx.qt.QTimer.singleShot(100, _reenable_start_button)
 
 
 def wire(ctx: "AppContext") -> None:
@@ -802,6 +850,6 @@ def _fill_in_ptu(ctx: "AppContext") -> None:
     """Delegate the fill-PTU-table action to AntennaSystemDiagrams."""
     import AntennaSystemDiagrams as antSysDiag  # noqa: PLC0415
     antSysDiag.fillInPTU(
-        ctx.pc.sysDiagParsedDataDict["parsedDataList"],
+        _resolve_sys_diag_parsed_data(ctx),
         logconfig.antSysDiagLogger,
     )

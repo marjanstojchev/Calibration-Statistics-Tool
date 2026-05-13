@@ -229,6 +229,9 @@ def fillInPTU(parseDataList, sysDiagLogger):
         # data Prcoessing
         parseData['parseDataList'] = parseDataList
         antennaTypesList = dp.getAntennaTypesList(parseDataList)
+        if len(antennaTypesList) == 0:
+            myLogger.error('No antenna types found in parsed PTU2 data for interactive table fill.')
+            return
         desiredDiagList  = dp.getDiagramList(antennaTypesList[0], parseDataList)
         qt.SysDiaInterTableProtocol.clearContents()
         qt.SysDiaInterTableParam.clearContents()
@@ -237,24 +240,32 @@ def fillInPTU(parseDataList, sysDiagLogger):
         for antTypeIdx in range(len(antennaTypesList)):
             ptu2ListPerAntennaType = dp.getPtu2ListPerAntennaType(antennaTypesList[antTypeIdx], parseDataList)
             rowIdx = 0
+            seen_protocol_rows = set()
             # Number of protocol table
             for row in range(len(ptu2ListPerAntennaType)):
-                if ptu2ListPerAntennaType[row].fileTitle.diagram == 0:
-                    qt.SysDiaInterTableProtocol.insertRow(rowIdx)
+                protocol_key = (
+                    str(ptu2ListPerAntennaType[row].fileTitle.dateAndTime),
+                    str(ptu2ListPerAntennaType[row].fileTitle.tuner),
+                    str(ptu2ListPerAntennaType[row].fileTitle.sensor),
+                )
+                if protocol_key in seen_protocol_rows:
+                    continue
+                seen_protocol_rows.add(protocol_key)
 
-                    # Graph
-                    tableItem = qt.QTableWidgetItem()
-                    tableItem.setData(qt.Qt.DisplayRole, 'False')
-                    tableItem.setData(qt.Qt.UserRole, -1)
-                    tableItem.setFlags(qt.Qt.ItemIsEnabled)
-                    qt.SysDiaInterTableProtocol.setItem(rowIdx, qt.SysDiaInterTableProtColMapping['graph'], qt.QTableWidgetItem(tableItem))
+                qt.SysDiaInterTableProtocol.insertRow(rowIdx)
 
-                    # protocol
-                    tableItem = qt.QTableWidgetItem()
-                    tableItem.setData(0, str(ptu2ListPerAntennaType[row].fileTitle.dateAndTime) +'_'+ \
-                        str(ptu2ListPerAntennaType[row].fileTitle.tuner) +'_'+ str(ptu2ListPerAntennaType[row].fileTitle.sensor))
-                    qt.SysDiaInterTableProtocol.setItem(rowIdx, qt.SysDiaInterTableProtColMapping['Protocol'], tableItem)
-                    rowIdx += 1
+                # Graph
+                tableItem = qt.QTableWidgetItem()
+                tableItem.setData(qt.Qt.DisplayRole, 'False')
+                tableItem.setData(qt.Qt.UserRole, -1)
+                tableItem.setFlags(qt.Qt.ItemIsEnabled)
+                qt.SysDiaInterTableProtocol.setItem(rowIdx, qt.SysDiaInterTableProtColMapping['graph'], qt.QTableWidgetItem(tableItem))
+
+                # protocol
+                tableItem = qt.QTableWidgetItem()
+                tableItem.setData(0, protocol_key[0] + '_' + protocol_key[1] + '_' + protocol_key[2])
+                qt.SysDiaInterTableProtocol.setItem(rowIdx, qt.SysDiaInterTableProtColMapping['Protocol'], tableItem)
+                rowIdx += 1
 
             qt.SysDiaInterTableProtocolHeader.setSectionResizeMode(qt.QHeaderView.Interactive)
             qt.SysDiaInterTableProtocolHeader.setStretchLastSection(True)

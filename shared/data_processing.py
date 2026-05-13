@@ -150,18 +150,21 @@ def getSensorList(parseDataList: list) -> list:
     return sensorList
 
 def getDateTimeSensorCombList(antennaType: int, parseDataList: list) -> list:
-    outputDictList=[]
-    sensor=''
-    dateAndTime=''
-    for listIdx in range(len(parseDataList)):
-        outputDict = dict()
+    outputDictList = []
+    seen = set()
 
-        if parseDataList[listIdx].fileTitle.sensorFound != 0 and parseDataList[listIdx].fileTitle.dateAndTimeFound !=0:
-            if parseDataList[listIdx].fileTitle.sensor != sensor or parseDataList[listIdx].fileTitle.dateAndTime != dateAndTime:
-                dateAndTime= parseDataList[listIdx].fileTitle.dateAndTime
-                sensor= parseDataList[listIdx].fileTitle.sensor
-                outputDict.update({"dateAndTime":dateAndTime,"sensor":sensor})
-                outputDictList.append(outputDict)
+    for listIdx in range(len(parseDataList)):
+        parse_data = parseDataList[listIdx]
+        if parse_data.antennaInfo.antennaType != antennaType:
+            continue
+
+        if parse_data.fileTitle.sensorFound != 0 and parse_data.fileTitle.dateAndTimeFound != 0:
+            key = (parse_data.fileTitle.dateAndTime, parse_data.fileTitle.sensor)
+            if key in seen:
+                continue
+            seen.add(key)
+            outputDictList.append({"dateAndTime": key[0], "sensor": key[1]})
+
     return outputDictList
 
 def getDateTimeSensorCombTable(dateTimeList: list, sensorList: list, dateAndTimeCombList: list) -> list:

@@ -1,69 +1,32 @@
-Name,Status,Objective,Precondition,Test Script (Step),Test Script (Test Data),Test Script (Expected Result),Labels,Priority
-[System] antenna_patterns — Antenna Patterns tab visible on launch,Draft,Verify the Antenna Patterns tab is present and accessible in the main window.,Application installed and Python environment ready.,Launch the Calibration Statistics Tool application (python main.py).,,Main window opens without crash.,antenna_patterns; System; ant_pat_tab,High
-,,,,Locate the tab bar at the top of the main window.,,A tab labelled "Antenna Patterns" is visible in the tab bar.,,
-,,,,Click the "Antenna Patterns" tab.,,The Antenna Patterns tab becomes the active view. The tab content is rendered with no errors or blank panels.,,
-[System] antenna_patterns — Default widget state on startup,Draft,Verify that all Antenna Patterns controls are initialised to documented defaults when the tab is first shown.,Application launched and "Antenna Patterns" tab is visible.,"Open the Antenna Patterns tab and inspect the Antenna Patterns Header group box (Name and Identifier fields are disabled by default).",,Name and Identifier QLineEdit fields are disabled. Name shows ""Antenna_Pattern_Tables"". Identifier shows ""36"".,antenna_patterns; System; ant_pat_tab,Medium
-,,,,Inspect the version and date fields.,,Major Version = ""2""; Minor Version = ""0""; Year = ""2020""; Month = ""1""; Day = ""28"".,,,
-,,,,Inspect the rfe fields.,,rfeGeneration = ""28""; rfeModification = ""0""; rfeRevision = ""0"".,,,
-,,,,Inspect the Table Configuration group box: verify that Tables 0–3 have their check boxes ticked and Tables 4–7 are un-ticked.,,"Tables 0, 1, 2 and 3 check boxes are checked. Tables 4–7 are unchecked.",,,
-,,,,Inspect the default per-table combo values for Table 0.,,Pattern Type = ""Tx - Rx""; Rotation Axis = ""Azimuth""; Gain Calc Method = ""Step-wise"". Nof. Tx = ""1""; Nof. Rx = ""4"". Tx Indices = ""0""; Rx Indices = ""0, 1, 2, 3"".,,,
-,,,,Inspect the Input Configuration group box.,,""Target Angle"" radio is selected. ""Normal"" sensor orientation is selected. Chirp 0 is checked; Chirp 1–3 are unchecked. ""With Diag. Type (Az/El) Info"" and ""With Upside-Down Info"" check boxes are checked and disabled.,,,
-,,,,Inspect the Output Format group box.,,""json v1"" radio is selected.,,,
-[System] antenna_patterns — Start with no parsed PTU2 data,Draft,Verify the evaluation handles an empty parsed-data list gracefully without a crash.,Application launched. No PTU2 files have been parsed (the parsed-data list is empty).,Open the Antenna Patterns tab.,,Antenna Patterns tab is visible.,antenna_patterns; System; ant_pat_tab,High
-,,,,Click the Start button.,,Application does not crash. An error message is logged: ""No parsed PTU-2 files found!"" or similar. No output files are written to the output folder. The GUI remains responsive.,,,
-[System] antenna_patterns — Successful evaluation with valid PTU2 data,Draft,Verify that clicking Start with a valid parsed-data set produces PNG plots and a YAML/JSON output file.,Application launched. At least one PTU2 file has been parsed successfully via the Parse Protocols tab.,"Open the Antenna Patterns tab. Confirm default settings (Tables 0–3 enabled, Target Angle, Normal, Chirp 0, yaml v1).",,Tab shows default configuration.,antenna_patterns; System; ant_pat_tab,High
-,,,,Click the Start button.,measurement_data/ptu_files/ (any available .ptu2 file),Evaluation starts. Log panel shows ""Starting."" and ""Loading data."" messages.,,,
-,,,,Wait for the evaluation to finish.,,"Log shows ""Image generated: …"" for each table that found data. No Python exception or crash.",,,
-,,,,Open the output/ folder (antenna_patterns sub-directory if separate).,,At least one .png plot file exists per enabled table that had matching data. At least one .yaml output file exists.,,,
-,,,,Open a generated .yaml file in a text editor.,,The YAML contains ""type: antennaPattern"", ""data:"" section with ""patterns:"" list. Each pattern entry includes patternType, rotationAxis, applTxAntIdx, applRxAntIdx, angle, and normGainDb.,,,
-[System] antenna_patterns — Target Angle vs PTU Angle selection,Draft,Verify that switching between Target Angle and PTU Angle changes the angle axis of the output.,Application launched and PTU2 data is available (parsed). Default Antenna Patterns tab settings.,Open the Antenna Patterns tab. Select ""Target Angle"" radio button in Input Configuration.,,""Target Angle"" radio is selected.,antenna_patterns; System; ant_pat_tab,High
-,,,,Click Start and wait for evaluation.,,PNG plots are generated. X-axis label in the plot file reads ""Target Angle [°]"".,,,
-,,,,Select the ""PTU Angle"" radio button.,,""PTU Angle"" radio is now selected. ""Target Angle"" radio is deselected.,,,
-,,,,Click Start again.,,New PNG plots are generated. X-axis label reads ""PTU Angle [°]"".,,,
-[System] antenna_patterns — Sensor Orientation Upside-Down,Draft,Verify that switching to Upside-Down orientation produces an angle axis that is inverted relative to the Normal orientation.,Application launched and PTU2 data with upsideDown=0 is available.,Open the Antenna Patterns tab. Ensure ""Normal"" sensor orientation is selected and Target Angle is active.,,"Normal radio is selected, Target Angle is active.",antenna_patterns; System; ant_pat_tab,High
-,,,,Click Start and note the first and last angle values in the generated .yaml file (angle list).,,Evaluation completes. Angle list is recorded.,,,
-,,,,Switch sensor orientation to ""Upside-Down"".,,""Upside-Down"" radio button is now checked.,,,
-,,,,Click Start again.,,Evaluation completes without crash. The angle values in the new .yaml file are in reverse order compared to the previous run (or negated), reflecting upsideDown=1 processing.,,,
-[System] antenna_patterns — Chirp selection,Draft,Verify that enabling additional chirps results in additional output files.,Application launched and PTU2 data containing multiple active chirps is available.,Open the Antenna Patterns tab. Ensure only Chirp 0 is checked.,,Only Chirp 0 checked. Chirps 1–3 are unchecked.,antenna_patterns; System; ant_pat_tab,Medium
-,,,,Click Start and count the generated output files.,,Output files are generated for Chirp 0 only.,,,
-,,,,Check the ""Chirp 1"" check box.,,Chirp 1 is now checked.,,,
-,,,,Click Start again (ensure PTU2 data with Chirp 1 active exists).,,Additional output files are generated corresponding to Chirp 1 (file names include ""Chirp1""). No crash.,,,
-,,,,Uncheck all chirp check boxes.,,All chirps are unchecked.,,,
-,,,,Click Start.,,Evaluation completes without crash. No output is generated or log reports ""Invalid chirp configuration."",,,
-[System] antenna_patterns — Table enable/disable toggles,Draft,Verify that only checked tables are included in the evaluation and output.,Application launched and PTU2 data is available.,Open the Antenna Patterns tab. Uncheck Tables 1–3 so only Table 0 is enabled.,,Only Table 0 check box is ticked.,antenna_patterns; System; ant_pat_tab,Medium
-,,,,Click Start.,,Evaluation completes. Output contains data for Table 0 only. Log shows exactly one ""Table lookup scheduled"" entry for Table 0 (per chirp/angle combo).,,,
-,,,,Re-enable Table 1 (check its check box) and Click Start.,,Output now includes data for Tables 0 and 1. Log shows two ""Table lookup scheduled"" entries.,,,
-,,,,Uncheck all tables and click Start.,,Log reports no tables scheduled. No YAML/JSON output file is produced. No crash.,,,
-[System] antenna_patterns — Table Pattern Type combo,Draft,Verify that changing the Pattern Type combo for a table updates the internal configuration.,Application launched and PTU2 data is available.,Open the Antenna Patterns tab. Locate Table 0 Pattern Type combo (currently ""Tx - Rx"").,,Pattern Type combo shows ""Tx - Rx"" (index 1).,antenna_patterns; System; ant_pat_tab,Medium
-,,,,Change Table 0 Pattern Type to ""Tx"" (index 2).,,Combo selection updates to ""Tx"". No error dialog.,,,
-,,,,Click Start.,,Evaluation completes without crash. The generated YAML for Table 0 contains patternType: 2.,,,
-,,,,Change Pattern Type to ""Invalid"" (index 0).,,Combo selection updates to ""Invalid"".,,,
-,,,,Click Start.,,Log contains an error for invalid pattern type for Table 0. No crash.,,,
-[System] antenna_patterns — Table Rotation Axis combo,Draft,Verify that the Rotation Axis combo maps to the correct diagram type (Azimuth→Az, Elevation→El).,Application launched and PTU2 data containing both Az and El diagram type files is available.,Open the Antenna Patterns tab. Set Table 0 Rotation Axis to ""Azimuth"".,,Rotation Axis combo shows ""Azimuth"" (index 1).,antenna_patterns; System; ant_pat_tab,High
-,,,,Click Start.,,Evaluation searches for ""Az"" diagram type PTU2 files. YAML output for Table 0 contains rotationAxis: 1. Plot X-axis reflects azimuth data.,,,
-,,,,Set Table 0 Rotation Axis to ""Elevation"".,,Combo shows ""Elevation"" (index 2).,,,
-,,,,Click Start.,,Evaluation searches for ""El"" diagram type files. YAML output for Table 0 contains rotationAxis: 2.,,,
-[System] antenna_patterns — Tx and Rx Antenna Indices input validation,Draft,Verify that the Tx and Rx antenna index fields accept only valid comma-separated integers and reject other input.,Application launched. Antenna Patterns tab is open.,Locate Table 0 App. Tx-Antenna Indices field (default ""0""). Clear it and type ""abc"".,,Field rejects non-numeric characters due to regex validator. Field remains empty or shows last valid value.,antenna_patterns; System; ant_pat_tab,High
-,,,,Type ""0,1,2"" into the Tx Indices field.,,Field accepts ""0,1,2"".,,,
-,,,,Set Nof. Applicable Tx Ant to 3 and click Start.,,Evaluation uses Tx antenna indices [0, 1, 2]. No crash.,,,
-,,,,Clear the Rx Indices field and type ""0,0,1"" (duplicate index).,,Field accepts the input.,,,
-,,,,Click Start.,,The handler deduplicates to [0, 1] internally (antPatTableLEditParse removes duplicates). Evaluation proceeds without crash.,,,
-[System] antenna_patterns — Output Format selection (yaml v1),Draft,Verify that selecting the ""yaml v1"" output format produces .yaml files instead of the default format.,Application launched and PTU2 data is available.,Open the Antenna Patterns tab. Note that ""json v1"" is currently selected.,,"json v1"" radio is active.",antenna_patterns; System; ant_pat_tab,High
-,,,,Select the ""yaml v1"" radio button.,,""yaml v1"" radio is now active.,,,
-,,,,Click Start.,,Evaluation completes. Output folder contains .yaml files. Files open as valid YAML in a text editor and contain the expected keys (type, meta, data).,,,
-[System] antenna_patterns — Header Name and Identifier selection checkbox,Draft,Verify that enabling the ""Name and Identifier Selection"" checkbox enables the Name and Identifier input fields.,Application launched. Antenna Patterns tab is open. Name and Identifier fields are disabled by default.,Verify Name QLineEdit and Identifier QLineEdit are disabled (greyed out).,,Fields are greyed out and non-editable.,antenna_patterns; System; ant_pat_tab,Low
-,,,,Check the ""Name and Identifier Selection"" checkbox.,,Name and Identifier fields become enabled.,,,
-,,,,Clear the Name field and type ""CustomAntPatName"".,,Name field shows ""CustomAntPatName"".,,,
-,,,,Set Identifier to ""50"" (valid integer 0–999).,,Identifier field shows ""50"".,,,
-,,,,Click Start.,,Evaluation completes without crash. Generated output uses the custom name/identifier where applicable.,,,
-,,,,Uncheck the ""Name and Identifier Selection"" checkbox.,,Fields are disabled again. Values revert or remain but fields are non-editable.,,,
-[System] antenna_patterns — PNG plot generation and content,Draft,Verify that a plot image is created for each valid data table combination and contains expected visual elements.,Application launched and PTU2 data with at least two Rx antennas is available. Antenna Patterns tab uses default settings.,Click Start and wait for evaluation to complete.,,Log shows ""Image generated: …"" messages. Output folder contains .png files.,antenna_patterns; System; ant_pat_tab,Medium
-,,,,Open one of the generated PNG files.,,Image is a non-zero size. Plot shows multiple curves (one per Rx antenna) and one bold dashed golden average curve.,,,
-,,,,Inspect the plot axes.,,Y-axis is labelled ""Norm. Level [dB]"". X-axis is labelled ""Target Angle [°]"" or ""PTU Angle [°]"" depending on configuration.,,,
-,,,,Inspect the plot title.,,Title string contains the configuration identifier (e.g. Conf0_, DiagType, AntType, Chirp, Tab info).,,,
-[System] antenna_patterns — No output folder crash when output directory missing,Draft,Verify the evaluation creates the output directory if it does not exist and does not crash.,Application installed. The antenna patterns output directory has been manually deleted.,Open the Antenna Patterns tab and click Start with valid PTU2 data.,,Evaluation starts without a FileNotFoundError crash.,antenna_patterns; System; ant_pat_tab,High
-,,,,Observe the log output.,,Log shows that the output directory was created. Evaluation continues and produces output files.,,,
-,,,,Verify the output directory now exists.,,Output folder has been re-created. PNG and YAML/JSON files are present inside it.,,,
-[System] antenna_patterns — Log file copied to output folder,Draft,Verify that the antenna patterns log file is copied into the output folder at the end of evaluation.,Application launched and PTU2 data is available. Default settings.,Open Antenna Patterns tab. Click Start and wait for evaluation to complete.,,Evaluation finishes without crash.,antenna_patterns; System; ant_pat_tab,Low
-,,,,Open the antenna patterns output folder.,,A log file (matching the name defined in logconfig.LogFileNames.AntennaPatterns) is present in the output folder.,,,
-,,,,Open the log file.,,Contents include timestamped entries covering ""Starting."", table lookup info, and ""Image generated"" messages.,,,
+"Name","Status","Priority","Component","Labels","Precondition","Objective","Folder","Test Script (Step)","Test Script (Step Data)","Test Script (Expected Result)"
+"[Smoke] antenna_patterns - tab visible on launch","Draft","High","Calibration-Statistics-Tool/antenna_patterns","Smoke, System, antenna_patterns","Application is installed and starts from workspace root.","Verify the Antenna Patterns tab is available after application startup.","/SMOKE/antenna_patterns","Launch the Calibration Statistics Tool.","Command: python main.py","Main window opens without crash."
+"","","","","","","","","Locate the main tab bar.","","A tab labeled Antenna Patterns is visible."
+"","","","","","","","","Open the Antenna Patterns tab.","","Antenna Patterns view becomes active and fully rendered."
+"[Smoke] antenna_patterns - default widget state on startup","Draft","High","Calibration-Statistics-Tool/antenna_patterns","Smoke, System, antenna_patterns","Application is running and Antenna Patterns tab is open for the first time.","Verify default control values are initialized correctly.","/SMOKE/antenna_patterns","Check Header Name field state.","","Name field is disabled."
+"","","","","","","","","Check Header Identifier field state.","","Identifier field is disabled."
+"","","","","","","","","Check selected angle source radio button.","","Target Angle radio button is selected."
+"","","","","","","","","Check selected orientation radio button.","","Normal orientation radio button is selected."
+"","","","","","","","","Check chirp checkbox defaults.","","Chirp0 is checked and Chirp1-3 are unchecked."
+"","","","","","","","","Check Output Format default.","","json v1 is selected by default."
+"","","","","","","","","Check enabled default data tables.","","Tables 0-3 are checked and Tables 4-7 are unchecked."
+"[Smoke] antenna_patterns - output format selection yaml v1","Draft","High","Calibration-Statistics-Tool/antenna_patterns","Smoke, System, antenna_patterns","Parsed PTU2 data is available from Parse Protocols tab.","Verify yaml v1 output format produces YAML files.","/SMOKE/antenna_patterns","Select yaml v1 in Output Format.","","yaml v1 radio button is selected."
+"","","","","","","","","Start antenna pattern evaluation.","","Evaluation runs to completion without crash."
+"","","","","","","","","Open the antenna pattern output folder.","Path: output_antenna_patterns","At least one .yaml file is present."
+"","","","","","","","","Open one generated YAML file.","","File is valid YAML and includes keys type, meta, and data."
+"[Smoke] antenna_patterns - start with no parsed PTU2 data","Draft","High","Calibration-Statistics-Tool/antenna_patterns","Smoke, System, antenna_patterns","Application is running and no protocol/PTU2 data has been parsed in current session.","Verify Start handles empty parsed-data list safely.","/SMOKE/antenna_patterns","Open the Antenna Patterns tab.","","Tab opens and stays responsive."
+"","","","","","","","","Click Start.","","Application does not crash."
+"","","","","","","","","Inspect the log panel.","","Log contains an error indicating no parsed PTU2 files were found."
+"[Smoke] antenna_patterns - successful run with valid PTU2 input","Draft","High","Calibration-Statistics-Tool/antenna_patterns","Smoke, System, antenna_patterns","At least one compatible PTU2 dataset is parsed successfully.","Verify Start generates expected plot and data outputs.","/SMOKE/antenna_patterns","Open the Antenna Patterns tab with default table selection.","","Tab shows default configuration ready for run."
+"","","","","","","","","Click Start.","PTU2 source: measurement_data/ptu_files","Evaluation starts and remains responsive."
+"","","","","","","","","Wait until run completes.","","Log shows image generation entries for available tables."
+"","","","","","","","","Open output folder.","Path: output_antenna_patterns","PNG output files are present."
+"","","","","","","","","Open output folder again for data artifact check.","Path: output_antenna_patterns","YAML or JSON data output file is present for the selected format."
+"[Smoke] antenna_patterns - table enable disable behavior","Draft","Medium","Calibration-Statistics-Tool/antenna_patterns","Smoke, System, antenna_patterns","Parsed PTU2 data is available.","Verify only enabled tables are scheduled for processing.","/SMOKE/antenna_patterns","Disable Tables 1-3 and keep only Table 0 enabled.","","Only Table 0 remains checked."
+"","","","","","","","","Click Start.","","Run completes without crash."
+"","","","","","","","","Inspect log entries for table scheduling.","","Only Table 0 scheduling entries are present for the run."
+"[Smoke] antenna_patterns - target angle vs PTU angle axis","Draft","Medium","Calibration-Statistics-Tool/antenna_patterns","Smoke, System, antenna_patterns","Parsed PTU2 data is available.","Verify axis mode change affects generated plot axis labeling.","/SMOKE/antenna_patterns","Select Target Angle and run Start.","","Run completes and produces plots."
+"","","","","","","","","Open one generated plot from Target Angle run.","","X-axis label is Target Angle [deg]."
+"","","","","","","","","Select PTU Angle and run Start again.","","Second run completes and produces plots."
+"","","","","","","","","Open one generated plot from PTU Angle run.","","X-axis label is PTU Angle [deg]."
+"[Smoke] antenna_patterns - log file copied to output","Draft","Low","Calibration-Statistics-Tool/antenna_patterns","Smoke, System, antenna_patterns","Parsed PTU2 data is available.","Verify antenna pattern log is copied to output directory after run.","/SMOKE/antenna_patterns","Run Start to completion.","","Evaluation completes successfully."
+"","","","","","","","","Open output directory.","Path: output_antenna_patterns","Antenna pattern log file exists in the output folder."

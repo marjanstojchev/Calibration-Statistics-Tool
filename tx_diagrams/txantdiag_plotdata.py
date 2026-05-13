@@ -105,6 +105,34 @@ def getUpsideDown( plotSetup):
         upsideDown = True
     return upsideDown
 
+
+def _sanitize_curve_points(angle_vals, graph_vals):
+    angle_arr = np.asarray(angle_vals, dtype=float)
+    graph_arr = np.asarray(graph_vals, dtype=float)
+
+    if angle_arr.size == 0 or graph_arr.size == 0:
+        return np.array([]), np.array([])
+
+    valid_mask = np.isfinite(angle_arr) & np.isfinite(graph_arr)
+    valid_mask &= (angle_arr > -9999) & (graph_arr > -9999)
+
+    if not np.any(valid_mask):
+        return np.array([]), np.array([])
+
+    angle_clean = angle_arr[valid_mask]
+    graph_clean = graph_arr[valid_mask]
+
+    sort_idx = np.argsort(angle_clean)
+    return angle_clean[sort_idx], graph_clean[sort_idx]
+
+
+def _sanitize_graph_values(values):
+    arr = np.asarray(values, dtype=float)
+    if arr.size == 0:
+        return np.array([])
+    mask = np.isfinite(arr) & (arr > -9999)
+    return arr[mask]
+
 # Generate graph for specific graph type, specific diagram num., all Rx channels together, and all sensors.
 def plotTxAntDiagram(plotSetup, graph, diagType, dateAndTimeSensorList, txAnt, parseDataList, lowerMarginDict, upperMarginDict, normGraphs):
 
@@ -214,7 +242,9 @@ def plotTxAntDiagram(plotSetup, graph, diagType, dateAndTimeSensorList, txAnt, p
                     plt.ylim(lowerMargin, upperMargin)
 
                     # Plot data
-                    ax1.plot(angle, actualGraphData, '.-', color=color)
+                    angle_plot, graph_plot = _sanitize_curve_points(angle, actualGraphData)
+                    if angle_plot.size > 0:
+                        ax1.plot(angle_plot, graph_plot, '.-', color=color)
 
                 else:
 
@@ -228,7 +258,9 @@ def plotTxAntDiagram(plotSetup, graph, diagType, dateAndTimeSensorList, txAnt, p
                         plt.ylim(lowerMargin, upperMargin)
 
                         # Plot data
-                        ax1.plot(angle, actualGraphData, '.-', color=color)
+                        angle_plot, graph_plot = _sanitize_curve_points(angle, actualGraphData)
+                        if angle_plot.size > 0:
+                            ax1.plot(angle_plot, graph_plot, '.-', color=color)
 
     # Assign figure title
     figureTitle = graphData.normGraphs+'_'+ graphData.graphTitle+'_'+diagType +'_TxAnt'+str(graphData.txAnt)
@@ -257,8 +289,8 @@ def plotTxAntDiagram(plotSetup, graph, diagType, dateAndTimeSensorList, txAnt, p
 # Generate legend figure for all sensors
 def generateLegend(plotSetup, dateTimeSensorCombList):
 
-    # Create legend figure
-    legFig = plt.figure(figsize=(2, 6))
+    # Use a wider legend canvas to prevent tiny/shrunk rendering in PPT placeholders.
+    legFig = plt.figure(figsize=(5.5, 6))
     # plt.figure()
 
     # Num. of sensors
@@ -296,8 +328,7 @@ def generateLegend(plotSetup, dateTimeSensorCombList):
             patchList.append(mpatches.Patch(color=whiteBlank, label=''))
 
     # Attach patch list to a legend
-    # legFig.legend(handles=patchList, loc='center')
-    legFig.legend(handles=patchList, loc='center')
+    legFig.legend(handles=patchList, loc='center', fontsize=10)
     # Figure title and save path
     legFigPath = os.path.join(outputDir, legFigTitle)
     # Save figure
@@ -327,8 +358,14 @@ def scaleLowerMargin(graph, parseDataList, normGraphs):
             actualGraph = getActualGraphData(graph,parseDataList,pdIdx)
         else:
             actualGraph = getNormGraphData(graph,parseDataList,pdIdx)
-        minValue = actualGraph.min()
+        valid_values = _sanitize_graph_values(actualGraph)
+        if valid_values.size == 0:
+            continue
+        minValue = valid_values.min()
         lowerMarginList.append(minValue)
+
+    if len(lowerMarginList) == 0:
+        return -10
 
     lowerMargin= min(lowerMarginList)
     whole = int(abs(lowerMargin) / 10)
@@ -357,8 +394,14 @@ def scaleUpperMargin(graph, parseDataList, normGraphs):
         else:
             actualGraph = getNormGraphData(graph, parseDataList, pdIdx)
 
-        maxValue = actualGraph.max()
+        valid_values = _sanitize_graph_values(actualGraph)
+        if valid_values.size == 0:
+            continue
+        maxValue = valid_values.max()
         upperMarginList.append(maxValue)
+
+    if len(upperMarginList) == 0:
+        return 10
 
     upperMargin = max(upperMarginList)
     whole = int(abs(upperMargin) / 10)

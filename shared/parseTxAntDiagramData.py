@@ -193,7 +193,7 @@ def setParDict(lineArray: list, nofMeasDataFields: int) -> dict:
             elif 'PTU-AngleEl' in lineArray[lineArrayElement]:
                 dictEntry = {lineArrayElement: 'ptuAngleEl'}
 
-            elif 'Level[dBm]' == lineArray[lineArrayElement]:
+            elif ('Level' in lineArray[lineArrayElement]) and ('[dBm]' in lineArray[lineArrayElement]) and ('Powermeter' not in lineArray[lineArrayElement]) and ('Spec' not in lineArray[lineArrayElement]) and ('measured' not in lineArray[lineArrayElement]):
                 dictEntry = {lineArrayElement: 'level'}
 
             elif ('Powermeter' in lineArray[lineArrayElement]) and ('measured' not in lineArray[lineArrayElement]):
@@ -205,7 +205,7 @@ def setParDict(lineArray: list, nofMeasDataFields: int) -> dict:
             elif ('Powermeter' in lineArray[lineArrayElement]) and ('measured' in lineArray[lineArrayElement]):
                 dictEntry = {lineArrayElement: 'levelPowerMeterMeas'}
 
-            elif 'Frequenz' in lineArray[lineArrayElement]:
+            elif ('Frequenz' in lineArray[lineArrayElement]) or ('Frequency' in lineArray[lineArrayElement]):
                 dictEntry = {lineArrayElement: 'frequency'}
 
             elif 'Time' in lineArray[lineArrayElement]:
@@ -214,6 +214,12 @@ def setParDict(lineArray: list, nofMeasDataFields: int) -> dict:
             parMappingDict.update(dictEntry)
 
         return parMappingDict
+
+
+def hasRequiredParMapping(parMappingDict: dict) -> bool:
+    mapped = set(parMappingDict.values())
+    required_core = {'ptuAngleAz', 'ptuAngleEl', 'level'}
+    return required_core.issubset(mapped)
 
 
 # PTU2 file parts procesing info
@@ -303,6 +309,11 @@ def interpretData(fileNamePath: str, txAntDiagParseData: TxAntDiagramParseData) 
                         nofMeasDataFields = len(lineArray)
 
                     parMappingDict = setParDict(lineArray, nofMeasDataFields)
+                    if not hasRequiredParMapping(parMappingDict):
+                        txAntDiagParseData.errorList.append(
+                            strMeasName + ' invalid MAXIMUM(Spec) header: missing required columns (PTU-AngleAz/PTU-AngleEl/Level)'
+                        )
+                        return
 
                     currentPart = searchParts.MaxHeaderData
 
@@ -341,6 +352,11 @@ def interpretData(fileNamePath: str, txAntDiagParseData: TxAntDiagramParseData) 
                         nofMeasDataFields = len(lineArray)
 
                     parMappingDict = setParDict(lineArray,nofMeasDataFields)
+                    if not hasRequiredParMapping(parMappingDict):
+                        txAntDiagParseData.errorList.append(
+                            strMeasName + ' invalid measurement header: missing required columns (PTU-AngleAz/PTU-AngleEl/Level)'
+                        )
+                        return
 
                     currentPart = searchParts.PtuPosData
 
@@ -421,14 +437,14 @@ def getMeasData(lineArray: list, txAntDiagParseData: TxAntDiagramParseData, nofM
                 bRet = False
 
         elif par == 'level':
-            temp = lineArray[key]
+            temp = lineArray[key].replace(',', '.')
             if sp.checkDecimal(temp):
                 ptuPosMeasData.level_dBm = float(temp)
             else:
                 bRet = False
 
         elif par == 'levelPowerMeter':
-            temp = lineArray[key]
+            temp = lineArray[key].replace(',', '.')
             if sp.checkDecimal(temp):
                 ptuPosMeasData.levelPowMet_dBm = float(temp)
             else:
@@ -436,28 +452,28 @@ def getMeasData(lineArray: list, txAntDiagParseData: TxAntDiagramParseData, nofM
 
         elif par == 'levelSpecMeas':
 
-            temp = lineArray[key]
+            temp = lineArray[key].replace(',', '.')
             if sp.checkDecimal(temp):
                 ptuPosMeasData.levelMeasSpec_dBm = float(temp)
             else:
                 bRet = False
 
         elif par == 'levelPowerMeterMeas':
-            temp = lineArray[key]
+            temp = lineArray[key].replace(',', '.')
             if sp.checkDecimal(temp):
                 ptuPosMeasData.levelMeasPowMet_dBm = float(temp)
             else:
                 bRet = False
 
         elif par == 'frequency':
-            temp = lineArray[key]
+            temp = lineArray[key].replace(',', '.')
             if sp.checkDecimal(temp):
                 ptuPosMeasData.frequenz_MHz = float(temp)
             else:
                 bRet = False
 
         elif par == 'time':
-            temp = lineArray[key]
+            temp = lineArray[key].replace(',', '.')
             if sp.checkDecimal(temp):
                 ptuPosMeasData.time_ms = float(temp)
             else:
