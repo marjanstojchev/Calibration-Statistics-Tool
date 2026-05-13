@@ -98,7 +98,9 @@ class Logger():
         self.logger.removeHandler(self.consoleHandler)
 
     def addConsoleHandler(self) -> None:
-        # if consoleOutput==ConsoleOutput.On:
+        for h in self.logger.handlers:
+            if isinstance(h, log.StreamHandler) and not isinstance(h, log.FileHandler):
+                return
         consoleHandler = log.StreamHandler()
         consoleHandler.setFormatter(self.logFormatter)
         self.logger.addHandler(consoleHandler)

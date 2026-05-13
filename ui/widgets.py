@@ -459,7 +459,7 @@ class QTableLogHandler(logging.Handler):
         self.logTableRow = 0
 
     def emit(self, record):
-        msgStr      = str(record.msg)
+        msgStr      = record.getMessage()
         levelnameStr = str(record.levelname)
         timeStr     = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         timeMsStr   = "%s,%03d" % (timeStr, record.msecs)

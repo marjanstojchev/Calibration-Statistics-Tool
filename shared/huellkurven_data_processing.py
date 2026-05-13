@@ -4,18 +4,17 @@ import re
 import enum
 import sys
 import errno
-import logging
 from operator import itemgetter
 
 import numpy as np
 
 from shared import loaddata as ld
 from shared import calcdiagram_functions as calc
-from shared import logconfig
+import logconfig
 from shared import auxiliary as aux
 from shared import safeparse as sp
 
-myLogger = logging.getLogger(__name__)
+myLogger = logconfig.mainLoadDataLogger.logger
 
 
 class LimitsHeader(enum.Enum):
@@ -362,6 +361,10 @@ def createLimitsData(version, commentsDict, desiredDiagramList, diagListIdx, chi
                      angleSetup, centFreqDictList, diagType, inputConfig, chirpConfig, dataConf,
                      write_output: bool = False):
 
+    diagramNum = desiredDiagramList[diagListIdx]['diagramNum']
+    myLogger.debug('createLimitsData: diagType=%s diagram=%s chirp=%s (%d candidate files)',
+                   diagType, diagramNum, chirp, len(parseDataList))
+
     limitsData = LimitsData()
     limitsData.version = version
     limitsData.patternMethod = dataConf['patternLimitsMethod']
@@ -371,7 +374,6 @@ def createLimitsData(version, commentsDict, desiredDiagramList, diagListIdx, chi
 
     for pdIdx in range(len(parseDataList)):
         if desiredDiagramList[diagListIdx]['diagramNum'] == parseDataList[pdIdx].fileTitle.diagram and parseDataList[pdIdx].chirpInfoList[chirp].active == 1:
-
             limitsData.nofChirps = len(getValidChirpList(chirpConfig, parseDataList, pdIdx))
             limitsData.usedChirpBitCoded = pow(2, chirp)
             limitsData.panType = 0 if diagType == 'Az' else 1  # 0-Azimut|1-Elevation
@@ -390,6 +392,15 @@ def createLimitsData(version, commentsDict, desiredDiagramList, diagListIdx, chi
 
             if inputConfig['targetAngle'] == 1:
                 limitsData.angle = calc.getTarAngVals(parseDataList[0], getUpsideDown(parseDataList[0], inputConfig))
+
+    myLogger.debug('createLimitsData: %d files matched diagram=%s chirp=%s',
+                   len(parseDataFilteredList), diagramNum, chirp)
+    if not parseDataFilteredList:
+        myLogger.error(
+            'Hullkurven: No matching data found for diagram=%s chirp=%s. Processing aborted.',
+            diagramNum, chirp,
+        )
+        return None
 
     limitsData.antennaType = antennaType
     limitsData.nofAntennas = getMaxNofRxAntennas(parseDataFilteredList)
@@ -454,7 +465,122 @@ def writeLimitsDataToFile(limitsData):
     with open(outputPath, 'w+') as dat_file:
         dat_file.truncate(0)
         dat_file.write(limitsDataFileStr)
-        myLogger.info('Limits data saved: ' + outputPath)
+    myLogger.info('Limits data saved: %s', outputPath)
+
+
+def savePlotImage(limitsData, outputBaseDir: str) -> None:
+    """Save PNG plot images for a LimitsData object (pattern limits and phase diff limits).
+
+    Creates one image per Rx channel for pattern limits and one per phase-diff channel.
+    Images are written to ``outputBaseDir / limitsData.outputPath``.
+    """
+    try:
+        import matplotlib
+        matplotlib.use('Agg')           # non-interactive backend — no GUI window
+        import matplotlib.pyplot as mpl_plt
+    except ImportError:
+        myLogger.error('matplotlib not available — cannot save Hullkurven plot images.')
+        return
+
+    outputDir = os.path.join(outputBaseDir, limitsData.outputPath)
+    angle = limitsData.angle
+    baseName = limitsData.title.replace('.dat', '')
+    diagType = 'Az' if limitsData.panType == 0 else 'El'
+    angleLabel = 'Target Angle [°]'
+    myLogger.debug('savePlotImage: %s (%d pattern channels, %d phase-diff channels)',
+                   baseName, len(limitsData.rxAntPatternData), len(limitsData.rxChPhaseDiffData))
+
+    # ------------------------------------------------------------------ #
+    # Pattern limits (one figure per Rx channel)
+    # ------------------------------------------------------------------ #
+    for rxChIdx, rxAnt in enumerate(limitsData.rxAntPatternData):
+        fig, (ax1, ax2) = mpl_plt.subplots(nrows=2, figsize=(12, 8))
+        fig.suptitle(
+            f'Pattern Limits - {diagType} - AntType{limitsData.antennaType}'
+            f' - TxAnt{limitsData.activeTx} - RxCh{rxChIdx}'
+            f' - Diagram{limitsData.activeTx} - Chirp{limitsData.usedChirpBitCoded.bit_length()-1}',
+            fontsize=10,
+        )
+
+        ax1.invert_xaxis()
+        ax2.invert_xaxis()
+        ax1.grid(True)
+        ax2.grid(True)
+        ax1.set_xlabel(angleLabel)
+        ax2.set_xlabel(angleLabel)
+        ax1.set_ylabel('Norm. Level [dB]')
+        ax2.set_ylabel('Level dev. to Median [dB]')
+
+        # Raw measurement curves
+        for measurement in rxAnt.ptuLevelPerRxAntenna:
+            ax1.plot(angle, measurement, '.-', color='steelblue', alpha=0.4, linewidth=0.8)
+            devToMedian = [m - med for m, med in zip(measurement, rxAnt.medianPatternLimits)]
+            ax2.plot(angle, devToMedian, '.-', color='steelblue', alpha=0.4, linewidth=0.8)
+
+        # Median and limit curves
+        ax1.plot(angle, rxAnt.medianPatternLimits, '--', color='lightcoral', linewidth=2, label='Median')
+        ax1.plot(angle, rxAnt.minPatternLimits, '-.', color='gold', linewidth=2, label='Min limit')
+        ax1.plot(angle, rxAnt.maxPatternLimits, '-.', color='gold', linewidth=2, label='Max limit')
+        ax1.legend(fontsize=8)
+
+        ax2.axhline(y=0, linestyle='--', color='lightcoral', linewidth=2, label='Median')
+        minDev = [mn - med for mn, med in zip(rxAnt.minPatternLimits, rxAnt.medianPatternLimits)]
+        maxDev = [mx - med for mx, med in zip(rxAnt.maxPatternLimits, rxAnt.medianPatternLimits)]
+        ax2.plot(angle, minDev, '-.', color='gold', linewidth=2, label='Min limit')
+        ax2.plot(angle, maxDev, '-.', color='gold', linewidth=2, label='Max limit')
+        ax2.legend(fontsize=8)
+
+        fig.tight_layout()
+        imgPath = os.path.join(outputDir, f'{baseName}_RxCh{rxChIdx}_Pattern.png')
+        fig.savefig(imgPath, dpi=150, bbox_inches='tight')
+        mpl_plt.close(fig)
+        myLogger.info('Plot image saved: %s', imgPath)
+
+    # ------------------------------------------------------------------ #
+    # Phase difference limits (one figure per phase-diff channel)
+    # ------------------------------------------------------------------ #
+    for rxChIdx, rxPhase in enumerate(limitsData.rxChPhaseDiffData):
+        fig, (ax1, ax2) = mpl_plt.subplots(nrows=2, figsize=(12, 8))
+        fig.suptitle(
+            f'Phase Diff Limits - {diagType} - AntType{limitsData.antennaType}'
+            f' - TxAnt{limitsData.activeTx} - RxCh{rxChIdx}'
+            f' - Diagram{limitsData.activeTx} - Chirp{limitsData.usedChirpBitCoded.bit_length()-1}',
+            fontsize=10,
+        )
+
+        ax1.invert_xaxis()
+        ax2.invert_xaxis()
+        ax1.grid(True)
+        ax2.grid(True)
+        ax1.set_xlabel(angleLabel)
+        ax2.set_xlabel(angleLabel)
+        ax1.set_ylabel('Phase Difference [°]')
+        ax2.set_ylabel('Phase Diff. dev. to Median [°]')
+
+        # Raw measurement curves
+        for measurement in rxPhase.ptuPhaseDiffPerRxCh:
+            ax1.plot(angle, measurement, '.-', color='steelblue', alpha=0.4, linewidth=0.8)
+            devToMedian = [m - med for m, med in zip(measurement, rxPhase.medianPhase)]
+            ax2.plot(angle, devToMedian, '.-', color='steelblue', alpha=0.4, linewidth=0.8)
+
+        # Median and limit curves
+        ax1.plot(angle, rxPhase.medianPhase, '--', color='lightcoral', linewidth=2, label='Median')
+        ax1.plot(angle, rxPhase.minPhaseLimits, '-.', color='gold', linewidth=2, label='Min limit')
+        ax1.plot(angle, rxPhase.maxPhaseLimits, '-.', color='gold', linewidth=2, label='Max limit')
+        ax1.legend(fontsize=8)
+
+        ax2.axhline(y=0, linestyle='--', color='lightcoral', linewidth=2, label='Median')
+        minDev = [mn - med for mn, med in zip(rxPhase.minPhaseLimits, rxPhase.medianPhase)]
+        maxDev = [mx - med for mx, med in zip(rxPhase.maxPhaseLimits, rxPhase.medianPhase)]
+        ax2.plot(angle, minDev, '-.', color='gold', linewidth=2, label='Min limit')
+        ax2.plot(angle, maxDev, '-.', color='gold', linewidth=2, label='Max limit')
+        ax2.legend(fontsize=8)
+
+        fig.tight_layout()
+        imgPath = os.path.join(outputDir, f'{baseName}_RxCh{rxChIdx}_PhaseDiff.png')
+        fig.savefig(imgPath, dpi=150, bbox_inches='tight')
+        mpl_plt.close(fig)
+        myLogger.info('Plot image saved: %s', imgPath)
 
 
 def noDiagTypeDataFound(parseDataList):
@@ -562,9 +688,9 @@ def getConfiguredPtu2Files(parseDataList, angleSetup, inputConfig):
     ptu2PerAngleSetupList = getPtu2ListPerAngleSetup(parseDataList, angleSetup, inputConfig['diagTypeInfo'])
     ptu2PerUpsideDownInfo = getPtu2PerUpsideDownInfo(ptu2PerAngleSetupList, inputConfig['upsideDownInfo'])
     if inputConfig['upsideDownInfo'] == 1 and len(ptu2PerUpsideDownInfo) == 0:
-        myLogger.error('No PTU2 files WITH Upside-Down Info found!')
+        myLogger.error('No PTU2 files WITH Upside-Down Info found! (angleSetup=%s)', angleSetup.angleSetupStr)
     if inputConfig['upsideDownInfo'] == 0 and len(ptu2PerUpsideDownInfo) == 0:
-        myLogger.error('No PTU2 files WITHOUT Upside-Down Info found!')
+        myLogger.error('No PTU2 files WITHOUT Upside-Down Info found! (angleSetup=%s)', angleSetup.angleSetupStr)
     return ptu2PerUpsideDownInfo
 
 
@@ -734,10 +860,14 @@ def setAngleSetupList(ptu2InputConf, parseDataList):
         dtInfoStr = 'WITHOUT Diagram Type Info'
 
     if len(angSetupCombDictList1) == 0:
-        myLogger.error('No data for ' + dtInfoStr + ' found.')
+        myLogger.error('No data %s found.', dtInfoStr)
     else:
         for angSetupIdx in range(len(angSetupCombDictList1)):
-            myLogger.info('Angle setup comb. added: ' + 'AntType-' + str(angSetupCombDictList1[angSetupIdx]["antType"]) + '_DiagType=' + angSetupCombDictList1[angSetupIdx]["diagType"] + '_NofPts=' + str(angSetupCombDictList1[angSetupIdx]["nofAnglePoints"]) + '_StepSize=' + str(angSetupCombDictList1[angSetupIdx]["angleStepSize"]) + '_RefPt=' + str(angSetupCombDictList1[angSetupIdx]["refAnglePoint"]) + '.')
+            d = angSetupCombDictList1[angSetupIdx]
+            myLogger.info(
+                'Angle setup added: AntType-%s DiagType=%s NofPts=%s StepSize=%s RefPt=%s',
+                d['antType'], d['diagType'], d['nofAnglePoints'], d['angleStepSize'], d['refAnglePoint'],
+            )
             angSetupComb = AngleSetup(angSetupCombDictList1[angSetupIdx])
             angSetupCombList.append(angSetupComb)
 
@@ -770,7 +900,7 @@ def getRefAnglePoint(parseData):
 def getAppearingAngleSetupComb(parseDataList):
     combDictList = []
     outputList = []
-    myLogger.info('Getting angle setup list:')
+    myLogger.debug('getAppearingAngleSetupComb: processing %d files', len(parseDataList))
 
     for pdIdx in range(len(parseDataList)):
         combDict = dict()
@@ -810,6 +940,7 @@ def getAppearingAngleSetupComb(parseDataList):
         if found == 1:
             outputList.append(combDictList[pdIdx])
 
+    myLogger.debug('getAppearingAngleSetupComb: found %d unique angle setups', len(outputList))
     return outputList
 
 
@@ -870,7 +1001,7 @@ def getAvgFreqPerDiagram(chirp, diagNum, parseDataList):
     if len(freqList) != 0:
         avgFreq = sum(freqList) / len(freqList)
     else:
-        myLogger.error("Empty frequency list.")
+        myLogger.error('Empty frequency list for diagram=%s chirp=%s.', diagNum, chirp)
     return avgFreq
 
 
@@ -880,7 +1011,7 @@ def getMaxFreqPerDiagram(chirp, diagNum, parseDataList):
     if len(freqList) != 0:
         maxFreq = max(freqList)
     else:
-        myLogger.error("Empty frequency list.")
+        myLogger.error('Empty frequency list for diagram=%s chirp=%s.', diagNum, chirp)
     return maxFreq
 
 
@@ -890,7 +1021,7 @@ def getMinFreqPerDiagram(chirp, diagNum, parseDataList):
     if len(freqList) != 0:
         minFreq = min(freqList)
     else:
-        myLogger.error("Empty frequency list.")
+        myLogger.error('Empty frequency list for diagram=%s chirp=%s.', diagNum, chirp)
     return minFreq
 
 
@@ -900,7 +1031,7 @@ def getAvgFreq(chirp, diagramList, parseDataList):
     if len(freqList) != 0:
         avgFreq = sum(freqList) / len(freqList)
     else:
-        myLogger.error("Empty frequency list.")
+        myLogger.error('Empty frequency list for chirp=%s.', chirp)
     return avgFreq
 
 
@@ -910,7 +1041,7 @@ def getMaxFreq(chirp, diagramList, parseDataList):
     if len(freqList) != 0:
         maxFreq = max(freqList)
     else:
-        myLogger.error("Empty frequency list.")
+        myLogger.error('Empty frequency list for chirp=%s.', chirp)
     return maxFreq
 
 
@@ -920,5 +1051,5 @@ def getMinFreq(chirp, diagramList, parseDataList):
     if len(freqList) != 0:
         minFreq = min(freqList)
     else:
-        myLogger.error("Empty frequency list.")
+        myLogger.error('Empty frequency list for chirp=%s.', chirp)
     return minFreq
