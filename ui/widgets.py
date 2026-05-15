@@ -364,7 +364,7 @@ class PlotFrameSysDia(QFrame):
         self.layout.setColumnStretch(1, 1)
         self.layout.setRowStretch(1, 1)
 
-    def plot(self, angleData, plot_dat, Prot_param, graphType, idx, ax):
+    def plot(self, angleData, plot_dat, Prot_param, graphType, idx, ax, draw=True):
         ylimits0 = []
         ylimits1 = []
         ylimitssec0 = []
@@ -427,7 +427,8 @@ class PlotFrameSysDia(QFrame):
             ylimitssec1 = max(ylimitssec1) + 10 if max(ylimitssec1) >= 1 else max(ylimitssec1) + 5
             self.ax2.set_ylim(ymin=ylimitssec0, ymax=ylimitssec1)
 
-        self.canvas.draw()
+        if draw:
+            self.canvas.draw()
 
     def clear(self, ax=0):
         if ax == 0:
