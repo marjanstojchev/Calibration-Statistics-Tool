@@ -1363,7 +1363,7 @@ def start_data_evaluation(parseDataList, plotSetup, chirpConfig, graphConfig, di
                                     if  plotWindowConfig['showPlotAllMode']!=1:
 
                                         if plotWindowConfig['inputMode'] == 1:
-                                            if (plotWindowConfig['graph'] == graphList[graphIdx] and plotWindowConfig['antType'] == antennaTypesList[antTypeIdx] and plotWindowConfig['diagramNum'] == desiredDiagramList[diagramIdx] and plotWindowConfig['rxCh'] == rxCh):
+                                            if (plotWindowConfig['graph'] == graphList[graphIdx] and (plotWindowConfig['antType'] == 0 or plotWindowConfig['antType'] == antennaTypesList[antTypeIdx]) and (plotWindowConfig['diagramNum'] == 0 or plotWindowConfig['diagramNum'] == desiredDiagramList[diagramIdx]) and (plotWindowConfig['rxCh'] == 0 or plotWindowConfig['rxCh'] == rxCh)):
                                                 plt.plotDiagramRxCh(plotSetup, chirpConfig, graphList[graphIdx],
                                                                                 desiredDiagramList[diagramIdx], rxCh,
                                                                                 dateTimeSensorCombList,
@@ -1635,7 +1635,7 @@ def start_data_evaluation(parseDataList, plotSetup, chirpConfig, graphConfig, di
                                 if plotWindowConfig['showPlotAllMode'] != 1:
 
                                     if plotWindowConfig['inputMode'] == 1:
-                                        if (plotWindowConfig['graph'] == graphList[graphIdx] and plotWindowConfig['antType'] == antennaTypesList[antTypeIdx]  and plotWindowConfig['diagramNum'] == desiredDiagramList[diagramIdx]):
+                                        if (plotWindowConfig['graph'] == graphList[graphIdx] and (plotWindowConfig['antType'] == 0 or plotWindowConfig['antType'] == antennaTypesList[antTypeIdx]) and (plotWindowConfig['diagramNum'] == 0 or plotWindowConfig['diagramNum'] == desiredDiagramList[diagramIdx])):
                                             plt.plotDiagram(plotSetup, chirpConfig, graphList[graphIdx],
                                                                         desiredDiagramList[diagramIdx],
                                                                         dateTimeSensorCombList,

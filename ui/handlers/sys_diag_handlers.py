@@ -307,6 +307,10 @@ def sysDiagPlotSetupScriptModeGroupClick(ctx: "AppContext") -> None:
     if btnId == 0:
         ctx.qt.sysDiagPlotWindowGroupBox.setEnabled(False)
         ctx.qt.sysDiagSlideConfGroupBox.setEnabled(True)
+        # Restore allOnOneSlide from the slide-conf checkbox state
+        ctx.plc.plotSetup["allOnOneSlide"] = (
+            1 if ctx.qt.sysDiagSlideConfGeneralAllGraphsSlideCheckBox.isChecked() else 0
+        )
         ctx.qt.sysDiagPlotWindowAllGraphsCheckBox.setChecked(False)
         for cb in (ctx.qt.sysDiagPlotWindowAllGraphsCheckBox1,
                    ctx.qt.sysDiagPlotWindowAllGraphsCheckBox2,
@@ -324,6 +328,7 @@ def sysDiagPlotSetupScriptModeGroupClick(ctx: "AppContext") -> None:
     elif btnId == 1:
         ctx.qt.sysDiagPlotWindowGroupBox.setEnabled(True)
         ctx.qt.sysDiagSlideConfGroupBox.setEnabled(False)
+        ctx.plc.plotSetup["allOnOneSlide"] = 0
         for cb in (ctx.qt.sysDiagPlotWindowAllGraphsCheckBox1,
                    ctx.qt.sysDiagPlotWindowAllGraphsCheckBox2,
                    ctx.qt.sysDiagPlotWindowAllGraphsCheckBox3):
@@ -369,6 +374,7 @@ def sysDiagPlotWindowAllGraphsComboBox3Click(ctx: "AppContext", idx: int) -> Non
 def sysDiagPlotWindowAllGraphsClick(ctx: "AppContext") -> None:
     state = ctx.qt.sysDiagPlotWindowAllGraphsCheckBox.isChecked()
     ctx.plc.set_plot_window_all_graphs_mode(state)
+    ctx.plc.plotSetup["allOnOneSlide"] = 1 if state else 0
     enabled = bool(state)
     for cb in (ctx.qt.sysDiagPlotWindowAllGraphsCheckBox1,
                ctx.qt.sysDiagPlotWindowAllGraphsCheckBox2,
@@ -694,6 +700,12 @@ def sys_diag_data_update_and_evaluation(ctx: "AppContext") -> None:
         if ctx.qt.sysDiagPlotWindowAllGraphsCheckBox3.isChecked():
             allOnOneSlideGraphList.append(ctx.plc.AllGraphsConf3)
 
+    # Safety clamp: in plot-window mode, allOnOneSlide must match the actual list.
+    # If the list is empty (no checkboxes selected), disable allOnOneSlide so
+    # start_data_evaluation does not error on an empty graph list.
+    if scriptMode == 1 and len(allOnOneSlideGraphList) == 0:
+        ctx.plc.plotSetup["allOnOneSlide"] = 0
+
     parsed_data_list = _resolve_sys_diag_parsed_data(ctx)
     plot_setup = copy.deepcopy(ctx.plc.plotSetup)
     chirp_config = copy.deepcopy(ctx.plc.chirpConfig)
@@ -726,16 +738,26 @@ def sys_diag_data_update_and_evaluation(ctx: "AppContext") -> None:
         finally:
             worker_done["done"] = True
 
-    worker = threading.Thread(target=_run_eval, name="sys-diag-eval", daemon=True)
-    worker.start()
+    # Sync the module-level plotWindowConfig in AntennaSystemDiagrams so
+    # start_data_evaluation uses current UI values instead of hardcoded defaults.
+    antSysDiag.plotWindowConfig.update(ctx.plc.plotWindowConfig)
 
-    def _reenable_start_button() -> None:
-        if worker_done["done"]:
-            ctx.qt.sysDiagStartPushBtn.setEnabled(True)
-            return
+    if plot_setup.get("ShowCertainPlotWindow", 0) == 1:
+        # Matplotlib GUI (plt.subplots / plt.show) must run on the main thread.
+        # In plot-window mode run synchronously so the figures appear correctly.
+        _run_eval()
+        ctx.qt.sysDiagStartPushBtn.setEnabled(True)
+    else:
+        worker = threading.Thread(target=_run_eval, name="sys-diag-eval", daemon=True)
+        worker.start()
+
+        def _reenable_start_button() -> None:
+            if worker_done["done"]:
+                ctx.qt.sysDiagStartPushBtn.setEnabled(True)
+                return
+            ctx.qt.QTimer.singleShot(100, _reenable_start_button)
+
         ctx.qt.QTimer.singleShot(100, _reenable_start_button)
-
-    ctx.qt.QTimer.singleShot(100, _reenable_start_button)
 
 
 def wire(ctx: "AppContext") -> None:

@@ -1178,7 +1178,10 @@ def plotDiagramRxCh(plotSetup: dict, chirpConfig: dict, graph: str, diagramNum: 
 
 
     else:
-        plt.show()
+        if len(ax1.lines) > 0 or len(ax1.collections) > 0:
+            plt.show()
+        else:
+            plt.close(fig)
 
     # Return the meta data object
     return graphData
