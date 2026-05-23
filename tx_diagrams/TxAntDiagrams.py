@@ -799,7 +799,7 @@ else:
     if loadData.invalidPath != 1:
         # myLogger.info('Num. of valid files parsed: ' + str(loadData.validFilesCounter) + '.')
         parsedDataList = loadData.parseDataList
-        start_data_evaluation(parsedDataList, plotSetup, graphConfig, txAntDiagLogger, aux.txAntDiagOutputPath, 'TxAnt_Diagrams.pptx', './template.pptx')
+        start_data_evaluation(parsedDataList, plotSetup, graphConfig, txAntDiagLogger, aux.txAntDiagOutputPath, 'TxAnt_Diagrams.pptx', os.path.join(aux.assetsDir, 'template.pptx'))
     else:
         parseDataLogger.error(loadData.invalidPathString)
 

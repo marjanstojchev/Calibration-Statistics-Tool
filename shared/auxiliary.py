@@ -55,6 +55,9 @@ setcurvescustinputconffilepath = os.path.join(_outputBase, setcurvescustinputcon
 # Located inside shared/config/ so it is bundled with the pip package.
 configDir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config')
 
+# assets folder (PPTX templates) — located inside shared/assets/ so it is bundled.
+assetsDir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets')
+
 #stats input config
 statsinputconffilename = 'StatisticsLimitsConfig.json'
 statsinputconffilepath = os.path.join(configDir, statsinputconffilename)

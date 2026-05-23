@@ -9,6 +9,7 @@ the "##TxAnt Diagrams" section.
 from __future__ import annotations
 
 import copy
+import os
 import threading
 from typing import TYPE_CHECKING
 
@@ -146,7 +147,7 @@ def txantdiag_data_update_and_evaluation(ctx: "AppContext") -> None:
                 txAntDiagLogger,
                 aux.txAntDiagOutputPath,
                 "TxAnt_Diagrams.pptx",
-                "./assets/template.pptx",
+                os.path.join(aux.assetsDir, 'template.pptx'),
             )
         except Exception as exc:
             parseDataLog.exception("Tx antenna diagram evaluation failed: %s", exc)

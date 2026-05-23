@@ -9,6 +9,7 @@ same widget-initialisation that used to run at import time in main.py.
 from __future__ import annotations
 
 import copy
+import os
 import threading
 from typing import TYPE_CHECKING
 
@@ -731,7 +732,7 @@ def sys_diag_data_update_and_evaluation(ctx: "AppContext") -> None:
                 logconfig.antSysDiagLogger,
                 aux.antSysDiagOutputPath,
                 "Antenna_diagrams.pptx",
-                "./assets/template.pptx",
+                os.path.join(aux.assetsDir, 'template.pptx'),
             )
         except Exception as exc:
             parseDataLog.exception("System diagrams evaluation failed: %s", exc)

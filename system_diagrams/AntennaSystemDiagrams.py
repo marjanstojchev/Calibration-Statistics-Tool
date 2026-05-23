@@ -1866,6 +1866,6 @@ else:
     if loadData.invalidPath != 1:
         parseDataLogger.info('Num. of valid files parsed: ' + str(loadData.validFilesCounter) + '.')
         parseDataList=loadData.parseDataList
-        start_data_evaluation(parseDataList, plotSetup, chirpConfig, graphConfig, diagramConfig, twoGraphSetupList, fourGraphSetupList, threeGraphSetupList, allOnOneSlideGraphList, diagramConfigList, sysDiagLogger, aux.antSysDiagOutputPath, 'Antenna_diagrams.pptx', './template.pptx')
+        start_data_evaluation(parseDataList, plotSetup, chirpConfig, graphConfig, diagramConfig, twoGraphSetupList, fourGraphSetupList, threeGraphSetupList, allOnOneSlideGraphList, diagramConfigList, sysDiagLogger, aux.antSysDiagOutputPath, 'Antenna_diagrams.pptx', os.path.join(aux.assetsDir, 'template.pptx'))
     else:
         parseDataLogger.error(loadData.invalidPathString)
