@@ -34,6 +34,11 @@ _configBase = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Expose the user paths config file so the GUI can show/edit it.
 userPathsFile = _up.PATHS_FILE
 
+# Input directory defaults (set in paths.json; empty string = OS default).
+inputProtocolDir: str = _up.input_protocol_dir
+inputPtuDir: str = _up.input_ptu_dir
+inputTxAntDir: str = _up.input_tx_ant_dir
+
 # Output paths
 antSysDiagOutputPath = os.path.join(_outputBase, OutputFolderNames.AntennaSystemDiagrams.value)
 antPatOutputPath = os.path.join(_outputBase, OutputFolderNames.AntennaPatterns.value)

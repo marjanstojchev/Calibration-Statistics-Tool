@@ -30,6 +30,11 @@ PATHS_FILE: str = os.path.join(APP_DIR, 'paths.json')
 _DEFAULT_OUTPUT_BASE = os.path.join(os.path.expanduser('~'), 'Documents', 'calibration-tool')
 _DEFAULTS: dict = {
     'output_base': _DEFAULT_OUTPUT_BASE,
+    # Input directories: leave empty to use the OS default (home dir).
+    # Set these once to the folders where your measurement files live.
+    'input_protocol_dir': '',
+    'input_ptu_dir': '',
+    'input_tx_ant_dir': '',
 }
 
 
@@ -65,12 +70,24 @@ output_base: str = _config['output_base']
 log_dir: str = os.path.join(APP_DIR, 'logs')
 """Log files always go to AppData/calibration-statistics-tool/logs/."""
 
+input_protocol_dir: str = _config['input_protocol_dir']
+"""Default directory for the Protocol Files / Protocol Directory dialogs."""
+
+input_ptu_dir: str = _config['input_ptu_dir']
+"""Default directory for the PTU-2 Files dialog."""
+
+input_tx_ant_dir: str = _config['input_tx_ant_dir']
+"""Default directory for the Tx-Ant. Diag. Files dialog."""
+
 
 def reload() -> None:
     """Re-read paths.json from disk (call after the user edits it via the GUI)."""
-    global _config, output_base
+    global _config, output_base, input_protocol_dir, input_ptu_dir, input_tx_ant_dir
     _config = _load()
     output_base = _config['output_base']
+    input_protocol_dir = _config['input_protocol_dir']
+    input_ptu_dir = _config['input_ptu_dir']
+    input_tx_ant_dir = _config['input_tx_ant_dir']
 
 
 def save(output_base_path: str) -> None:

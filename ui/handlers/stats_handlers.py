@@ -694,7 +694,7 @@ def _on_stats_group_pptx_export(ctx: "AppContext") -> None:
         from pptx import Presentation
         from pptx.util import Inches
 
-        output_dir = Path('output')
+        output_dir = Path(aux.statisticOutputPath)
         output_dir.mkdir(parents=True, exist_ok=True)
         stamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         png_path = output_dir / f'stats_plot_{stamp}.png'
