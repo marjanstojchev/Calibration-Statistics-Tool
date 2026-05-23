@@ -112,7 +112,7 @@ class Logger():
 
 
 # basicDir = os.path.dirname(os.path.abspath(__file__))
-basicDir = os.path.dirname(sys.argv[0])
+basicDir = os.getcwd()
 basicDir = os.path.join(basicDir, '0_logFiles')
 createDirectory(basicDir)
 

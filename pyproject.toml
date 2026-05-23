@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "calibration-statistics-tool"
-version = "1.0.0"
+version = "1.0.1"
 description = "Statistics and antenna pattern analysis tool for radar systems"
 readme = "README.md"
 license = {text = "MIT"}
@@ -64,6 +64,9 @@ test-writer-mcp = "agents.zephyr.mcp_server:run_server"
 [tool.setuptools]
 py-modules = ["main"]
 packages = ["shared", "ui", "system_diagrams", "tx_diagrams", "antenna_patterns", "agents", "agents.zephyr"]
+
+[tool.setuptools.package-data]
+shared = ["config/*.yaml", "config/*.json"]
 
 [tool.ruff]
 line-length = 120

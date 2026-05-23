@@ -774,7 +774,7 @@ if(bUseGui):
 
 else:
     # configuration file if the GUI is not used
-    with open('TxAntDiagramsConf.yaml', 'r', encoding='utf8') as yamlfile:
+    with open(os.path.join(aux.configDir, 'TxAntDiagramsConf.yaml'), 'r', encoding='utf8') as yamlfile:
         config      = yaml.safe_load(yamlfile)
         plotSetup   = config['plotSetup']
         graphConfig = config['graphConfig']

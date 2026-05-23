@@ -5,7 +5,6 @@ from shutil import copyfile
 import errno
 import logconfig
 import enum
-import sys
 
 class OutputFolderNames(enum.Enum):
     AntennaSystemDiagrams='output'
@@ -21,29 +20,37 @@ class OutputFolderNames(enum.Enum):
 # Get logger
 myLogger=logconfig.mainLoadDataLogger.logger
 
-# Basic directory
-# basicDir = os.path.dirname(os.path.abspath(__file__))
-basicDir = os.path.dirname(sys.argv[0])
+# Output base: always use the current working directory so writing to
+# protected install locations (e.g. Program Files) is avoided.
+_outputBase = os.getcwd()
+# Public alias kept for backward compatibility with modules that reference aux.basicDir.
+basicDir = _outputBase
 
-# Output pazh
-antSysDiagOutputPath = os.path.join(basicDir, OutputFolderNames.AntennaSystemDiagrams.value)
-antPatOutputPath = os.path.join(basicDir, OutputFolderNames.AntennaPatterns.value)
-huellKurvenOutputPath = os.path.join(basicDir, OutputFolderNames.HuellKurven.value)
-txAntDiagOutputPath = os.path.join(basicDir, OutputFolderNames.TxAntDiagrams.value)
-setCurvesOutputPath = os.path.join(basicDir, OutputFolderNames.SetCurves.value)
-# mainLoadDataOutputPath = os.path.join(basicDir, OutputFolderNames.LoadData.value)
-certificatesOutputPath = os.path.join(basicDir, OutputFolderNames.Certificates.value)
-statisticOutputPath = os.path.join(basicDir, OutputFolderNames.Statistic.value)
-mergeOutputPath = os.path.join(basicDir, OutputFolderNames.merge.value)
+# Config base: resolve from this file's location so the bundled config/
+# directory is found both in the source tree and after pip install.
+# shared/auxiliary.py  →  shared/  →  project/package root  →  config/
+_configBase = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Output paths
+antSysDiagOutputPath = os.path.join(_outputBase, OutputFolderNames.AntennaSystemDiagrams.value)
+antPatOutputPath = os.path.join(_outputBase, OutputFolderNames.AntennaPatterns.value)
+huellKurvenOutputPath = os.path.join(_outputBase, OutputFolderNames.HuellKurven.value)
+txAntDiagOutputPath = os.path.join(_outputBase, OutputFolderNames.TxAntDiagrams.value)
+setCurvesOutputPath = os.path.join(_outputBase, OutputFolderNames.SetCurves.value)
+# mainLoadDataOutputPath = os.path.join(_outputBase, OutputFolderNames.LoadData.value)
+certificatesOutputPath = os.path.join(_outputBase, OutputFolderNames.Certificates.value)
+statisticOutputPath = os.path.join(_outputBase, OutputFolderNames.Statistic.value)
+mergeOutputPath = os.path.join(_outputBase, OutputFolderNames.merge.value)
 
 #setcurves
 setcurvesinputconffilename = 'SetCurvesInputConf.json'
-setcurvesinputconffilepath = os.path.join(basicDir, setcurvesinputconffilename)
+setcurvesinputconffilepath = os.path.join(_outputBase, setcurvesinputconffilename)
 setcurvescustinputconffilename = 'SetCurvesCustomerInputConf.json'
-setcurvescustinputconffilepath = os.path.join(basicDir, setcurvescustinputconffilename)
+setcurvescustinputconffilepath = os.path.join(_outputBase, setcurvescustinputconffilename)
 
 # config folder (limits YAML + stats JSON live here alongside the diagram confs)
-configDir = os.path.join(basicDir, 'config')
+# Located inside shared/config/ so it is bundled with the pip package.
+configDir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config')
 
 #stats input config
 statsinputconffilename = 'StatisticsLimitsConfig.json'

@@ -1839,7 +1839,7 @@ if bUseGui:
     qt.SysDiaInterClrGrBtn.clicked.connect(ClearData)
 else:
     # configuration file if the GUI is not used
-    with open('AntennaSystemDiagramsConf.yaml', 'r', encoding='utf8') as yamlfile:
+    with open(os.path.join(aux.configDir, 'AntennaSystemDiagramsConf.yaml'), 'r', encoding='utf8') as yamlfile:
         config = yaml.safe_load(yamlfile)
         plotSetup              = config['plotSetup']
         chirpConfig            = config['chirpConfig'] 
