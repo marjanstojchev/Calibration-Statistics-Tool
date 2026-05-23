@@ -4,6 +4,7 @@ import shutil
 from shutil import copyfile
 import errno
 import logconfig
+import user_paths as _up
 import enum
 
 class OutputFolderNames(enum.Enum):
@@ -20,16 +21,18 @@ class OutputFolderNames(enum.Enum):
 # Get logger
 myLogger=logconfig.mainLoadDataLogger.logger
 
-# Output base: always use the current working directory so writing to
-# protected install locations (e.g. Program Files) is avoided.
-_outputBase = os.getcwd()
-# Public alias kept for backward compatibility with modules that reference aux.basicDir.
-basicDir = _outputBase
+# Output base comes from %APPDATA%\calibration-statistics-tool\paths.json.
+# On first run the file is created automatically with a default pointing to
+# ~/Documents/calibration-tool.  Edit it (or use the GUI settings) to change.
+_outputBase = _up.output_base
+basicDir = _outputBase  # backward-compat alias
 
 # Config base: resolve from this file's location so the bundled config/
 # directory is found both in the source tree and after pip install.
-# shared/auxiliary.py  →  shared/  →  project/package root  →  config/
 _configBase = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Expose the user paths config file so the GUI can show/edit it.
+userPathsFile = _up.PATHS_FILE
 
 # Output paths
 antSysDiagOutputPath = os.path.join(_outputBase, OutputFolderNames.AntennaSystemDiagrams.value)

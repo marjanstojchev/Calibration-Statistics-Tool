@@ -4,6 +4,7 @@ import os
 import enum
 import sys
 import errno
+import user_paths as _up
 
 
 def createDirectory(outputPath: str) -> tuple[bool, str]:
@@ -111,9 +112,8 @@ class Logger():
         self.tableHandler = handler
 
 
-# basicDir = os.path.dirname(os.path.abspath(__file__))
-basicDir = os.getcwd()
-basicDir = os.path.join(basicDir, '0_logFiles')
+# Log files go to AppData/calibration-statistics-tool/logs/ regardless of CWD.
+basicDir = _up.log_dir
 createDirectory(basicDir)
 
 
