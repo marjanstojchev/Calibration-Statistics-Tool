@@ -16,8 +16,14 @@ import os
 import sys
 
 _root = os.path.dirname(os.path.abspath(__file__))
+# Installed layout:  site-packages/calibration_statistics_tool/{shared,ui,...}
+# Source layout:     repo/{shared,ui,...}  (CWD on sys.path handles package imports)
+_cst = os.path.join(_root, 'calibration_statistics_tool')
+_base = _cst if os.path.isdir(os.path.join(_cst, 'shared')) else _root
+if _base != _root and _base not in sys.path:
+    sys.path.insert(0, _base)   # lets 'from shared.X import Y' resolve
 for _subdir in ['shared', 'ui', 'system_diagrams', 'tx_diagrams', 'antenna_patterns']:
-    _path = os.path.join(_root, _subdir)
+    _path = os.path.join(_base, _subdir)
     if _path not in sys.path:
         sys.path.insert(0, _path)
 

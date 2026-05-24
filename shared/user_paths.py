@@ -11,6 +11,7 @@ The GUI (future: Settings dialog) can also update it at runtime.
 from __future__ import annotations
 import json
 import os
+import shutil
 
 _APP_NAME = 'calibration-statistics-tool'
 
@@ -62,6 +63,41 @@ def _load() -> dict:
 
 
 _config = _load()
+
+# ── Derived AppData paths ────────────────────────────────────────────────────
+config_dir: str = os.path.join(APP_DIR, 'config')
+"""Editable config files (YAML limits, JSON stats config) — seeded on first run."""
+
+templates_dir: str = os.path.join(APP_DIR, 'templates')
+"""PPTX report templates — seeded on first run."""
+
+
+def _copy_defaults_if_missing() -> None:
+    """Copy bundled config/assets to AppData the first time the tool runs.
+
+    Files that already exist in AppData are never overwritten, so user
+    edits survive upgrades.
+    """
+    _here = os.path.dirname(os.path.abspath(__file__))
+    _bundled_config = os.path.join(_here, 'config')
+    _bundled_assets = os.path.join(_here, 'assets')
+
+    os.makedirs(config_dir, exist_ok=True)
+    if os.path.isdir(_bundled_config):
+        for fname in os.listdir(_bundled_config):
+            dst = os.path.join(config_dir, fname)
+            if not os.path.exists(dst):
+                shutil.copy2(os.path.join(_bundled_config, fname), dst)
+
+    os.makedirs(templates_dir, exist_ok=True)
+    if os.path.isdir(_bundled_assets):
+        for fname in os.listdir(_bundled_assets):
+            dst = os.path.join(templates_dir, fname)
+            if not os.path.exists(dst):
+                shutil.copy2(os.path.join(_bundled_assets, fname), dst)
+
+
+_copy_defaults_if_missing()
 
 # ── Public values ────────────────────────────────────────────────────────────
 output_base: str = _config['output_base']

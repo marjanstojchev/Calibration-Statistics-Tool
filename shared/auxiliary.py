@@ -56,12 +56,12 @@ setcurvesinputconffilepath = os.path.join(_outputBase, setcurvesinputconffilenam
 setcurvescustinputconffilename = 'SetCurvesCustomerInputConf.json'
 setcurvescustinputconffilepath = os.path.join(_outputBase, setcurvescustinputconffilename)
 
-# config folder (limits YAML + stats JSON live here alongside the diagram confs)
-# Located inside shared/config/ so it is bundled with the pip package.
-configDir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config')
+# Config files (limits YAML + stats JSON) and asset templates (PPTX) are
+# seeded to AppData on first run by user_paths._copy_defaults_if_missing().
+# Reading from AppData means users can edit them and upgrades won't overwrite.
+configDir = _up.config_dir
 
-# assets folder (PPTX templates) — located inside shared/assets/ so it is bundled.
-assetsDir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets')
+assetsDir = _up.templates_dir
 
 #stats input config
 statsinputconffilename = 'StatisticsLimitsConfig.json'
