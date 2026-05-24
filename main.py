@@ -25,6 +25,32 @@ import logconfig
 from shared.parse_controller import ParseController
 from shared.plot_controller import PlotController
 import auxiliary as aux
+import user_paths as _up
+
+# ── Startup: config file location + onboarding notice ───────────────────────
+print(f"\n{'─' * 60}")
+print(f"  Calibration Statistics Tool")
+print(f"{'─' * 60}")
+print(f"  Config file : {_up.PATHS_FILE}")
+print(f"  Output dir  : {_up.output_base}")
+_unconfigured = {
+    'input_protocol_dir': _up.input_protocol_dir,
+    'input_ptu_dir':      _up.input_ptu_dir,
+    'input_tx_ant_dir':   _up.input_tx_ant_dir,
+}
+_missing = [k for k, v in _unconfigured.items() if not v]
+if _missing:
+    print(f"\n  NOTE: The following input directories are not set in paths.json.")
+    print(f"  File dialogs will open at your home folder until you configure them:")
+    for _k in _missing:
+        print(f"    - {_k}")
+    print(f"\n  Edit the config file above to set them.")
+else:
+    print(f"\n  All input directories are configured.")
+print(f"{'─' * 60}\n")
+del _unconfigured, _missing
+# ────────────────────────────────────────────────────────────────────────────
+
 import PySide6
 
 dirname = os.path.dirname(PySide6.__file__)

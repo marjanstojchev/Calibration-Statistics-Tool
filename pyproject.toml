@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "calibration-statistics-tool"
-version = "1.0.5"
+version = "1.0.6"
 description = "Statistics and antenna pattern analysis tool for radar systems"
 readme = "README.md"
 license = {text = "MIT"}
