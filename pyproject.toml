@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "calibration-statistics-tool"
-version = "1.0.7"
+version = "1.0.8"
 description = "Statistics and antenna pattern analysis tool for radar systems"
 readme = "README.md"
 license = {text = "MIT"}
@@ -56,13 +56,12 @@ docs = [
 ]
 
 [project.gui-scripts]
-calibration-tool = "main:run"
+calibration-tool = "calibration_statistics_tool.main:run"
 
 [project.scripts]
 test-writer-mcp = "calibration_statistics_tool.agents.zephyr.mcp_server:run_server"
 
 [tool.setuptools]
-py-modules = ["main"]
 packages = [
     "calibration_statistics_tool",
     "calibration_statistics_tool.shared",
