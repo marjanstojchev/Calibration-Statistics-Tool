@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import time
 
 _APP_NAME = 'calibration-statistics-tool'
 
@@ -47,8 +48,22 @@ def _load() -> dict:
             json.dump(_DEFAULTS, f, indent=2)
         return dict(_DEFAULTS)
 
-    with open(PATHS_FILE, 'r', encoding='utf-8') as f:
-        data: dict = json.load(f)
+    try:
+        with open(PATHS_FILE, 'r', encoding='utf-8') as f:
+            data: dict = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        # Keep a backup of the invalid file and recover with defaults
+        # so local config issues do not block app startup.
+        ts = time.strftime('%Y%m%d_%H%M%S', time.localtime())
+        broken = os.path.join(APP_DIR, f'paths.invalid.{ts}.json')
+        try:
+            if os.path.isfile(PATHS_FILE):
+                shutil.copy2(PATHS_FILE, broken)
+        except OSError:
+            pass
+        data = dict(_DEFAULTS)
+        with open(PATHS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=2)
 
     # Back-fill any keys added in newer versions
     changed = False
