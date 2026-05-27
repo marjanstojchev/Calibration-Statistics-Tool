@@ -1,0 +1,20 @@
+Fix TxAntDiag discovery for glued-stem protocols + clean subfiles fixtures
+
+- parse_helpers.walk_protocol_files: strip trailing _TxAntN_DiagramN_ from
+  search stem before calling getfiltered_txantdiagramfilelist so that
+  protocols whose filename embeds an antenna/diagram label (e.g.
+  ..._TxAnt1_Diagram1_Protocol.txt) can find all TxAntDiag subfiles
+  regardless of which antenna/diagram index each file covers.
+  PTU2 search is unaffected (uses raw stem + glob, which still matches).
+
+- subfiles fixtures: rename 3 Tuner1 _link_ files to plain clean names
+  (TxAnt0_Diagram0, TxAnt1_Diagram1, TxAnt2_Diagram2); remove 6 stale
+  Tuner3 files (plain + _link_) that are no longer needed.
+
+- integration test: extend test_subfiles_fixture_found_by_pipeline to
+  also assert that all 3 Tuner1 TxAntDiag files are discovered (regression
+  guard that was previously missing for glued-stem protocols).
+- Rename 3 Tuner3 plain files: strip doubled TxAnt1_Diagram1_Az_ prefix
+- Rename 3 Tuner3 link files: update _link_ ref from old glued Tuner1 to Tuner5
+- Rename 3 Tuner1 link files: update _link_ ref from _Az_ref glued name to Tuner5
+- Update integration test to use split stems (ptu2_stem vs txant_stem)

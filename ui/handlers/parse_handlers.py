@@ -55,6 +55,8 @@ def parseProtSensorMusterClick(ctx: "AppContext") -> None:
 
 def importProtocolsDirPath(ctx: "AppContext") -> None:
     protocolDirPath = ""
+    if aux.inputProtocolDir:
+        ctx.qt.parseProtImportProtDirPathFDialog.setDirectory(aux.inputProtocolDir)
     if ctx.qt.parseProtImportProtDirPathFDialog.exec_():
         protocolDirPath = ctx.qt.parseProtImportProtDirPathFDialog.selectedFiles()[0]
     protocolFilesList = protocolFilter.ProtocolInfoClass.GetAllProtocolsList(protocolDirPath)
@@ -65,6 +67,8 @@ def importProtocolsDirPath(ctx: "AppContext") -> None:
 
 def importProtocolsFileList(ctx: "AppContext") -> None:
     protocolFilesList = []
+    if aux.inputProtocolDir:
+        ctx.qt.parseProtImportProtFListFDialog.setDirectory(aux.inputProtocolDir)
     if ctx.qt.parseProtImportProtFListFDialog.exec_():
         protocolFilesList = ctx.qt.parseProtImportProtFListFDialog.selectedFiles()
     fillInProtocolData(ctx, protocolFilesList)
@@ -261,6 +265,8 @@ def fillInProtocolData(ctx: "AppContext", protocolFilesList: list) -> None:
 def addAndParsePtu2Files(ctx: "AppContext") -> None:
     ctx.qt.parseProtTableTabWidget.setCurrentIndex(2)
     ptu2FilesList = []
+    if aux.inputPtuDir:
+        ctx.qt.parseProtAddAndParsePtu2FDialog.setDirectory(aux.inputPtuDir)
     if ctx.qt.parseProtAddAndParsePtu2FDialog.exec_():
         ptu2FilesList = ctx.qt.parseProtAddAndParsePtu2FDialog.selectedFiles()
         ptu2FilesList.sort()
@@ -287,6 +293,8 @@ def addAndParsePtu2Files(ctx: "AppContext") -> None:
 def addAndParseTxAntDiagFiles(ctx: "AppContext") -> None:
     ctx.qt.parseProtTableTabWidget.setCurrentIndex(3)
     txAntDiagFilesList = []
+    if aux.inputTxAntDir:
+        ctx.qt.parseProtAddAndParseTxAntDiagFDialog.setDirectory(aux.inputTxAntDir)
     if ctx.qt.parseProtAddAndParseTxAntDiagFDialog.exec_():
         txAntDiagFilesList = ctx.qt.parseProtAddAndParseTxAntDiagFDialog.selectedFiles()
 

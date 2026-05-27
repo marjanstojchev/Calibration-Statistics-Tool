@@ -774,7 +774,7 @@ if(bUseGui):
 
 else:
     # configuration file if the GUI is not used
-    with open('TxAntDiagramsConf.yaml', 'r', encoding='utf8') as yamlfile:
+    with open(os.path.join(aux.configDir, 'TxAntDiagramsConf.yaml'), 'r', encoding='utf8') as yamlfile:
         config      = yaml.safe_load(yamlfile)
         plotSetup   = config['plotSetup']
         graphConfig = config['graphConfig']
@@ -799,7 +799,7 @@ else:
     if loadData.invalidPath != 1:
         # myLogger.info('Num. of valid files parsed: ' + str(loadData.validFilesCounter) + '.')
         parsedDataList = loadData.parseDataList
-        start_data_evaluation(parsedDataList, plotSetup, graphConfig, txAntDiagLogger, aux.txAntDiagOutputPath, 'TxAnt_Diagrams.pptx', './template.pptx')
+        start_data_evaluation(parsedDataList, plotSetup, graphConfig, txAntDiagLogger, aux.txAntDiagOutputPath, 'TxAnt_Diagrams.pptx', os.path.join(aux.assetsDir, 'template.pptx'))
     else:
         parseDataLogger.error(loadData.invalidPathString)
 

@@ -21,36 +21,118 @@ A comprehensive statistics and antenna pattern analysis tool for radar systems, 
 
 ## Installation
 
-1. Clone the repository:
+### From PyPI (recommended)
+
 ```bash
-git clone <repository-url>
-cd statistictoolpython
+pip install calibration-statistics-tool
+calibration-tool
 ```
 
-2. Create virtual environment:
+### From source
+
+1. Clone the repository:
+```bash
+git clone https://github.com/marjanstojchev/Calibration-Statistics-Tool.git
+cd Calibration-Statistics-Tool
+```
+
+2. Create a virtual environment:
 ```bash
 python -m venv .venv
 .venv\Scripts\activate  # Windows
-# or
 source .venv/bin/activate  # Linux/Mac
 ```
 
-3. Install dependencies:
+3. Install in editable mode:
 ```bash
 pip install -e .
 ```
 
+## Configuration
+
+On first launch the tool automatically creates a configuration file and an output directory. No manual setup is required to start — but configuring the input directories makes file dialogs open directly in the right folder.
+
+### Configuration file (`paths.json`)
+
+| Platform | Location |
+|----------|----------|
+| Windows  | `%APPDATA%\calibration-statistics-tool\paths.json` |
+| Linux    | `~/.config/calibration-statistics-tool/paths.json` |
+
+The file is created with defaults on first run. Edit it with any text editor:
+
+```json
+{
+  "output_base":         "C:\\Users\\you\\Documents\\calibration-tool",
+  "input_protocol_dir": "D:\\measurements\\protocol_files",
+  "input_ptu_dir":      "D:\\measurements\\ptu_files",
+  "input_tx_ant_dir":   "D:\\measurements\\tx_antenna_files"
+}
+```
+
+| Key | Description |
+|-----|-------------|
+| `output_base` | Root folder for all generated reports and diagrams. Created automatically if it does not exist. |
+| `input_protocol_dir` | Folder containing protocol measurement files (`.csv` / text format). File dialogs open here. Leave empty to start at the home folder. |
+| `input_ptu_dir` | Folder containing PTU-2 antenna measurement files (`.ptu` binary format). |
+| `input_tx_ant_dir` | Folder containing Tx-antenna diagram input files. |
+
+### Output directories
+
+All output is written under `output_base`. The tool creates these subdirectories automatically:
+
+| Subdirectory | Contents |
+|--------------|----------|
+| `output/` | Antenna system diagram PPTX reports |
+| `output_tx_diagrams/` | Tx-antenna diagram PPTX reports |
+| `output_antenna_patterns/` | Antenna pattern YAML + plot exports |
+| `output_huellkurven/` | Hüllkurven (hull curve) PPTX reports |
+| `output_certificates/` | Calibration certificate exports |
+| `output_setcurves/` | Set-curves output and input config JSON |
+| `output_statistic/` | Statistics PPTX reports |
+| `output_merge/` | Merged PPTX output (combine.pptx) |
+
+### Input directory conventions
+
+| Input folder | Expected file types | Used by tab |
+|---|---|---|
+| `protocol_files/` | Protocol text/CSV files exported from the measurement system | Parse Protocols |
+| `ptu_files/` | PTU-2 binary files (`*.ptu`) | Parse Protocols / System Diagrams |
+| `tx_antenna_files/` | Tx-antenna measurement files | Tx-Ant. Diagrams |
+
+### Bundled configuration files
+
+The following files are included in the installed package (`shared/config/`) and are loaded automatically. They define measurement limits and plot layouts:
+
+| File | Purpose |
+|------|---------|
+| `CalLimits.yaml` | Calibration measurement limits (gradient, curvilinearity, peak width, variation) |
+| `CalLimGroups.yaml` | Grouping metadata for CalLimits — controls how limits are organised in the UI |
+| `BurnInLimits.yaml` | Burn-in measurement limits (Doppler, speed, range, amplitude, cycle duration) |
+| `BurnInLimGroups.yaml` | Grouping metadata for BurnInLimits |
+| `StatisticsLimitsConfig.json` | Statistics plot setup — defines which measurements to plot and how slides are laid out |
+| `AntennaSystemDiagramsConf.yaml` | System diagram computation config (plot/graph/chirp/diagram layouts) |
+| `TxAntDiagramsConf.yaml` | Tx-antenna diagram computation config |
+
+> **Note:** These files live inside the installed package. To customise limits without modifying the package, copy the relevant YAML to `output_base` and adjust `auxiliary.py` to load from there (see [docs/mvc_architecture.md](docs/mvc_architecture.md)).
+
+### Log files
+
+Logs are written to `%APPDATA%\calibration-statistics-tool\logs\` (Windows) or `~/.config/calibration-statistics-tool/logs/` (Linux).
+
 ## Usage
 
-Run the main application:
+After installing from PyPI:
+```bash
+calibration-tool
+```
+
+When running from source:
 ```bash
 python main.py
 ```
 
-Or use the command-line entry point:
-```bash
-statistictool
-```
+On startup, the console prints the location of `paths.json` and lists any input directories that have not been configured yet.
 
 ## Project Structure
 

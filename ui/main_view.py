@@ -136,12 +136,20 @@ class MainView:
         _tx_scroll.setWidgetResizable(True)
         self.mainTabWidget.insertTab(2, _tx_scroll, 'Tx-Antenna Diagrams')
 
+        import tabs.hullkurven_tab as _hkt
+        self._absorb(vars(_hkt))
+        self.mainTabWidget.insertTab(3, self.hullkurvenTab, 'Hullkurven')
+
         import tabs.ant_pat_tab as _apt
         self._absorb(vars(_apt))
         _ant_scroll = QScrollArea()
         _ant_scroll.setWidget(self.antPatTab)
         _ant_scroll.setWidgetResizable(True)
         self.mainTabWidget.insertTab(4, _ant_scroll, 'Antenna Patterns')
+
+        import tabs.hullkurven_tab as _hkt
+        self._absorb(vars(_hkt))
+        self.mainTabWidget.insertTab(3, self.hullkurvenTab, 'Hullkurven')
 
         # ------------------------------------------------------------------ #
         # Statistics Tab
@@ -391,6 +399,17 @@ class MainView:
         for k, v in ns.items():
             if not k.startswith('_'):
                 setattr(self, k, v)
+
+    # ------------------------------------------------------------------ #
+    # Tab helpers
+    # ------------------------------------------------------------------ #
+
+    def tab_index_of(self, title: str) -> int:
+        """Return the actual tab index whose text equals *title*, or -1."""
+        for i in range(self.mainTabWidget.count()):
+            if self.mainTabWidget.tabText(i) == title:
+                return i
+        return -1
 
     # ------------------------------------------------------------------ #
     # Application lifecycle

@@ -19,17 +19,14 @@ def getGraphList(graphConfig):
 # Date time and sensor combination list
 def getDateTimeSensorCombList(parseDataList):
     outputDictList = []
-    sensor = ''
-    dateAndTime = ''
+    seen = set()
     for listIdx in range(len(parseDataList)):
-        outputDict = dict()
-
         if parseDataList[listIdx].fileTitle.sensorFound != 0 and parseDataList[listIdx].fileTitle.dateAndTimeFound != 0:
-            if parseDataList[listIdx].fileTitle.sensor != sensor or parseDataList[listIdx].fileTitle.dateAndTime != dateAndTime:
-                dateAndTime = parseDataList[listIdx].fileTitle.dateAndTime
-                sensor = parseDataList[listIdx].fileTitle.sensor
-                outputDict.update({"dateAndTime":dateAndTime,"sensor":sensor})
-                outputDictList.append(outputDict)
+            key = (parseDataList[listIdx].fileTitle.dateAndTime, parseDataList[listIdx].fileTitle.sensor)
+            if key in seen:
+                continue
+            seen.add(key)
+            outputDictList.append({"dateAndTime": key[0], "sensor": key[1]})
     return outputDictList
 
 def getTxAntList(parseDataList):

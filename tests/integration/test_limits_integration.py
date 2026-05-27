@@ -35,7 +35,7 @@ from shared.parse_controller import ParseController
 # Paths
 # ---------------------------------------------------------------------------
 
-_config_dir       = os.path.join(_root, 'config')
+_config_dir       = os.path.join(_root, 'shared', 'config')
 _burn_in_limits   = os.path.join(_config_dir, 'BurnInLimits.yaml')
 _cal_limits       = os.path.join(_config_dir, 'CalLimits.yaml')
 _burn_in_groups   = os.path.join(_config_dir, 'BurnInLimGroups.yaml')

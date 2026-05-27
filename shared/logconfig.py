@@ -4,6 +4,7 @@ import os
 import enum
 import sys
 import errno
+import user_paths as _up
 
 
 def createDirectory(outputPath: str) -> tuple[bool, str]:
@@ -98,7 +99,9 @@ class Logger():
         self.logger.removeHandler(self.consoleHandler)
 
     def addConsoleHandler(self) -> None:
-        # if consoleOutput==ConsoleOutput.On:
+        for h in self.logger.handlers:
+            if isinstance(h, log.StreamHandler) and not isinstance(h, log.FileHandler):
+                return
         consoleHandler = log.StreamHandler()
         consoleHandler.setFormatter(self.logFormatter)
         self.logger.addHandler(consoleHandler)
@@ -109,9 +112,8 @@ class Logger():
         self.tableHandler = handler
 
 
-# basicDir = os.path.dirname(os.path.abspath(__file__))
-basicDir = os.path.dirname(sys.argv[0])
-basicDir = os.path.join(basicDir, '0_logFiles')
+# Log files go to AppData/calibration-statistics-tool/logs/ regardless of CWD.
+basicDir = _up.log_dir
 createDirectory(basicDir)
 
 

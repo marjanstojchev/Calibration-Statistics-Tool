@@ -17,11 +17,11 @@ from unittest.mock import MagicMock, patch, call
 
 import shared.auxiliary as aux
 
-# Derive the project root from auxiliary.py's location (shared/ -> project root).
+# Derive the config dir from auxiliary.py's location (shared/ -> shared/config/).
 # Do NOT use aux.burnInLimitsFilePath etc. directly in tests: those paths depend
 # on sys.argv[0] (= the pytest executable) when run via pytest.
 _PROJECT_ROOT = pathlib.Path(aux.__file__).resolve().parent.parent
-_CONFIG_DIR = _PROJECT_ROOT / 'config'
+_CONFIG_DIR = pathlib.Path(aux.__file__).resolve().parent / 'config'
 from shared.parse_controller import ParseController
 from ui.handlers.app_context import AppContext
 from ui.handlers.parse_handlers import parseData, clearData

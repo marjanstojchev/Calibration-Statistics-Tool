@@ -232,7 +232,7 @@ parseProtGroupBoxFrameLayout.addWidget(parseProtAddAndParseTxAntDiagPushBtn, str
 
 parseProtAddAndParseTxAntDiagFDialog = QFileDialog()
 parseProtAddAndParseTxAntDiagFDialog.setFileMode(QFileDialog.ExistingFiles)
-parseProtAddAndParseTxAntDiagFDialog.setNameFilter("Tx-Ant. Diag. Files (*Diagram0.txt)")
+parseProtAddAndParseTxAntDiagFDialog.setNameFilter("Tx-Ant. Diag. Files (*TxAnt*_Diagram*.txt)")
 
 ####
 parseProtHLine = QFrame()

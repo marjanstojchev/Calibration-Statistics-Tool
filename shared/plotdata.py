@@ -1178,7 +1178,10 @@ def plotDiagramRxCh(plotSetup: dict, chirpConfig: dict, graph: str, diagramNum: 
 
 
     else:
-        plt.show()
+        if len(ax1.lines) > 0 or len(ax1.collections) > 0:
+            plt.show()
+        else:
+            plt.close(fig)
 
     # Return the meta data object
     return graphData
@@ -1186,8 +1189,8 @@ def plotDiagramRxCh(plotSetup: dict, chirpConfig: dict, graph: str, diagramNum: 
 # Generate legend figure for all sensors
 def generateLegend(plotSetup: dict, dateTimeSensorCombList: list) -> None:
 
-    # Create legend figure
-    legFig = plt.figure(figsize=(2, 6))
+    # Use a wider legend canvas to prevent tiny/shrunk rendering in PPT placeholders.
+    legFig = plt.figure(figsize=(5.5, 6))
 
     # plt.figure()
 
@@ -1236,7 +1239,7 @@ def generateLegend(plotSetup: dict, dateTimeSensorCombList: list) -> None:
             patchList.append(mpatches.Patch(color=whiteBlank, label=''))
 
     # Attach patch list to a legend
-    legFig.legend(handles=patchList, loc='center')
+    legFig.legend(handles=patchList, loc='center', fontsize=10)
 
 
     # Figure title and save path

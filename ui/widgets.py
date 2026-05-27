@@ -141,6 +141,7 @@ class LimitsGroupsSaveDialog(QDialog):
         self.addLineButton = QPushButton('Add Line')
         self.addLineButton.setFixedSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
         self.addLineFrameLayout.addWidget(self.addLineButton, alignment=Qt.AlignBottom)
+        self.addLineButton.clicked.connect(self.addLine)
 
         self.gridLayout.addWidget(self.addLineFrame, 1, 1, 1, 1, alignment=Qt.AlignBottom)
 
@@ -168,6 +169,7 @@ class LimitsGroupsSaveDialog(QDialog):
         self.buttonBox.button(QDialogButtonBox.Ok).setText('Save')
         self.buttonBox.button(QDialogButtonBox.Ok).setFixedSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
         self.buttonBox.button(QDialogButtonBox.Cancel).setFixedSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
+        self.buttonBox.rejected.connect(self.reject)
         self.gridLayout.addWidget(self.buttonBox, 2, 1, 1, 1)
 
     def initTable(self):
@@ -338,7 +340,7 @@ class PlotFrameSysDia(QFrame):
         self.layout.setColumnStretch(1, 1)
         self.layout.setRowStretch(1, 1)
 
-    def plot(self, angleData, plot_dat, Prot_param, graphType, idx, ax):
+    def plot(self, angleData, plot_dat, Prot_param, graphType, idx, ax, draw=True):
         ylimits0 = []
         ylimits1 = []
         ylimitssec0 = []
@@ -401,7 +403,8 @@ class PlotFrameSysDia(QFrame):
             ylimitssec1 = max(ylimitssec1) + 10 if max(ylimitssec1) >= 1 else max(ylimitssec1) + 5
             self.ax2.set_ylim(ymin=ylimitssec0, ymax=ylimitssec1)
 
-        self.canvas.draw()
+        if draw:
+            self.canvas.draw()
 
     def clear(self, ax=0):
         if ax == 0:
@@ -433,7 +436,7 @@ class QTableLogHandler(logging.Handler):
         self.logTableRow = 0
 
     def emit(self, record):
-        msgStr       = str(record.msg)
+        msgStr      = record.getMessage()
         levelnameStr = str(record.levelname)
         timeStr      = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         timeMsStr    = "%s,%03d" % (timeStr, record.msecs)

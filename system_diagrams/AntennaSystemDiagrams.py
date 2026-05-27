@@ -229,32 +229,46 @@ def fillInPTU(parseDataList, sysDiagLogger):
         # data Prcoessing
         parseData['parseDataList'] = parseDataList
         antennaTypesList = dp.getAntennaTypesList(parseDataList)
+        if len(antennaTypesList) == 0:
+            myLogger.error('No antenna types found in parsed PTU2 data for interactive table fill.')
+            return
         desiredDiagList  = dp.getDiagramList(antennaTypesList[0], parseDataList)
         qt.SysDiaInterTableProtocol.clearContents()
         qt.SysDiaInterTableParam.clearContents()
-        qt.mainTabWidget.setCurrentIndex(8)
+        qt.mainTabWidget.setCurrentIndex(qt.tab_index_of('System Diagrams Interactive'))
 
         for antTypeIdx in range(len(antennaTypesList)):
             ptu2ListPerAntennaType = dp.getPtu2ListPerAntennaType(antennaTypesList[antTypeIdx], parseDataList)
             rowIdx = 0
+            seen_protocol_rows = set()
             # Number of protocol table
             for row in range(len(ptu2ListPerAntennaType)):
-                if ptu2ListPerAntennaType[row].fileTitle.diagram == 0:
-                    qt.SysDiaInterTableProtocol.insertRow(rowIdx)
+                protocol_key = (
+                    str(ptu2ListPerAntennaType[row].fileTitle.dateAndTime),
+                    str(ptu2ListPerAntennaType[row].fileTitle.tuner),
+                    str(ptu2ListPerAntennaType[row].fileTitle.sensor),
+                )
+                if protocol_key in seen_protocol_rows:
+                    continue
+                seen_protocol_rows.add(protocol_key)
 
-                    # Graph
-                    tableItem = qt.QTableWidgetItem()
-                    tableItem.setData(qt.Qt.DisplayRole, 'False')
-                    tableItem.setData(qt.Qt.UserRole, -1)
-                    tableItem.setFlags(qt.Qt.ItemIsEnabled)
-                    qt.SysDiaInterTableProtocol.setItem(rowIdx, qt.SysDiaInterTableProtColMapping['graph'], qt.QTableWidgetItem(tableItem))
+                qt.SysDiaInterTableProtocol.insertRow(rowIdx)
 
-                    # protocol
-                    tableItem = qt.QTableWidgetItem()
-                    tableItem.setData(0, str(ptu2ListPerAntennaType[row].fileTitle.dateAndTime) +'_'+ \
-                        str(ptu2ListPerAntennaType[row].fileTitle.tuner) +'_'+ str(ptu2ListPerAntennaType[row].fileTitle.sensor))
-                    qt.SysDiaInterTableProtocol.setItem(rowIdx, qt.SysDiaInterTableProtColMapping['Protocol'], tableItem)
-                    rowIdx += 1
+                # Graph
+                tableItem = qt.QTableWidgetItem()
+                tableItem.setData(qt.Qt.DisplayRole, 'True')
+                tableItem.setData(qt.Qt.UserRole, -1)
+                tableItem.setFlags(qt.Qt.ItemIsEnabled)
+                tableItem.setBackground(qt.QBrush(qt.QColor('green')))
+                tableItem.setForeground(qt.QBrush(qt.QColor('white')))
+                qt.SysDiaInterTableProtocol.setItem(rowIdx, qt.SysDiaInterTableProtColMapping['graph'], qt.QTableWidgetItem(tableItem))
+
+                # protocol
+                tableItem = qt.QTableWidgetItem()
+                tableItem.setData(0, protocol_key[0] + '_' + protocol_key[1] + '_' + protocol_key[2])
+                tableItem.setData(qt.Qt.UserRole, protocol_key[2])  # sensor for line-matching
+                qt.SysDiaInterTableProtocol.setItem(rowIdx, qt.SysDiaInterTableProtColMapping['Protocol'], tableItem)
+                rowIdx += 1
 
             qt.SysDiaInterTableProtocolHeader.setSectionResizeMode(qt.QHeaderView.Interactive)
             qt.SysDiaInterTableProtocolHeader.setStretchLastSection(True)
@@ -362,9 +376,9 @@ def SysDiaInterTableParamCellClicked(row, col):
                     del RePlot['graphtypesec'][idx]
 
             # parameter table
-            item.setBackgroundColor('white')
-            item.setTextColor('black')
-            axisItem.setTextColor('black')
+            item.setBackground(qt.QBrush(qt.QColor('white')))
+            item.setForeground(qt.QBrush(qt.QColor('black')))
+            axisItem.setForeground(qt.QBrush(qt.QColor('black')))
 
 
             strVal = 'Off'
@@ -373,13 +387,13 @@ def SysDiaInterTableParamCellClicked(row, col):
                 for lineIndex in reversed(range(len(qt.SysDiaInterPlotFrame.ax1.lines))):
                     if AntChan in qt.SysDiaInterPlotFrame.ax1.lines[lineIndex].get_label() \
                         and Diag in qt.SysDiaInterPlotFrame.ax1.lines[lineIndex].get_label():
-                        del qt.SysDiaInterPlotFrame.ax1.lines[lineIndex]
+                        qt.SysDiaInterPlotFrame.ax1.lines[lineIndex].remove()
 
             else:
                 for lineIndex in reversed(range(len(qt.SysDiaInterPlotFrame.ax2.lines))):
                     if AntChan in qt.SysDiaInterPlotFrame.ax2.lines[lineIndex].get_label() \
                         and Diag in qt.SysDiaInterPlotFrame.ax2.lines[lineIndex].get_label():
-                        del qt.SysDiaInterPlotFrame.ax2.lines[lineIndex]
+                        qt.SysDiaInterPlotFrame.ax2.lines[lineIndex].remove()
 
             # rescaling
             for lineIndex in range(len(qt.SysDiaInterPlotFrame.ax1.lines)):
@@ -419,8 +433,8 @@ def SysDiaInterTableParamCellClicked(row, col):
         else:
             graphIndex = getGraphIndex()
 
-            item.setBackgroundColor('green')
-            item.setTextColor('black')
+            item.setBackground(qt.QBrush(qt.QColor('green')))
+            item.setForeground(qt.QBrush(qt.QColor('black')))
 
 
             item.setText('On')
@@ -428,9 +442,9 @@ def SysDiaInterTableParamCellClicked(row, col):
 
 
             if ax == 1:
-                axisItem.setTextColor('blue')
+                axisItem.setForeground(qt.QBrush(qt.QColor('blue')))
             else:
-                axisItem.setTextColor('red')
+                axisItem.setForeground(qt.QBrush(qt.QColor('red')))
 
             for pdIdx in range(len(parseDataList)):
                 angBiggerThan45 = 0
@@ -441,7 +455,7 @@ def SysDiaInterTableParamCellClicked(row, col):
                         
                         # lable for interactive modus
                         label = parseDataList[pdIdx].fileTitle.fileNamePath \
-                            +'_'+ AntChan #+'_Diagram' +str(parseDataList[pdIdx].fileTitle.diagram)
+                            +'_'+ AntChan + '_Diagram' + str(diagIdx)
                         # Get the ptu angle for the specific PTU2 file
                         angle = plt.getAngle(parseDataList, pdIdx)
 
@@ -488,7 +502,7 @@ def SysDiaInterTableParamCellClicked(row, col):
                             RePlot['ysec'].append(actualGraphData)
                             RePlot['labelsec'].append(label)
                             RePlot['graphtypesec'].append(graphType)
-                        # qt.SysDiaInterPlotFrame.plot(angle, actualGraphData, label, graphType, dtsIdx, ax)
+                        qt.SysDiaInterPlotFrame.plot(angle, actualGraphData, label, graphType, dtsIdx, ax)
 
     elif col == 1:
         graphNameItem  = qt.SysDiaInterTableParam.item(row,  qt.SysDiaInterTableParamColMapping['MeasurementName'])
@@ -510,7 +524,7 @@ def SysDiaInterTableParamCellClicked(row, col):
         if ax == 1:
             axisItem.setData(qt.Qt.UserRole, 2)
             axisItem.setData(qt.Qt.DisplayRole, 'ax2')
-            axisItem.setTextColor('red')
+            axisItem.setForeground(qt.QBrush(qt.QColor('red')))
 
             for lineIndex in reversed(range(len(qt.SysDiaInterPlotFrame.ax1.lines))):
                 if AntChan in qt.SysDiaInterPlotFrame.ax1.lines[lineIndex].get_label() \
@@ -518,14 +532,14 @@ def SysDiaInterTableParamCellClicked(row, col):
                     xData = qt.SysDiaInterPlotFrame.ax1.lines[lineIndex].get_xdata()
                     yData = qt.SysDiaInterPlotFrame.ax1.lines[lineIndex].get_ydata()
                     label = qt.SysDiaInterPlotFrame.ax1.lines[lineIndex].get_label()
-                    del qt.SysDiaInterPlotFrame.ax1.lines[lineIndex]
+                    qt.SysDiaInterPlotFrame.ax1.lines[lineIndex].remove()
                     qt.SysDiaInterPlotFrame.plot(xData, yData, label, graphType, lineIndex, 2)
         
         elif ax == 2:
 
             axisItem.setData(qt.Qt.UserRole, 1)
             axisItem.setData(qt.Qt.DisplayRole, 'ax1')
-            axisItem.setTextColor('blue')
+            axisItem.setForeground(qt.QBrush(qt.QColor('blue')))
 
 
             for lineIndex in reversed(range(len(qt.SysDiaInterPlotFrame.ax2.lines))):
@@ -534,7 +548,7 @@ def SysDiaInterTableParamCellClicked(row, col):
                     xData = qt.SysDiaInterPlotFrame.ax2.lines[lineIndex].get_xdata()
                     yData = qt.SysDiaInterPlotFrame.ax2.lines[lineIndex].get_ydata()
                     label = qt.SysDiaInterPlotFrame.ax2.lines[lineIndex].get_label()
-                    del qt.SysDiaInterPlotFrame.ax2.lines[lineIndex]
+                    qt.SysDiaInterPlotFrame.ax2.lines[lineIndex].remove()
                     qt.SysDiaInterPlotFrame.plot(xData, yData, label, graphType, lineIndex, 1)
 
 def SysDiaInterTableProtCellClicked(row, col):
@@ -546,53 +560,305 @@ def SysDiaInterTableProtCellClicked(row, col):
         # extract name of protocol
         item = qt.SysDiaInterTableProtocol.item(row, col)
         graphNameItem = qt.SysDiaInterTableProtocol.item(row, 1)
-        graphNameTable = graphNameItem.data(qt.Qt.DisplayRole)
-        graphNameTable.replace('PTU2.txt', '')
+        graphNameTable = graphNameItem.data(qt.Qt.UserRole)  # sensor substring (e.g. 'rf12345_dsp67890')
         if graphNameCheck == 'False':
             # protocols table
             item.setBackground(qt.QBrush(qt.QColor('green')))
             item.setForeground(qt.QBrush(qt.QColor('white')))
-            # item.setText('False')
             item.setText('True')
             # ax1
             for idx in range(0, len(RePlot['x'])):
                 if graphNameTable in RePlot['label'][idx]:
-                    qt.SysDiaInterPlotFrame.plot(RePlot['x'][idx], RePlot['y'][idx], RePlot['label'][idx], RePlot['graphtype'][idx], idx, 1)
+                    qt.SysDiaInterPlotFrame.plot(RePlot['x'][idx], RePlot['y'][idx], RePlot['label'][idx], RePlot['graphtype'][idx], idx, 1, draw=False)
             # ax2
             for idx in range(0, len(RePlot['xsec'])):
                 if graphNameTable in RePlot['labelsec'][idx]:
-                    qt.SysDiaInterPlotFrame.plot(RePlot['xsec'][idx], RePlot['ysec'][idx], RePlot['labelsec'][idx], RePlot['graphtypesec'][idx], idx, 2)
-            
-            # draw
+                    qt.SysDiaInterPlotFrame.plot(RePlot['xsec'][idx], RePlot['ysec'][idx], RePlot['labelsec'][idx], RePlot['graphtypesec'][idx], idx, 2, draw=False)
+            # single draw after all lines added
             qt.SysDiaInterPlotFrame.canvas.draw()
         else:
             # remove ax1
             for lineIndex in reversed(range(len(qt.SysDiaInterPlotFrame.ax1.lines))):
                 # removing lines
                 if graphNameTable in qt.SysDiaInterPlotFrame.ax1.lines[lineIndex].get_label():
-                    del qt.SysDiaInterPlotFrame.ax1.lines[lineIndex]
+                    qt.SysDiaInterPlotFrame.ax1.lines[lineIndex].remove()
             # remove ax2
             for lineIndex in reversed(range(len(qt.SysDiaInterPlotFrame.ax2.lines))):
                 # removing lines
                 if graphNameTable in qt.SysDiaInterPlotFrame.ax2.lines[lineIndex].get_label():
-                    del qt.SysDiaInterPlotFrame.ax2.lines[lineIndex]
+                    qt.SysDiaInterPlotFrame.ax2.lines[lineIndex].remove()
             item.setBackground(qt.QBrush(qt.QColor('white')))
             item.setForeground(qt.QBrush(qt.QColor('black')))
             item.setText('False')
             qt.SysDiaInterPlotFrame.canvas.draw()
 
+# ---------------------------------------------------------------------------
+# Batch toggle-off helper (no dp.* calls needed, single canvas.draw)
+# ---------------------------------------------------------------------------
+def _batch_turn_off(on_rows):
+    """Remove all currently-On rows from the plot in a single pass."""
+    for row in on_rows:
+        item          = qt.SysDiaInterTableParam.item(row, 0)
+        axisItem      = qt.SysDiaInterTableParam.item(row, qt.SysDiaInterTableParamColMapping['axis'])
+        graphNameItem = qt.SysDiaInterTableParam.item(row, 2)
+        graphNameTable = graphNameItem.data(qt.Qt.DisplayRole)
+        rxNums    = re.findall(r'\d+', graphNameTable)
+        diagIdx   = int(rxNums[1])
+        rxCh      = int(rxNums[0])
+        graphName = graphNameTable.replace('Ant', '').replace('_Diagram', '')
+        graphType = re.sub(r'[0-9]+', '', graphName)
+        AntChan   = graphType + 'Ant' + str(rxCh)
+        Diag      = 'Diagram' + str(diagIdx)
+        ax        = axisItem.data(qt.Qt.UserRole) if axisItem else 1
+
+        # Clear matching entries from the RePlot buffer
+        for idx in reversed(range(len(RePlot['x']))):
+            if AntChan in RePlot['label'][idx] and Diag in RePlot['label'][idx]:
+                del RePlot['x'][idx]
+                del RePlot['y'][idx]
+                del RePlot['label'][idx]
+                del RePlot['graphtype'][idx]
+        for idx in reversed(range(len(RePlot['xsec']))):
+            if AntChan in RePlot['labelsec'][idx] and Diag in RePlot['labelsec'][idx]:
+                del RePlot['xsec'][idx]
+                del RePlot['ysec'][idx]
+                del RePlot['labelsec'][idx]
+                del RePlot['graphtypesec'][idx]
+
+        # Remove matching lines from the axes
+        if ax == 1:
+            for li in reversed(range(len(qt.SysDiaInterPlotFrame.ax1.lines))):
+                if AntChan in qt.SysDiaInterPlotFrame.ax1.lines[li].get_label() \
+                        and Diag in qt.SysDiaInterPlotFrame.ax1.lines[li].get_label():
+                    qt.SysDiaInterPlotFrame.ax1.lines[li].remove()
+        else:
+            for li in reversed(range(len(qt.SysDiaInterPlotFrame.ax2.lines))):
+                if AntChan in qt.SysDiaInterPlotFrame.ax2.lines[li].get_label() \
+                        and Diag in qt.SysDiaInterPlotFrame.ax2.lines[li].get_label():
+                    qt.SysDiaInterPlotFrame.ax2.lines[li].remove()
+
+        # Update table item
+        item.setBackground(qt.QBrush(qt.QColor('white')))
+        item.setForeground(qt.QBrush(qt.QColor('black')))
+        item.setText('Off')
+        item.setData(qt.Qt.DisplayRole, 'Off')
+        item.setData(qt.Qt.UserRole, -1)
+        if axisItem:
+            axisItem.setForeground(qt.QBrush(qt.QColor('black')))
+
+    # Rescale axes once after all removals
+    ylimits0    = [min(qt.SysDiaInterPlotFrame.ax1.lines[i]._yorig)
+                   for i in range(len(qt.SysDiaInterPlotFrame.ax1.lines))]
+    ylimits1    = [max(qt.SysDiaInterPlotFrame.ax1.lines[i]._yorig)
+                   for i in range(len(qt.SysDiaInterPlotFrame.ax1.lines))]
+    ylimitssec0 = [min(qt.SysDiaInterPlotFrame.ax2.lines[i]._yorig)
+                   for i in range(len(qt.SysDiaInterPlotFrame.ax2.lines))]
+    ylimitssec1 = [max(qt.SysDiaInterPlotFrame.ax2.lines[i]._yorig)
+                   for i in range(len(qt.SysDiaInterPlotFrame.ax2.lines))]
+
+    if ylimits0:
+        qt.SysDiaInterPlotFrame.ax1.set_ylim(
+            ymin=min(ylimits0) - (10 if min(ylimits0) >= 1 else 5),
+            ymax=max(ylimits1) + (10 if max(ylimits1) >= 1 else 5))
+    if ylimitssec0:
+        qt.SysDiaInterPlotFrame.ax2.set_ylim(
+            ymin=min(ylimitssec0) - (10 if min(ylimitssec0) >= 1 else 5),
+            ymax=max(ylimitssec1) + (10 if max(ylimitssec1) >= 1 else 5))
+
+    qt.SysDiaInterPlotFrame.canvas.draw()
+
+
+# ---------------------------------------------------------------------------
+# Background worker for TurnOnOff
+# ---------------------------------------------------------------------------
+class _TurnOnWorker(qt.QThread):
+    """Computes plot data for all 'Off' rows; runs off the main thread."""
+    batch_ready = qt.Signal(list)
+
+    def __init__(self, row_params):
+        super().__init__()
+        self._row_params = row_params
+
+    def run(self):
+        parseDataList = list(parseData['parseDataList'])  # snapshot
+        if not parseDataList:
+            self.batch_ready.emit([])
+            return
+
+        antennaTypesList   = dp.getAntennaTypesList(parseDataList)
+        ptu2List           = dp.getPtu2ListPerAntennaType(antennaTypesList[0], parseDataList)
+        dateTimeSensorList = dp.getDateTimeSensorCombList(antennaTypesList[0], ptu2List)
+        desiredDiagList    = dp.getDiagramList(antennaTypesList[0], parseDataList)
+
+        batch = []
+        for rp in self._row_params:
+            row        = rp['row']
+            graphIndex = rp['graphIndex']
+            diagIdx    = rp['diagIdx']
+            rxCh       = rp['rxCh']
+            graphType  = rp['graphType']
+            AntChan    = rp['AntChan']
+            ax         = rp['ax']
+
+            for pdIdx in range(len(parseDataList)):
+                angBiggerThan45 = 0
+                for dtsIdx in range(len(dateTimeSensorList)):
+                    if (desiredDiagList[diagIdx] == parseDataList[pdIdx].fileTitle.diagram
+                            and dateTimeSensorList[dtsIdx]['sensor'] == parseDataList[pdIdx].fileTitle.sensor
+                            and dateTimeSensorList[dtsIdx]['dateAndTime'] == parseDataList[pdIdx].fileTitle.dateAndTime):
+
+                        label    = (parseDataList[pdIdx].fileTitle.fileNamePath
+                                    + '_' + AntChan + '_Diagram' + str(diagIdx))
+                        angle    = plt.getAngle(parseDataList, pdIdx)
+                        tarAngle = plt.getTargetAngle(plotSetup, parseDataList, pdIdx)
+
+                        if abs(angle[0]) > 45:
+                            angBiggerThan45 = 1
+
+                        validChirpList = dp.getValidChirp(chirpConfig, parseDataList, pdIdx)
+
+                        if plt.isAvgDiagram(graphType):
+                            actualGraphData = plt.getActualGraphData(graphType, rxCh, 0, parseDataList, pdIdx)
+                        else:
+                            actualGraphData = None
+                            for chirp in range(len(validChirpList)):
+                                actualGraphData = plt.getActualGraphData(graphType, rxCh, chirp, parseDataList, pdIdx)
+
+                        if plotSetup['targetAngle'] == 1:
+                            angle = tarAngle
+
+                        batch.append((row, graphIndex, ax, angle, actualGraphData,
+                                      label, graphType, dtsIdx, angBiggerThan45))
+
+        self.batch_ready.emit(batch)
+
+
+_turn_on_thread = None  # module-level reference prevents GC while thread runs
+
+
+def _apply_batch_turn_on(batch):
+    """Main-thread slot: applies computed lines to the plot and updates the table."""
+    global _turn_on_thread
+
+    seen_rows = {}   # row → (graphIndex, ax)
+    ang_big   = False
+
+    for (row, graphIndex, ax, angle, actualGraphData,
+         label, graphType, dtsIdx, angBiggerThan45) in batch:
+
+        if actualGraphData is None:
+            continue
+
+        if angBiggerThan45:
+            ang_big = True
+
+        # Buffer for protocol-table redraw
+        if ax == 1:
+            RePlot['x'].append(angle)
+            RePlot['y'].append(actualGraphData)
+            RePlot['label'].append(label)
+            RePlot['graphtype'].append(graphType)
+        else:
+            RePlot['xsec'].append(angle)
+            RePlot['ysec'].append(actualGraphData)
+            RePlot['labelsec'].append(label)
+            RePlot['graphtypesec'].append(graphType)
+
+        qt.SysDiaInterPlotFrame.ax1.autoscale(enable='True')
+        qt.SysDiaInterPlotFrame.ax1.set_xlabel(
+            'Target Angle [°]' if plotSetup['targetAngle'] == 1 else 'PTU Angle [°]')
+
+        # draw=False defers canvas refresh until the entire batch is plotted
+        qt.SysDiaInterPlotFrame.plot(angle, actualGraphData, label, graphType, dtsIdx, ax, draw=False)
+
+        if row not in seen_rows:
+            seen_rows[row] = (graphIndex, ax)
+
+    # Apply x-ticks and do a single canvas refresh after all lines are added
+    plot.xticks(np.arange(90, -91, -10) if ang_big else np.arange(90, -91, -5))
+    qt.SysDiaInterPlotFrame.canvas.draw()
+
+    # Update table items — Qt widget access must happen on the main thread
+    for row, (graphIndex, ax) in seen_rows.items():
+        item     = qt.SysDiaInterTableParam.item(row, 0)
+        axisItem = qt.SysDiaInterTableParam.item(row, qt.SysDiaInterTableParamColMapping['axis'])
+        if item:
+            item.setBackground(qt.QBrush(qt.QColor('green')))
+            item.setForeground(qt.QBrush(qt.QColor('black')))
+            item.setText('On')
+            item.setData(qt.Qt.UserRole, graphIndex)
+        if axisItem:
+            axisItem.setForeground(qt.QBrush(
+                qt.QColor('blue') if ax == 1 else qt.QColor('red')))
+
+    qt.SysDiaInterSwitchBtn.setEnabled(True)
+    _turn_on_thread = None
+
+
 # Turn on and off the plots
 def TurnOnOff():
-    for row in range(qt.SysDiaInterTableProtocol.rowCount()):
-        SysDiaInterTableProtCellClicked(row, 0)
+    global _turn_on_thread
+
+    n_rows = qt.SysDiaInterTableParam.rowCount()
+    if n_rows == 0:
+        return
+
+    on_rows  = []  # rows currently 'On' — toggle off in one batch
+    off_rows = []  # rows currently 'Off' — toggle on via thread
+
+    for row in range(n_rows):
+        item = qt.SysDiaInterTableParam.item(row, 0)
+        if item is None:
+            continue
+        if item.data(qt.Qt.UserRole) != -1:
+            on_rows.append(row)
+        else:
+            # Collect all row params here; Qt widget reads must stay on the main thread
+            graphNameItem  = qt.SysDiaInterTableParam.item(row, 2)
+            graphNameTable = graphNameItem.data(qt.Qt.DisplayRole)
+            rxNums    = re.findall(r'\d+', graphNameTable)
+            diagIdx   = int(rxNums[1])
+            rxCh      = int(rxNums[0])
+            graphName = graphNameTable.replace('Ant', '').replace('_Diagram', '')
+            graphType = re.sub(r'[0-9]+', '', graphName)
+            AntChan   = graphType + 'Ant' + str(rxCh)
+            axisItem  = qt.SysDiaInterTableParam.item(
+                row, qt.SysDiaInterTableParamColMapping['axis'])
+            ax = axisItem.data(qt.Qt.UserRole) if axisItem else 1
+            off_rows.append({
+                'row':        row,
+                'graphIndex': getGraphIndex(),
+                'diagIdx':    diagIdx,
+                'rxCh':       rxCh,
+                'graphType':  graphType,
+                'AntChan':    AntChan,
+                'ax':         ax,
+            })
+
+    # Batch all 'On'→'Off' removals with a single canvas.draw()
+    if on_rows:
+        _batch_turn_off(on_rows)
+
+    # Toggle-On: run in background thread to avoid UI freeze
+    if not off_rows:
+        return
+
+    # Disable the button to prevent re-entry while the thread runs
+    qt.SysDiaInterSwitchBtn.setEnabled(False)
+    _turn_on_thread = _TurnOnWorker(off_rows)
+    _turn_on_thread.batch_ready.connect(_apply_batch_turn_on)
+    _turn_on_thread.start()
+
 
 def ClearData():
-    RePlot['x']        = []
-    RePlot['y']        = []
-    RePlot['label']    = []
-    RePlot['xsec']     = []
-    RePlot['ysec']     = []
-    RePlot['labelsec'] = []
+    RePlot['x']            = []
+    RePlot['y']            = []
+    RePlot['label']        = []
+    RePlot['graphtype']    = []
+    RePlot['xsec']         = []
+    RePlot['ysec']         = []
+    RePlot['labelsec']     = []
+    RePlot['graphtypesec'] = []
     qt.SysDiaInterTableParam.clearContents()
     qt.SysDiaInterTableParam.setRowCount(0)
     qt.SysDiaInterTableProtocol.clearContents()
@@ -1097,7 +1363,7 @@ def start_data_evaluation(parseDataList, plotSetup, chirpConfig, graphConfig, di
                                     if  plotWindowConfig['showPlotAllMode']!=1:
 
                                         if plotWindowConfig['inputMode'] == 1:
-                                            if (plotWindowConfig['graph'] == graphList[graphIdx] and plotWindowConfig['antType'] == antennaTypesList[antTypeIdx] and plotWindowConfig['diagramNum'] == desiredDiagramList[diagramIdx] and plotWindowConfig['rxCh'] == rxCh):
+                                            if (plotWindowConfig['graph'] == graphList[graphIdx] and (plotWindowConfig['antType'] == 0 or plotWindowConfig['antType'] == antennaTypesList[antTypeIdx]) and (plotWindowConfig['diagramNum'] == 0 or plotWindowConfig['diagramNum'] == desiredDiagramList[diagramIdx]) and (plotWindowConfig['rxCh'] == 0 or plotWindowConfig['rxCh'] == rxCh)):
                                                 plt.plotDiagramRxCh(plotSetup, chirpConfig, graphList[graphIdx],
                                                                                 desiredDiagramList[diagramIdx], rxCh,
                                                                                 dateTimeSensorCombList,
@@ -1369,7 +1635,7 @@ def start_data_evaluation(parseDataList, plotSetup, chirpConfig, graphConfig, di
                                 if plotWindowConfig['showPlotAllMode'] != 1:
 
                                     if plotWindowConfig['inputMode'] == 1:
-                                        if (plotWindowConfig['graph'] == graphList[graphIdx] and plotWindowConfig['antType'] == antennaTypesList[antTypeIdx]  and plotWindowConfig['diagramNum'] == desiredDiagramList[diagramIdx]):
+                                        if (plotWindowConfig['graph'] == graphList[graphIdx] and (plotWindowConfig['antType'] == 0 or plotWindowConfig['antType'] == antennaTypesList[antTypeIdx]) and (plotWindowConfig['diagramNum'] == 0 or plotWindowConfig['diagramNum'] == desiredDiagramList[diagramIdx])):
                                             plt.plotDiagram(plotSetup, chirpConfig, graphList[graphIdx],
                                                                         desiredDiagramList[diagramIdx],
                                                                         dateTimeSensorCombList,
@@ -1573,7 +1839,7 @@ if bUseGui:
     qt.SysDiaInterClrGrBtn.clicked.connect(ClearData)
 else:
     # configuration file if the GUI is not used
-    with open('AntennaSystemDiagramsConf.yaml', 'r', encoding='utf8') as yamlfile:
+    with open(os.path.join(aux.configDir, 'AntennaSystemDiagramsConf.yaml'), 'r', encoding='utf8') as yamlfile:
         config = yaml.safe_load(yamlfile)
         plotSetup              = config['plotSetup']
         chirpConfig            = config['chirpConfig'] 
@@ -1600,6 +1866,6 @@ else:
     if loadData.invalidPath != 1:
         parseDataLogger.info('Num. of valid files parsed: ' + str(loadData.validFilesCounter) + '.')
         parseDataList=loadData.parseDataList
-        start_data_evaluation(parseDataList, plotSetup, chirpConfig, graphConfig, diagramConfig, twoGraphSetupList, fourGraphSetupList, threeGraphSetupList, allOnOneSlideGraphList, diagramConfigList, sysDiagLogger, aux.antSysDiagOutputPath, 'Antenna_diagrams.pptx', './template.pptx')
+        start_data_evaluation(parseDataList, plotSetup, chirpConfig, graphConfig, diagramConfig, twoGraphSetupList, fourGraphSetupList, threeGraphSetupList, allOnOneSlideGraphList, diagramConfigList, sysDiagLogger, aux.antSysDiagOutputPath, 'Antenna_diagrams.pptx', os.path.join(aux.assetsDir, 'template.pptx'))
     else:
         parseDataLogger.error(loadData.invalidPathString)

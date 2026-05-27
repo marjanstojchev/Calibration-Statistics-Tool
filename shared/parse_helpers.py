@@ -6,6 +6,7 @@ unit-tested independently.
 from __future__ import annotations
 
 import os
+import re
 from typing import Callable
 
 
@@ -176,7 +177,13 @@ def walk_protocol_files(
             ptu2_files_list_dict['ptu2FilesList'] = get_ptu2_files_fn(path_only, search_pattern)
 
         if search_txantdiag_files:
-            txantdiag_list_dict['txAntDiagList'] = get_txantdiag_files_fn(path_only, stem)
+            # Strip a glued _TxAntN_DiagramN_ suffix from the stem so that
+            # protocols whose filename embeds the antenna/diagram label (e.g.
+            # "…Seq1_TxAnt1_Diagram1_Protocol.txt") can still discover all
+            # TxAntDiag files for that protocol regardless of which
+            # antenna/diagram each file covers.
+            txantdiag_stem = re.sub(r'_TxAnt\d+_Diagram\d+_$', '_', stem)
+            txantdiag_list_dict['txAntDiagList'] = get_txantdiag_files_fn(path_only, txantdiag_stem)
 
         if search_ptu2_files:
             ptu2_files_list_dict['protocolPath'] = pre_parse_info.PathName

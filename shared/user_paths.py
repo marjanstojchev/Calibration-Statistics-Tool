@@ -1,0 +1,136 @@
+"""
+User-level paths configuration for calibration-statistics-tool.
+
+On first run this module creates:
+    Windows : %APPDATA%\\calibration-statistics-tool\\paths.json
+    Linux   : ~/.config/calibration-statistics-tool/paths.json
+
+Edit that file once to tell the tool where to write output.
+The GUI (future: Settings dialog) can also update it at runtime.
+"""
+from __future__ import annotations
+import json
+import os
+import shutil
+
+_APP_NAME = 'calibration-statistics-tool'
+
+
+def _get_app_dir() -> str:
+    if os.name == 'nt':
+        base = os.environ.get('APPDATA', os.path.expanduser('~'))
+    else:
+        base = os.environ.get('XDG_CONFIG_HOME',
+                              os.path.join(os.path.expanduser('~'), '.config'))
+    return os.path.join(base, _APP_NAME)
+
+
+APP_DIR: str = _get_app_dir()
+PATHS_FILE: str = os.path.join(APP_DIR, 'paths.json')
+
+_DEFAULT_OUTPUT_BASE = os.path.join(os.path.expanduser('~'), 'Documents', 'calibration-tool')
+_DEFAULTS: dict = {
+    'output_base': _DEFAULT_OUTPUT_BASE,
+    # Input directories: leave empty to use the OS default (home dir).
+    # Set these once to the folders where your measurement files live.
+    'input_protocol_dir': '',
+    'input_ptu_dir': '',
+    'input_tx_ant_dir': '',
+}
+
+
+def _load() -> dict:
+    """Load paths.json, writing defaults if the file does not exist yet."""
+    if not os.path.isfile(PATHS_FILE):
+        os.makedirs(APP_DIR, exist_ok=True)
+        with open(PATHS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(_DEFAULTS, f, indent=2)
+        return dict(_DEFAULTS)
+
+    with open(PATHS_FILE, 'r', encoding='utf-8') as f:
+        data: dict = json.load(f)
+
+    # Back-fill any keys added in newer versions
+    changed = False
+    for key, default_val in _DEFAULTS.items():
+        if key not in data:
+            data[key] = default_val
+            changed = True
+    if changed:
+        with open(PATHS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=2)
+    return data
+
+
+_config = _load()
+
+# ── Derived AppData paths ────────────────────────────────────────────────────
+config_dir: str = os.path.join(APP_DIR, 'config')
+"""Editable config files (YAML limits, JSON stats config) — seeded on first run."""
+
+templates_dir: str = os.path.join(APP_DIR, 'templates')
+"""PPTX report templates — seeded on first run."""
+
+
+def _copy_defaults_if_missing() -> None:
+    """Copy bundled config/assets to AppData the first time the tool runs.
+
+    Files that already exist in AppData are never overwritten, so user
+    edits survive upgrades.
+    """
+    _here = os.path.dirname(os.path.abspath(__file__))
+    _bundled_config = os.path.join(_here, 'config')
+    _bundled_assets = os.path.join(_here, 'assets')
+
+    os.makedirs(config_dir, exist_ok=True)
+    if os.path.isdir(_bundled_config):
+        for fname in os.listdir(_bundled_config):
+            dst = os.path.join(config_dir, fname)
+            if not os.path.exists(dst):
+                shutil.copy2(os.path.join(_bundled_config, fname), dst)
+
+    os.makedirs(templates_dir, exist_ok=True)
+    if os.path.isdir(_bundled_assets):
+        for fname in os.listdir(_bundled_assets):
+            dst = os.path.join(templates_dir, fname)
+            if not os.path.exists(dst):
+                shutil.copy2(os.path.join(_bundled_assets, fname), dst)
+
+
+_copy_defaults_if_missing()
+
+# ── Public values ────────────────────────────────────────────────────────────
+output_base: str = _config['output_base']
+"""Root directory for all generated output sub-folders."""
+
+log_dir: str = os.path.join(APP_DIR, 'logs')
+"""Log files always go to AppData/calibration-statistics-tool/logs/."""
+
+input_protocol_dir: str = _config['input_protocol_dir']
+"""Default directory for the Protocol Files / Protocol Directory dialogs."""
+
+input_ptu_dir: str = _config['input_ptu_dir']
+"""Default directory for the PTU-2 Files dialog."""
+
+input_tx_ant_dir: str = _config['input_tx_ant_dir']
+"""Default directory for the Tx-Ant. Diag. Files dialog."""
+
+
+def reload() -> None:
+    """Re-read paths.json from disk (call after the user edits it via the GUI)."""
+    global _config, output_base, input_protocol_dir, input_ptu_dir, input_tx_ant_dir
+    _config = _load()
+    output_base = _config['output_base']
+    input_protocol_dir = _config['input_protocol_dir']
+    input_ptu_dir = _config['input_ptu_dir']
+    input_tx_ant_dir = _config['input_tx_ant_dir']
+
+
+def save(output_base_path: str) -> None:
+    """Persist a new output_base to paths.json."""
+    global output_base
+    output_base = output_base_path
+    _config['output_base'] = output_base_path
+    os.makedirs(APP_DIR, exist_ok=True)
+    with open(PATHS_FILE, 'w', encoding='utf-8') as f:
+        json.dump(_config, f, indent=2)

@@ -8,18 +8,39 @@ same widget-initialisation that used to run at import time in main.py.
 """
 from __future__ import annotations
 
+import copy
+import os
+import threading
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QThread
 from shared import safeparse as sp
 
 if TYPE_CHECKING:  # pragma: no cover
     from ui.handlers.app_context import AppContext
 
 import logconfig
-from ui.workers import SysDiagWorker
 
 parseDataLog = logconfig.mainLoadDataLogger.logger
+
+
+def _resolve_sys_diag_parsed_data(ctx: "AppContext") -> list:
+    """Return the best available parsed PTU2 list for system-diagram workflows."""
+    primary = ctx.pc.sysDiagParsedDataDict.get("parsedDataList", [])
+    if primary:
+        return list(primary)
+
+    # Fallback for cases where PTU2 was parsed via the separate flow and
+    # the primary sys-diag list was not synchronised yet.
+    fallback = ctx.pc.separatePtu2ParsedDataDict.get("parsedDataList", [])
+    if fallback:
+        parseDataLog.warning(
+            "sysDiagParsedDataDict is empty; using separatePtu2ParsedDataDict fallback (%d entries).",
+            len(fallback),
+        )
+        return list(fallback)
+
+    parseDataLog.warning("No parsed PTU2 data available for System Diagrams.")
+    return []
 
 
 # ---------------------------------------------------------------------------
@@ -287,6 +308,10 @@ def sysDiagPlotSetupScriptModeGroupClick(ctx: "AppContext") -> None:
     if btnId == 0:
         ctx.qt.sysDiagPlotWindowGroupBox.setEnabled(False)
         ctx.qt.sysDiagSlideConfGroupBox.setEnabled(True)
+        # Restore allOnOneSlide from the slide-conf checkbox state
+        ctx.plc.plotSetup["allOnOneSlide"] = (
+            1 if ctx.qt.sysDiagSlideConfGeneralAllGraphsSlideCheckBox.isChecked() else 0
+        )
         ctx.qt.sysDiagPlotWindowAllGraphsCheckBox.setChecked(False)
         for cb in (ctx.qt.sysDiagPlotWindowAllGraphsCheckBox1,
                    ctx.qt.sysDiagPlotWindowAllGraphsCheckBox2,
@@ -304,6 +329,7 @@ def sysDiagPlotSetupScriptModeGroupClick(ctx: "AppContext") -> None:
     elif btnId == 1:
         ctx.qt.sysDiagPlotWindowGroupBox.setEnabled(True)
         ctx.qt.sysDiagSlideConfGroupBox.setEnabled(False)
+        ctx.plc.plotSetup["allOnOneSlide"] = 0
         for cb in (ctx.qt.sysDiagPlotWindowAllGraphsCheckBox1,
                    ctx.qt.sysDiagPlotWindowAllGraphsCheckBox2,
                    ctx.qt.sysDiagPlotWindowAllGraphsCheckBox3):
@@ -349,6 +375,7 @@ def sysDiagPlotWindowAllGraphsComboBox3Click(ctx: "AppContext", idx: int) -> Non
 def sysDiagPlotWindowAllGraphsClick(ctx: "AppContext") -> None:
     state = ctx.qt.sysDiagPlotWindowAllGraphsCheckBox.isChecked()
     ctx.plc.set_plot_window_all_graphs_mode(state)
+    ctx.plc.plotSetup["allOnOneSlide"] = 1 if state else 0
     enabled = bool(state)
     for cb in (ctx.qt.sysDiagPlotWindowAllGraphsCheckBox1,
                ctx.qt.sysDiagPlotWindowAllGraphsCheckBox2,
@@ -674,45 +701,65 @@ def sys_diag_data_update_and_evaluation(ctx: "AppContext") -> None:
         if ctx.qt.sysDiagPlotWindowAllGraphsCheckBox3.isChecked():
             allOnOneSlideGraphList.append(ctx.plc.AllGraphsConf3)
 
+    
+    # Safety clamp: in plot-window mode, allOnOneSlide must match the actual list.
+    # If the list is empty (no checkboxes selected), disable allOnOneSlide so
+    # start_data_evaluation does not error on an empty graph list.
+    if scriptMode == 1 and len(allOnOneSlideGraphList) == 0:
+        ctx.plc.plotSetup["allOnOneSlide"] = 0
+
+    parsed_data_list = _resolve_sys_diag_parsed_data(ctx)
+    plot_setup = copy.deepcopy(ctx.plc.plotSetup)
+    chirp_config = copy.deepcopy(ctx.plc.chirpConfig)
+    graph_config = copy.deepcopy(ctx.plc.graphConfig)
+    diagram_config = copy.deepcopy(ctx.plc.diagramConfig)
+
     ctx.qt.sysDiagStartPushBtn.setEnabled(False)
+    worker_done = {"done": False}
 
-    worker = SysDiagWorker(
-        parsed_data_list=ctx.pc.sysDiagParsedDataDict["parsedDataList"],
-        plot_setup=ctx.plc.plotSetup,
-        chirp_config=ctx.plc.chirpConfig,
-        graph_config=ctx.plc.graphConfig,
-        diagram_config=ctx.plc.diagramConfig,
-        two_graph_setup_list=twoGraphSetupList,
-        four_graph_setup_list=fourGraphSetupList,
-        three_graph_setup_list=threeGraphSetupList,
-        all_on_one_slide_graph_list=allOnOneSlideGraphList,
-        diagram_config_list=diagramConfigList,
-        logger=logconfig.antSysDiagLogger,
-        output_path=aux.antSysDiagOutputPath,
-        pptx_name="Antenna_diagrams.pptx",
-        template_path="./assets/template.pptx",
-    )
-    thread = QThread()
-    worker.moveToThread(thread)
+    def _run_eval() -> None:
+        try:
+            antSysDiag.start_data_evaluation(
+                parsed_data_list,
+                plot_setup,
+                chirp_config,
+                graph_config,
+                diagram_config,
+                copy.deepcopy(twoGraphSetupList),
+                copy.deepcopy(fourGraphSetupList),
+                copy.deepcopy(threeGraphSetupList),
+                copy.deepcopy(allOnOneSlideGraphList),
+                list(diagramConfigList),
+                logconfig.antSysDiagLogger,
+                aux.antSysDiagOutputPath,
+                "Antenna_diagrams.pptx",
+                os.path.join(aux.assetsDir, 'template.pptx'),
+            )
+        except Exception as exc:
+            parseDataLog.exception("System diagrams evaluation failed: %s", exc)
+        finally:
+            worker_done["done"] = True
 
-    def _on_finished() -> None:
-        parseDataLog.info("System diagram evaluation finished.")
+    # Sync the module-level plotWindowConfig in AntennaSystemDiagrams so
+    # start_data_evaluation uses current UI values instead of hardcoded defaults.
+    antSysDiag.plotWindowConfig.update(ctx.plc.plotWindowConfig)
+
+    if plot_setup.get("ShowCertainPlotWindow", 0) == 1:
+        # Matplotlib GUI (plt.subplots / plt.show) must run on the main thread.
+        # In plot-window mode run synchronously so the figures appear correctly.
+        _run_eval()
         ctx.qt.sysDiagStartPushBtn.setEnabled(True)
+    else:
+        worker = threading.Thread(target=_run_eval, name="sys-diag-eval", daemon=True)
+        worker.start()
 
-    def _on_error(msg: str) -> None:
-        parseDataLog.error(f"SysDiag worker error: {msg}")
-        ctx.qt.sysDiagStartPushBtn.setEnabled(True)
+        def _reenable_start_button() -> None:
+            if worker_done["done"]:
+                ctx.qt.sysDiagStartPushBtn.setEnabled(True)
+                return
+            ctx.qt.QTimer.singleShot(100, _reenable_start_button)
 
-    thread.started.connect(worker.run)
-    worker.finished.connect(_on_finished)
-    worker.error.connect(_on_error)
-    worker.finished.connect(thread.quit)
-    worker.error.connect(thread.quit)
-    worker.finished.connect(worker.deleteLater)
-    worker.error.connect(worker.deleteLater)
-    thread.finished.connect(thread.deleteLater)
-
-    thread.start()
+        ctx.qt.QTimer.singleShot(100, _reenable_start_button)
 
 
 def wire(ctx: "AppContext") -> None:
@@ -827,6 +874,6 @@ def _fill_in_ptu(ctx: "AppContext") -> None:
     """Delegate the fill-PTU-table action to AntennaSystemDiagrams."""
     import AntennaSystemDiagrams as antSysDiag  # noqa: PLC0415
     antSysDiag.fillInPTU(
-        ctx.pc.sysDiagParsedDataDict["parsedDataList"],
+        _resolve_sys_diag_parsed_data(ctx),
         logconfig.antSysDiagLogger,
     )

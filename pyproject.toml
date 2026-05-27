@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "calibration-statistics-tool"
-version = "1.0.0"
+version = "1.0.8"
 description = "Statistics and antenna pattern analysis tool for radar systems"
 readme = "README.md"
 license = {text = "MIT"}
@@ -56,14 +56,39 @@ docs = [
 ]
 
 [project.gui-scripts]
-calibration-tool = "main:run"
+calibration-tool = "calibration_statistics_tool.main:run"
 
 [project.scripts]
-test-writer-mcp = "agents.zephyr.mcp_server:run_server"
+test-writer-mcp = "calibration_statistics_tool.agents.zephyr.mcp_server:run_server"
 
 [tool.setuptools]
-py-modules = ["main"]
-packages = ["shared", "ui", "system_diagrams", "tx_diagrams", "antenna_patterns", "agents", "agents.zephyr"]
+packages = [
+    "calibration_statistics_tool",
+    "calibration_statistics_tool.shared",
+    "calibration_statistics_tool.ui",
+    "calibration_statistics_tool.ui.tabs",
+    "calibration_statistics_tool.ui.handlers",
+    "calibration_statistics_tool.system_diagrams",
+    "calibration_statistics_tool.tx_diagrams",
+    "calibration_statistics_tool.antenna_patterns",
+    "calibration_statistics_tool.agents",
+    "calibration_statistics_tool.agents.zephyr",
+]
+
+[tool.setuptools.package-dir]
+"calibration_statistics_tool"                    = "_cst_stub"
+"calibration_statistics_tool.shared"             = "shared"
+"calibration_statistics_tool.ui"                 = "ui"
+"calibration_statistics_tool.ui.tabs"            = "ui/tabs"
+"calibration_statistics_tool.ui.handlers"        = "ui/handlers"
+"calibration_statistics_tool.system_diagrams"    = "system_diagrams"
+"calibration_statistics_tool.tx_diagrams"        = "tx_diagrams"
+"calibration_statistics_tool.antenna_patterns"   = "antenna_patterns"
+"calibration_statistics_tool.agents"             = "agents"
+"calibration_statistics_tool.agents.zephyr"      = "agents/zephyr"
+
+[tool.setuptools.package-data]
+"calibration_statistics_tool.shared" = ["config/*.yaml", "config/*.json", "assets/*.pptx"]
 
 [tool.ruff]
 line-length = 120

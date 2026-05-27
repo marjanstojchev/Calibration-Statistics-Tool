@@ -16,8 +16,14 @@ import os
 import sys
 
 _root = os.path.dirname(os.path.abspath(__file__))
+# Installed layout:  site-packages/calibration_statistics_tool/{shared,ui,...}
+# Source layout:     repo/{shared,ui,...}  (CWD on sys.path handles package imports)
+_cst = os.path.join(_root, 'calibration_statistics_tool')
+_base = _cst if os.path.isdir(os.path.join(_cst, 'shared')) else _root
+if _base != _root and _base not in sys.path:
+    sys.path.insert(0, _base)   # lets 'from shared.X import Y' resolve
 for _subdir in ['shared', 'ui', 'system_diagrams', 'tx_diagrams', 'antenna_patterns']:
-    _path = os.path.join(_root, _subdir)
+    _path = os.path.join(_base, _subdir)
     if _path not in sys.path:
         sys.path.insert(0, _path)
 
@@ -25,6 +31,32 @@ import logconfig
 from shared.parse_controller import ParseController
 from shared.plot_controller import PlotController
 import auxiliary as aux
+import user_paths as _up
+
+# ── Startup: config file location + onboarding notice ───────────────────────
+print(f"\n{'─' * 60}")
+print(f"  Calibration Statistics Tool")
+print(f"{'─' * 60}")
+print(f"  Config file : {_up.PATHS_FILE}")
+print(f"  Output dir  : {_up.output_base}")
+_unconfigured = {
+    'input_protocol_dir': _up.input_protocol_dir,
+    'input_ptu_dir':      _up.input_ptu_dir,
+    'input_tx_ant_dir':   _up.input_tx_ant_dir,
+}
+_missing = [k for k, v in _unconfigured.items() if not v]
+if _missing:
+    print(f"\n  NOTE: The following input directories are not set in paths.json.")
+    print(f"  File dialogs will open at your home folder until you configure them:")
+    for _k in _missing:
+        print(f"    - {_k}")
+    print(f"\n  Edit the config file above to set them.")
+else:
+    print(f"\n  All input directories are configured.")
+print(f"{'─' * 60}\n")
+del _unconfigured, _missing
+# ────────────────────────────────────────────────────────────────────────────
+
 import PySide6
 
 dirname = os.path.dirname(PySide6.__file__)
@@ -103,6 +135,7 @@ qt.setCurvesInputConfPathLabel.setToolTip(aux.setcurvesinputconffilepath)
 qt.setCurvesInputConfPathLabel.setText(aux.setcurvesinputconffilepath)
 
 aux.createDirectory(aux.mergeOutputPath)
+aux.createDirectory(aux.huellKurvenOutputPath)
 aux.clearAll(aux.mergeOutputPath)
 _merge_combine = os.path.join(aux.mergeOutputPath, 'combine.pptx')
 aux.copyFile(_merge_combine, _merge_combine)
@@ -117,6 +150,7 @@ import ui.handlers.sys_diag_handlers    as sys_diag_h
 import ui.handlers.tx_ant_diag_handlers as tx_h
 import ui.handlers.ant_pat_handlers     as ant_h
 import ui.handlers.stats_handlers       as stats_h
+import ui.handlers.hullkurven_handlers  as hull_h
 
 ctx = AppContext(qt=qt, mv=view, plc=plc, pc=pc)
 
@@ -125,12 +159,14 @@ sys_diag_h.init_widgets(ctx)
 tx_h.init_widgets(ctx)
 ant_h.init_widgets(ctx)
 stats_h.init_widgets(ctx)
+hull_h.init_widgets(ctx)
 
 parse_h.wire(ctx)
 sys_diag_h.wire(ctx)
 tx_h.wire(ctx)
 ant_h.wire(ctx)
 stats_h.wire(ctx)
+hull_h.wire(ctx)
 
 qt.parseProtMergePPTXBtn.clicked.connect(lambda: None)  # merge: stub (feature removed)
 
