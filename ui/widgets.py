@@ -35,6 +35,7 @@ from ui_theme import (
     LOG_LEVEL_BG_COLORS, LOG_LEVEL_FG_COLORS,
     dialogLEditErrorStyle, dialogLEditCorrectStyle,
     dialogLabelErrorStyle, dialogLabelCorrectStyle,
+    get_theme_manager,
 )
 
 
@@ -443,13 +444,18 @@ class QTableLogHandler(logging.Handler):
 
         levelItem = QTableWidgetItem(levelnameStr)
 
-        # Background colour — semantic dark-theme tints
-        bg_hex = LOG_LEVEL_BG_COLORS.get(levelnameStr)
+        # Use ThemeManager colors when available; fall back to module-level dicts
+        _tm = get_theme_manager()
+        _log_bg = _tm.log_bg_colors() if _tm is not None else LOG_LEVEL_BG_COLORS
+        _log_fg = _tm.log_fg_colors() if _tm is not None else LOG_LEVEL_FG_COLORS
+
+        # Background colour — semantic tints matching the active theme
+        bg_hex = _log_bg.get(levelnameStr)
         if bg_hex:
             levelItem.setBackground(QBrush(QColor(bg_hex)))
 
-        # Foreground (text) colour — readable on the dark background
-        fg_hex = LOG_LEVEL_FG_COLORS.get(levelnameStr)
+        # Foreground (text) colour — readable on the active background
+        fg_hex = _log_fg.get(levelnameStr)
         if fg_hex:
             levelItem.setForeground(QBrush(QColor(fg_hex)))
 

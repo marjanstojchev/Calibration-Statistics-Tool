@@ -15,6 +15,10 @@ Typical usage in ``MainView.__init__()``:
 """
 from __future__ import annotations
 
+import json
+import os
+from typing import Callable
+
 # ============================================================================
 # § 1  COLOR PALETTE
 # ============================================================================
@@ -208,10 +212,108 @@ LOG_LEVEL_FG_COLORS: dict[str, str] = {
 }
 
 # ============================================================================
+# § 5a  PALETTE DICTS — used by ThemeManager to switch between modes
+# ============================================================================
+
+_DARK: dict[str, str] = {
+    "BG_PRIMARY":   BG_PRIMARY,
+    "BG_SECONDARY": BG_SECONDARY,
+    "BG_TERTIARY":  BG_TERTIARY,
+    "BG_ALT_ROW":   BG_ALT_ROW,
+    "BG_HOVER":     BG_HOVER,
+    "BG_SELECTION": BG_SELECTION,
+    "ACCENT":          ACCENT,
+    "ACCENT_HOVER":    ACCENT_HOVER,
+    "ACCENT_PRESSED":  ACCENT_PRESSED,
+    "ACCENT_DISABLED": ACCENT_DISABLED,
+    "TEXT_PRIMARY":    TEXT_PRIMARY,
+    "TEXT_SECONDARY":  TEXT_SECONDARY,
+    "TEXT_DISABLED":   TEXT_DISABLED,
+    "TEXT_ON_ACCENT":  TEXT_ON_ACCENT,
+    "TEXT_HEADER":     TEXT_HEADER,
+    "BORDER":       BORDER,
+    "BORDER_FOCUS": BORDER_FOCUS,
+    "BORDER_HOVER": BORDER_HOVER,
+    "TAB_ACTIVE_BG":     TAB_ACTIVE_BG,
+    "TAB_INACTIVE_BG":   TAB_INACTIVE_BG,
+    "TAB_HOVER_BG":      TAB_HOVER_BG,
+    "TAB_ACTIVE_TEXT":   TAB_ACTIVE_TEXT,
+    "TAB_INACTIVE_TEXT": TAB_INACTIVE_TEXT,
+    "SCROLLBAR_TRACK":        SCROLLBAR_TRACK,
+    "SCROLLBAR_HANDLE":       SCROLLBAR_HANDLE,
+    "SCROLLBAR_HANDLE_HOVER": SCROLLBAR_HANDLE_HOVER,
+}
+
+_LIGHT: dict[str, str] = {
+    "BG_PRIMARY":   "#f5f6fa",
+    "BG_SECONDARY": "#ffffff",
+    "BG_TERTIARY":  "#eef1f7",
+    "BG_ALT_ROW":   "#f0f2f8",
+    "BG_HOVER":     "#e2e8f4",
+    "BG_SELECTION": "#c5d8f8",
+    "ACCENT":          "#2271d4",
+    "ACCENT_HOVER":    "#3d8ef0",
+    "ACCENT_PRESSED":  "#1a5db5",
+    "ACCENT_DISABLED": "#b0c4e0",
+    "TEXT_PRIMARY":    "#1a2035",
+    "TEXT_SECONDARY":  "#4a5568",
+    "TEXT_DISABLED":   "#a0aec0",
+    "TEXT_ON_ACCENT":  "#ffffff",
+    "TEXT_HEADER":     "#2d3748",
+    "BORDER":       "#c8d3e8",
+    "BORDER_FOCUS": "#2271d4",
+    "BORDER_HOVER": "#9ab0cc",
+    "TAB_ACTIVE_BG":     "#ffffff",
+    "TAB_INACTIVE_BG":   "#eef1f7",
+    "TAB_HOVER_BG":      "#e2e8f4",
+    "TAB_ACTIVE_TEXT":   "#1a2035",
+    "TAB_INACTIVE_TEXT": "#4a5568",
+    "SCROLLBAR_TRACK":        "#eef1f7",
+    "SCROLLBAR_HANDLE":       "#c0ccd8",
+    "SCROLLBAR_HANDLE_HOVER": "#9aadbe",
+}
+
+_DARK_LOG_BG: dict[str, str] = {
+    "NOTSET":   BG_SECONDARY,
+    "DEBUG":    COLOR_DEBUG_BG,
+    "INFO":     COLOR_INFO_BG,
+    "WARNING":  COLOR_WARNING_BG,
+    "ERROR":    COLOR_ERROR_BG,
+    "CRITICAL": COLOR_CRITICAL_BG,
+}
+
+_DARK_LOG_FG: dict[str, str] = {
+    "NOTSET":   TEXT_SECONDARY,
+    "DEBUG":    COLOR_DEBUG,
+    "INFO":     COLOR_INFO,
+    "WARNING":  COLOR_WARNING,
+    "ERROR":    COLOR_ERROR,
+    "CRITICAL": COLOR_CRITICAL,
+}
+
+_LIGHT_LOG_BG: dict[str, str] = {
+    "NOTSET":   "#ffffff",
+    "DEBUG":    "#e8f0fc",
+    "INFO":     "#e8f0fc",
+    "WARNING":  "#fef3e2",
+    "ERROR":    "#fde8e8",
+    "CRITICAL": "#fad0d0",
+}
+
+_LIGHT_LOG_FG: dict[str, str] = {
+    "NOTSET":   "#4a5568",
+    "DEBUG":    "#2271d4",
+    "INFO":     "#1a5db5",
+    "WARNING":  "#b7620a",
+    "ERROR":    "#c53030",
+    "CRITICAL": "#9b1919",
+}
+
+# ============================================================================
 # § 6  COMPREHENSIVE QSS STYLESHEET
 # ============================================================================
 
-THEME_QSS = f"""
+_QSS_TEMPLATE = """
 /* =========================================================================
    CALIBRATION STATISTICS TOOL — Professional Dark Theme
    Palette: Deep Navy / Charcoal  ·  Accent: Engineering Blue
@@ -913,6 +1015,14 @@ NavigationToolbar2QT QToolButton:checked {{
 }}
 """
 
+
+def _build_qss(p: dict) -> str:
+    """Render _QSS_TEMPLATE with the given palette dict."""
+    return _QSS_TEMPLATE.format(**p)
+
+
+THEME_QSS = _build_qss(_DARK)
+
 # ============================================================================
 # § 7  PUBLIC API
 # ============================================================================
@@ -966,17 +1076,183 @@ def dpi_scale(logical_px: int) -> int:
 
 
 def apply_theme(app) -> None:
-    """Apply the global THEME_QSS stylesheet to a QApplication instance.
+    """Apply the global QSS stylesheet to a QApplication instance.
 
-    Call this immediately after ``QApplication`` is created — before any
-    widgets are shown.  The stylesheet cascades automatically to all child
-    widgets.
-
-    Args:
-        app: The ``QApplication`` instance (``self.app`` inside MainView).
+    Delegates to ThemeManager if a singleton has been created, otherwise
+    applies the default dark THEME_QSS so that backward-compatible callers
+    (tests, standalone scripts) continue to work.
     """
-    app.setStyleSheet(THEME_QSS)
+    tm = get_theme_manager()
+    if tm is not None:
+        tm.apply()
+    else:
+        app.setStyleSheet(THEME_QSS)
 
 
 # Backward-compat alias so ``from ui_theme import QSS`` still works if needed
 QSS = THEME_QSS
+
+
+# ============================================================================
+# § 8  THEME MANAGER — singleton that owns theme state + persistence
+# ============================================================================
+
+_theme_manager_instance: "ThemeManager | None" = None
+
+
+def get_theme_manager() -> "ThemeManager | None":
+    """Return the ThemeManager singleton, or None if not yet created."""
+    return _theme_manager_instance
+
+
+class ThemeManager:
+    """Singleton managing dark / light / system theme modes.
+
+    Usage in MainView.__init__()::
+
+        tm = ThemeManager.create(self.app, config_path)
+        tm.apply()
+
+    Anywhere else::
+
+        from ui_theme import get_theme_manager
+        tm = get_theme_manager()
+        if tm:
+            tm.cycle_mode()
+    """
+
+    _MODES = ("dark", "light", "system")
+
+    def __init__(self, app, config_path: str) -> None:
+        self._app = app
+        self._config_path = config_path
+        self._mode = self._load_mode()
+        self._listeners: list[Callable[[], None]] = []
+
+    @classmethod
+    def create(cls, app, config_path: str) -> "ThemeManager":
+        """Create or return the existing ThemeManager singleton."""
+        global _theme_manager_instance
+        if _theme_manager_instance is None:
+            _theme_manager_instance = cls(app, config_path)
+        return _theme_manager_instance
+
+    # ------------------------------------------------------------------ #
+    # Mode management
+    # ------------------------------------------------------------------ #
+
+    @property
+    def mode(self) -> str:
+        return self._mode
+
+    def cycle_mode(self) -> str:
+        """Advance dark → light → system → dark, apply, persist, notify."""
+        idx = self._MODES.index(self._mode)
+        self._mode = self._MODES[(idx + 1) % len(self._MODES)]
+        self._save_mode()
+        self.apply()
+        self._notify()
+        return self._mode
+
+    def set_mode(self, mode: str) -> None:
+        """Set a specific mode, apply, persist, and notify listeners."""
+        if mode not in self._MODES:
+            raise ValueError(f"Unknown mode {mode!r}. Choose from {self._MODES}")
+        self._mode = mode
+        self._save_mode()
+        self.apply()
+        self._notify()
+
+    def add_change_listener(self, cb: Callable[[], None]) -> None:
+        """Register a callback to call after each theme change."""
+        self._listeners.append(cb)
+
+    def _notify(self) -> None:
+        for cb in self._listeners:
+            try:
+                cb()
+            except Exception:
+                pass
+
+    # ------------------------------------------------------------------ #
+    # Active palette helpers
+    # ------------------------------------------------------------------ #
+
+    def _effective_mode(self) -> str:
+        """Resolve 'system' to 'dark' or 'light' based on OS palette."""
+        if self._mode != "system":
+            return self._mode
+        try:
+            from PySide6.QtGui import QGuiApplication, QPalette
+            app = QGuiApplication.instance()
+            if app is not None:
+                lum = app.palette().color(QPalette.Window).lightness()
+                return "light" if lum > 128 else "dark"
+        except Exception:
+            pass
+        return "dark"
+
+    def _palette(self) -> dict[str, str]:
+        return _DARK if self._effective_mode() == "dark" else _LIGHT
+
+    def log_bg_colors(self) -> dict[str, str]:
+        """Return log-row background color map for the active mode."""
+        return _DARK_LOG_BG if self._effective_mode() == "dark" else _LIGHT_LOG_BG
+
+    def log_fg_colors(self) -> dict[str, str]:
+        """Return log-row foreground color map for the active mode."""
+        return _DARK_LOG_FG if self._effective_mode() == "dark" else _LIGHT_LOG_FG
+
+    # ------------------------------------------------------------------ #
+    # Apply
+    # ------------------------------------------------------------------ #
+
+    def apply(self) -> None:
+        """Apply the active theme QSS to the QApplication."""
+        self._app.setStyleSheet(_build_qss(self._palette()))
+
+    # ------------------------------------------------------------------ #
+    # Persistence
+    # ------------------------------------------------------------------ #
+
+    def _load_mode(self) -> str:
+        try:
+            with open(self._config_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            mode = data.get("theme_mode", "dark")
+            if mode in self._MODES:
+                return mode
+        except Exception:
+            pass
+        return "dark"
+
+    def _save_mode(self) -> None:
+        try:
+            data: dict = {}
+            try:
+                with open(self._config_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+            except Exception:
+                pass
+            data["theme_mode"] = self._mode
+            os.makedirs(os.path.dirname(self._config_path), exist_ok=True)
+            with open(self._config_path, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
+        except Exception:
+            pass
+
+    # ------------------------------------------------------------------ #
+    # Toggle button label helpers
+    # ------------------------------------------------------------------ #
+
+    def current_mode_label(self) -> str:
+        """Label showing the CURRENT mode (for display on a status button)."""
+        return {"dark": "🌙 Dark", "light": "☀ Light", "system": "⚙ System"}.get(
+            self._mode, "Theme"
+        )
+
+    def next_mode_label(self) -> str:
+        """Label for a cycle button showing what mode comes NEXT."""
+        return {"dark": "☀ Light", "light": "⚙ System", "system": "🌙 Dark"}.get(
+            self._mode, "Theme"
+        )

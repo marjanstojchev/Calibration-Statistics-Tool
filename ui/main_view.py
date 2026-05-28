@@ -35,6 +35,12 @@ from ui_theme import (
     apply_theme, configure_hidpi,
     WINDOW_TITLE, WINDOW_MIN_W, WINDOW_MIN_H,
     MARGINS_MAIN,
+    ThemeManager, get_theme_manager,
+)
+
+_UI_DESIGN_CONFIG = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "config", "ui_design_config.json",
 )
 from widgets import (
     getGraphColor, show_datapoints, Match,
@@ -76,7 +82,8 @@ class MainView:
         # ------------------------------------------------------------------ #
         # Apply global theme  (must happen before any widgets are shown)
         # ------------------------------------------------------------------ #
-        apply_theme(self.app)
+        self._theme_manager = ThemeManager.create(self.app, _UI_DESIGN_CONFIG)
+        self._theme_manager.apply()
 
         # ------------------------------------------------------------------ #
         # Main window widget + layout
@@ -90,6 +97,28 @@ class MainView:
         mainWidgetLayout.setSpacing(V_LAYOUT_SPACING)
         mainWidgetLayout.setContentsMargins(_ml, _mt, _mr, _mb)
         self.mainWidget.setLayout(mainWidgetLayout)
+
+        # ------------------------------------------------------------------ #
+        # Top bar — title label + theme toggle
+        # ------------------------------------------------------------------ #
+        _topBar = QFrame()
+        _topBar.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        _topBarLayout = QHBoxLayout(_topBar)
+        _topBarLayout.setContentsMargins(0, 0, 0, 0)
+        _topBarLayout.setSpacing(H_LAYOUT_SPACING)
+
+        _titleLabel = QLabel(WINDOW_TITLE)
+        _titleLabel.setStyleSheet("font-weight: bold; font-size: 10pt;")
+        _topBarLayout.addWidget(_titleLabel, stretch=1)
+
+        self.themeToggleBtn = QPushButton(self._theme_manager.next_mode_label())
+        self.themeToggleBtn.setMinimumSize(90, PUSH_BTN_V_SIZE)
+        self.themeToggleBtn.setMaximumWidth(110)
+        self.themeToggleBtn.setToolTip("Cycle theme: Dark → Light → System")
+        self.themeToggleBtn.clicked.connect(self._on_theme_toggle)
+        _topBarLayout.addWidget(self.themeToggleBtn, stretch=0)
+
+        mainWidgetLayout.addWidget(_topBar)
 
         # ------------------------------------------------------------------ #
         # Shadow effects
@@ -389,6 +418,11 @@ class MainView:
         """Persist geometry and splitter state to QSettings."""
         self._settings.setValue("geometry", self.mainWidget.saveGeometry())
         self._settings.setValue("splitterState", self.mainSplitter.saveState())
+
+    def _on_theme_toggle(self) -> None:
+        """Cycle through dark → light → system themes."""
+        self._theme_manager.cycle_mode()
+        self.themeToggleBtn.setText(self._theme_manager.next_mode_label())
 
     # ------------------------------------------------------------------ #
     # Namespace absorb helper
