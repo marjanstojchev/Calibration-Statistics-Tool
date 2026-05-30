@@ -36,6 +36,7 @@ from ui_theme import (
     WINDOW_TITLE, WINDOW_MIN_W, WINDOW_MIN_H,
     MARGINS_MAIN,
     ThemeManager, get_theme_manager,
+    _build_ant_pat_table_style, _build_plot_frame_style,
 )
 
 _UI_DESIGN_CONFIG = os.path.join(
@@ -62,6 +63,54 @@ class _CloseEventFilter(QObject):
         if event.type() == QEvent.Close:
             self._on_close()
         return False  # let the event propagate normally
+
+
+class _LogDragHandle(QFrame):
+    """Small grip widget that detaches and reattaches the log panel by drag."""
+
+    def __init__(self, on_start, on_move, on_finish, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self._on_start = on_start
+        self._on_move = on_move
+        self._on_finish = on_finish
+        self._press_pos: QPoint | None = None
+        self._drag_active = False
+        self.setObjectName('LogDragHandle')
+        self.setCursor(Qt.SizeAllCursor)
+        self.setToolTip('Drag to detach the log window. Drop it back on the lower app area to attach.')
+        self.setFixedSize(34, PUSH_BTN_V_SIZE)
+
+    def mousePressEvent(self, event) -> None:
+        if event.button() == Qt.LeftButton:
+            self._press_pos = event.globalPosition().toPoint()
+            self._drag_active = False
+        super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event) -> None:
+        if self._press_pos is None:
+            super().mouseMoveEvent(event)
+            return
+
+        global_pos = event.globalPosition().toPoint()
+        if not self._drag_active:
+            distance = (global_pos - self._press_pos).manhattanLength()
+            if distance < QApplication.startDragDistance():
+                super().mouseMoveEvent(event)
+                return
+            self._drag_active = True
+            self._on_start(global_pos)
+
+        self._on_move(global_pos)
+        super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event) -> None:
+        if event.button() == Qt.LeftButton and self._press_pos is not None:
+            global_pos = event.globalPosition().toPoint()
+            if self._drag_active:
+                self._on_finish(global_pos)
+            self._press_pos = None
+            self._drag_active = False
+        super().mouseReleaseEvent(event)
 
 
 class MainView:
@@ -141,6 +190,7 @@ class MainView:
         mainTabWidgetLayout.setAlignment(Qt.AlignTop)
         mainTabWidgetLayout.setSpacing(H_LAYOUT_SPACING)
         self.mainTabWidget.setLayout(mainTabWidgetLayout)
+        self.mainTabWidget.setMinimumHeight(40)
         self.mainTabWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         # Note: mainTabWidget is added to mainSplitter below, NOT directly to mainWidgetLayout
 
@@ -306,7 +356,11 @@ class MainView:
         self.SysDiaInterTab.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         SysDiaInterLayout = QGridLayout()
         SysDiaInterLayout.setHorizontalSpacing(H_LAYOUT_SPACING)
-        SysDiaInterLayout.setAlignment(Qt.AlignLeft)
+        SysDiaInterLayout.setAlignment(Qt.AlignTop)
+        SysDiaInterLayout.setColumnStretch(0, 1)
+        SysDiaInterLayout.setColumnStretch(1, 1)
+        SysDiaInterLayout.setColumnStretch(2, 0)
+        SysDiaInterLayout.setRowStretch(1, 1)
         self.SysDiaInterTab.setLayout(SysDiaInterLayout)
 
         self.SysDiaInterTableProtColMapping = {'graph': 0, 'Protocol': 1}
@@ -365,16 +419,31 @@ class MainView:
         # ------------------------------------------------------------------ #
         self.mainTabWidget.setCurrentIndex(0)
 
-        mainLogTableFrame = QFrame()
-        mainLogTableFrame.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.mainLogTableFrame = QFrame()
+        self.mainLogTableFrame.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.mainLogTableFrame.setMinimumHeight(40)
         mainLogTableFrameLayout = QHBoxLayout()
         mainLogTableFrameLayout.setAlignment(Qt.AlignTop)
         mainLogTableFrameLayout.setSpacing(H_LAYOUT_SPACING)
-        mainLogTableFrame.setLayout(mainLogTableFrameLayout)
+        self.mainLogTableFrame.setLayout(mainLogTableFrameLayout)
 
         self.mainLogTableClearBtn = QPushButton('Clear Log')
         self.mainLogTableClearBtn.setMinimumSize(PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE)
         mainLogTableFrameLayout.addWidget(self.mainLogTableClearBtn, stretch=0)
+
+        self.logDragHandle = _LogDragHandle(
+            self._start_log_detach_drag,
+            self._move_log_detach_drag,
+            self._finish_log_detach_drag,
+            self.mainLogTableFrame,
+        )
+        _dragGripLabel = QLabel('Log')
+        _dragGripLabel.setAlignment(Qt.AlignCenter)
+        _dragGripLabel.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+        _dragGripLayout = QHBoxLayout(self.logDragHandle)
+        _dragGripLayout.setContentsMargins(0, 0, 0, 0)
+        _dragGripLayout.addWidget(_dragGripLabel)
+        mainLogTableFrameLayout.addWidget(self.logDragHandle, stretch=0)
 
         self.mainLogTableHandler = QTableLogHandler()
         self.mainLogTable = self.mainLogTableHandler.logTable
@@ -382,16 +451,44 @@ class MainView:
         self.mainLogTableHeader.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         self.mainLogTableHeader.setSectionResizeMode(1, QHeaderView.ResizeToContents)
         self.mainLogTableHeader.setSectionResizeMode(2, QHeaderView.Stretch)
+        self.mainLogTable.setMinimumHeight(40)
         self.mainLogTable.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         mainLogTableFrameLayout.addWidget(self.mainLogTable, stretch=1)
+
+        self._logPlaceholder = QWidget()
+        self._logPlaceholder.setMinimumHeight(0)
+        self._logPlaceholder.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self._logDialog = QDialog(self.mainWidget)
+        self._logDialog.setWindowTitle(f"{WINDOW_TITLE} - Log")
+        self._logDialog.setModal(False)
+        self._logDialog.setWindowFlag(Qt.Window, True)
+        self._logDialog.setWindowFlag(Qt.WindowMinMaxButtonsHint, True)
+        self._logDialog.setWindowFlag(Qt.WindowCloseButtonHint, True)
+        self._logDialog.resize(900, 280)
+        _logDialogLayout = QVBoxLayout(self._logDialog)
+        _logDialogLayout.setContentsMargins(0, 0, 0, 0)
+        _logDialogLayout.setSpacing(0)
+        self._logDialogCloseFilter = _CloseEventFilter(self._attach_log_panel, self._logDialog)
+        self._logDialog.installEventFilter(self._logDialogCloseFilter)
+        self._logDetached = False
+        self._logVisible = True
+        self._logDragOffset = QPoint(16, 10)
+        self._default_splitter_sizes = [int(WINDOW_DEF_H * 0.78), int(WINDOW_DEF_H * 0.22)]
+        self._last_attached_splitter_state = None
 
         # Vertical splitter: tab area (top, stretchy) + log table (bottom, collapsible)
         self.mainSplitter = QSplitter(Qt.Vertical)
         self.mainSplitter.addWidget(self.mainTabWidget)
-        self.mainSplitter.addWidget(mainLogTableFrame)
+        self.mainSplitter.addWidget(self.mainLogTableFrame)
+        self.mainSplitter.setChildrenCollapsible(True)
+        self.mainSplitter.setHandleWidth(8)
         self.mainSplitter.setStretchFactor(0, 4)   # tab area gets 4× the space
         self.mainSplitter.setStretchFactor(1, 1)   # log panel gets 1×
-        self.mainSplitter.setCollapsible(1, True)  # log panel can be collapsed
+        self.mainSplitter.setCollapsible(0, False)
+        self.mainSplitter.setCollapsible(1, False)
+        self.mainSplitter.setSizes(self._default_splitter_sizes)
+        self.mainSplitter.splitterMoved.connect(self._on_splitter_moved)
+        self._last_attached_splitter_state = self.mainSplitter.saveState()
         mainWidgetLayout.addWidget(self.mainSplitter)
 
         # ------------------------------------------------------------------ #
@@ -406,7 +503,12 @@ class MainView:
 
         _splitter_state = self._settings.value("splitterState")
         if _splitter_state:
-            self.mainSplitter.restoreState(_splitter_state)
+            if not self.mainSplitter.restoreState(_splitter_state):
+                self.mainSplitter.setSizes(self._default_splitter_sizes)
+        self._sync_log_visibility_from_splitter()
+        self._last_attached_splitter_state = self.mainSplitter.saveState()
+        self._theme_manager.add_change_listener(self._refresh_inline_theme_styles)
+        self._refresh_inline_theme_styles()
 
         # Install event filter on mainWidget to capture closeEvent for state save
         self._close_filter = _CloseEventFilter(self._save_window_state, self.mainWidget)
@@ -417,12 +519,150 @@ class MainView:
     def _save_window_state(self) -> None:
         """Persist geometry and splitter state to QSettings."""
         self._settings.setValue("geometry", self.mainWidget.saveGeometry())
-        self._settings.setValue("splitterState", self.mainSplitter.saveState())
+        splitter_state = self._last_attached_splitter_state or self.mainSplitter.saveState()
+        if not self._logDetached:
+            splitter_state = self.mainSplitter.saveState()
+        self._settings.setValue("splitterState", splitter_state)
 
     def _on_theme_toggle(self) -> None:
         """Cycle through dark → light → system themes."""
         self._theme_manager.cycle_mode()
         self.themeToggleBtn.setText(self._theme_manager.next_mode_label())
+
+    def _refresh_inline_theme_styles(self) -> None:
+        """Refresh widgets that still rely on inline styles outside global QSS."""
+        theme_manager = get_theme_manager()
+        if theme_manager is None:
+            return
+
+        palette = theme_manager.palette()
+        ant_pat_style = _build_ant_pat_table_style(palette)
+        plot_frame_style = _build_plot_frame_style(palette)
+
+        for frame in self.mainWidget.findChildren(QFrame):
+            object_name = frame.objectName()
+            if object_name in {"Frame", "SubFrame1", "SubFrame2"}:
+                frame.setStyleSheet(ant_pat_style)
+            elif object_name == "PlotFrame":
+                frame.setStyleSheet(plot_frame_style)
+
+        if hasattr(self, "mainLogTableHandler") and self.mainLogTableHandler is not None:
+            self.mainLogTableHandler.apply_theme_colors()
+
+    def _on_splitter_moved(self, *_args) -> None:
+        if self._logDetached:
+            return
+        self._last_attached_splitter_state = self.mainSplitter.saveState()
+        self._sync_log_visibility_from_splitter()
+
+    def _sync_log_visibility_from_splitter(self) -> None:
+        if self._logDetached:
+            self._logVisible = True
+            return
+        sizes = self.mainSplitter.sizes()
+        self._logVisible = len(sizes) > 1 and sizes[1] > 0
+
+    def _show_log_panel(self) -> None:
+        if self._logDetached:
+            self._logDialog.show()
+            self._logDialog.raise_()
+            self._logDialog.activateWindow()
+            return
+        sizes = self.mainSplitter.sizes()
+        total = sum(sizes) if sizes else WINDOW_DEF_H
+        log_size = max(int(total * 0.22), 96)
+        self.mainSplitter.setSizes([max(total - log_size, 120), log_size])
+        self._last_attached_splitter_state = self.mainSplitter.saveState()
+        self._sync_log_visibility_from_splitter()
+
+    def _hide_log_panel(self) -> None:
+        if self._logDetached:
+            self._logDialog.hide()
+            return
+        sizes = self.mainSplitter.sizes()
+        total = sum(sizes) if sizes else WINDOW_DEF_H
+        self.mainSplitter.setSizes([max(total, 200), 0])
+        self._last_attached_splitter_state = self.mainSplitter.saveState()
+        self._sync_log_visibility_from_splitter()
+
+    def _toggle_log_panel(self) -> None:
+        if self._logDetached:
+            if self._logDialog.isVisible():
+                self._logDialog.hide()
+            else:
+                self._show_log_panel()
+            return
+        if self._logVisible:
+            self._hide_log_panel()
+        else:
+            self._show_log_panel()
+
+    def _detach_log_panel(self) -> None:
+        self._detach_log_panel_at()
+
+    def _detach_log_panel_at(self, global_pos: QPoint | None = None) -> None:
+        if self._logDetached:
+            if global_pos is not None:
+                self._move_detached_log_dialog(global_pos)
+            self._show_log_panel()
+            return
+        self._last_attached_splitter_state = self.mainSplitter.saveState()
+        self.mainSplitter.replaceWidget(1, self._logPlaceholder)
+        self.mainLogTableFrame.setParent(self._logDialog)
+        self._logDialog.layout().addWidget(self.mainLogTableFrame)
+        self.mainSplitter.setSizes([sum(self.mainSplitter.sizes()) or WINDOW_DEF_H, 0])
+        self._logDetached = True
+        self._logDialog.show()
+        if global_pos is not None:
+            self._move_detached_log_dialog(global_pos)
+        self._show_log_panel()
+
+    def _attach_log_panel(self) -> None:
+        if not self._logDetached:
+            return
+        self._logDialog.hide()
+        self.mainLogTableFrame.setParent(None)
+        self.mainSplitter.replaceWidget(1, self.mainLogTableFrame)
+        if self._last_attached_splitter_state is not None:
+            self.mainSplitter.restoreState(self._last_attached_splitter_state)
+        else:
+            self.mainSplitter.setSizes(self._default_splitter_sizes)
+        self._logDetached = False
+        self._sync_log_visibility_from_splitter()
+
+    def _move_detached_log_dialog(self, global_pos: QPoint) -> None:
+        self._logDialog.move(global_pos - self._logDragOffset)
+
+    def _attach_drop_target_rect(self) -> QRect:
+        top_left = self.mainWidget.mapToGlobal(QPoint(0, 0))
+        size = self.mainWidget.size()
+        attach_top = int(size.height() * 0.68)
+        return QRect(
+            QPoint(top_left.x(), top_left.y() + attach_top),
+            QPoint(top_left.x() + size.width(), top_left.y() + size.height()),
+        )
+
+    def _start_log_detach_drag(self, global_pos: QPoint) -> None:
+        if not self._logDetached:
+            self._detach_log_panel_at(global_pos)
+        else:
+            self._logDialog.show()
+            self._move_detached_log_dialog(global_pos)
+
+    def _move_log_detach_drag(self, global_pos: QPoint) -> None:
+        if self._logDetached:
+            self._move_detached_log_dialog(global_pos)
+
+    def _finish_log_detach_drag(self, global_pos: QPoint) -> None:
+        if not self._logDetached:
+            return
+        if self._attach_drop_target_rect().contains(global_pos):
+            self._attach_log_panel()
+            return
+        self._move_detached_log_dialog(global_pos)
+        self._logDialog.show()
+        self._logDialog.raise_()
+        self._logDialog.activateWindow()
 
     # ------------------------------------------------------------------ #
     # Namespace absorb helper
@@ -456,7 +696,10 @@ class MainView:
     def close_and_save_state(self) -> None:
         """Persist window geometry and splitter state, then close."""
         self._settings.setValue("geometry", self.mainWidget.saveGeometry())
-        self._settings.setValue("splitterState", self.mainSplitter.saveState())
+        splitter_state = self._last_attached_splitter_state or self.mainSplitter.saveState()
+        if not self._logDetached:
+            splitter_state = self.mainSplitter.saveState()
+        self._settings.setValue("splitterState", splitter_state)
         self.mainWidget.close()
 
     def exec_(self) -> int:

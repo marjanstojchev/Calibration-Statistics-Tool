@@ -323,12 +323,13 @@ class PlotFrameSysDia(QFrame):
 
         self.layout = QGridLayout(self)
         self.layout.setVerticalSpacing(V_LAYOUT_SPACING)
-        self.layout.setAlignment(Qt.AlignCenter)
+        self.layout.setAlignment(Qt.AlignTop)
         self.setLayout(self.layout)
 
         self.figure = plt.figure(tight_layout=True)
         self.figure.set_size_inches(18.5, 16.5)
         self.canvas = FigureCanvas(self.figure)
+        self.canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.layout.addWidget(self.canvas, 0, 0, 1, 1)
 
         self.ax1 = self.figure.add_subplot(111)
@@ -337,9 +338,10 @@ class PlotFrameSysDia(QFrame):
         self.ax2.grid(visible=True, which='major', axis='both', linestyle='--')
 
         self.toolbar = NavigationToolbar(self.canvas, self)
+        self.toolbar.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.layout.addWidget(self.toolbar, 1, 0, 1, 1)
-        self.layout.setColumnStretch(1, 1)
-        self.layout.setRowStretch(1, 1)
+        self.layout.setColumnStretch(0, 1)
+        self.layout.setRowStretch(0, 1)
 
     def plot(self, angleData, plot_dat, Prot_param, graphType, idx, ax, draw=True):
         ylimits0 = []
@@ -448,6 +450,7 @@ class QTableLogHandler(logging.Handler):
         _tm = get_theme_manager()
         _log_bg = _tm.log_bg_colors() if _tm is not None else LOG_LEVEL_BG_COLORS
         _log_fg = _tm.log_fg_colors() if _tm is not None else LOG_LEVEL_FG_COLORS
+        _text_fg = (_tm.palette().get("TEXT_PRIMARY") if _tm is not None else None)
 
         # Background colour — semantic tints matching the active theme
         bg_hex = _log_bg.get(levelnameStr)
@@ -466,9 +469,10 @@ class QTableLogHandler(logging.Handler):
         if bg_hex:
             time_item.setBackground(QBrush(QColor(bg_hex)))
             msg_item.setBackground(QBrush(QColor(bg_hex)))
-        if fg_hex:
-            time_item.setForeground(QBrush(QColor(fg_hex)))
-            msg_item.setForeground(QBrush(QColor(fg_hex)))
+        text_fg_hex = _text_fg or fg_hex
+        if text_fg_hex:
+            time_item.setForeground(QBrush(QColor(text_fg_hex)))
+            msg_item.setForeground(QBrush(QColor(text_fg_hex)))
 
         self.logTable.insertRow(self.logTableRow)
         self.logTable.setItem(self.logTableRow, 0, time_item)
@@ -483,6 +487,33 @@ class QTableLogHandler(logging.Handler):
 
         # Auto-scroll to the latest row
         self.logTable.scrollToBottom()
+
+    def apply_theme_colors(self):
+        """Re-apply log row foreground/background colors for the active theme."""
+        _tm = get_theme_manager()
+        _log_bg = _tm.log_bg_colors() if _tm is not None else LOG_LEVEL_BG_COLORS
+        _log_fg = _tm.log_fg_colors() if _tm is not None else LOG_LEVEL_FG_COLORS
+        _text_fg = (_tm.palette().get("TEXT_PRIMARY") if _tm is not None else None)
+
+        for row in range(self.logTable.rowCount()):
+            level_item = self.logTable.item(row, 1)
+            if level_item is None:
+                continue
+
+            level_name = level_item.text()
+            bg_hex = _log_bg.get(level_name)
+            text_fg_hex = _text_fg or _log_fg.get(level_name)
+
+            for col in (0, 1, 2):
+                item = self.logTable.item(row, col)
+                if item is None:
+                    continue
+                if bg_hex:
+                    item.setBackground(QBrush(QColor(bg_hex)))
+                if text_fg_hex:
+                    item.setForeground(QBrush(QColor(text_fg_hex)))
+
+        self.logTable.viewport().update()
 
     def clearTable(self):
         self.logTable.clearContents()
