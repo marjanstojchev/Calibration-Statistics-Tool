@@ -76,16 +76,7 @@ packages = [
 ]
 
 [tool.setuptools.package-dir]
-"calibration_statistics_tool"                    = "_cst_stub"
-"calibration_statistics_tool.shared"             = "shared"
-"calibration_statistics_tool.ui"                 = "ui"
-"calibration_statistics_tool.ui.tabs"            = "ui/tabs"
-"calibration_statistics_tool.ui.handlers"        = "ui/handlers"
-"calibration_statistics_tool.system_diagrams"    = "system_diagrams"
-"calibration_statistics_tool.tx_diagrams"        = "tx_diagrams"
-"calibration_statistics_tool.antenna_patterns"   = "antenna_patterns"
-"calibration_statistics_tool.agents"             = "agents"
-"calibration_statistics_tool.agents.zephyr"      = "agents/zephyr"
+"" = "_cst_stub"
 
 [tool.setuptools.package-data]
 "calibration_statistics_tool.shared" = ["config/*.yaml", "config/*.json", "assets/*.pptx"]
