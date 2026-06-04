@@ -16,15 +16,19 @@ import os
 import sys
 
 _root = os.path.dirname(os.path.abspath(__file__))
-# Installed layout:  site-packages/calibration_statistics_tool/{shared,ui,...}
-# Source layout:     repo/{shared,ui,...}  (CWD on sys.path handles package imports)
-_cst = os.path.join(_root, 'calibration_statistics_tool')
-_base = _cst if os.path.isdir(os.path.join(_cst, 'shared')) else _root
-if _base != _root and _base not in sys.path:
-    sys.path.insert(0, _base)   # lets 'from shared.X import Y' resolve
+_parent = os.path.dirname(_root)
+
+# Detect layout and set up sys.path appropriately
+# Installed layout: _root/shared exists (site-packages/calibration_statistics_tool/shared)
+# Source layout: _parent/shared exists (repo/shared)
+_base = _root if os.path.isdir(os.path.join(_root, 'shared')) else _parent
+if _base not in sys.path:
+    sys.path.insert(0, _base)
+
+# Also add individual subdirectories for backward-compatible bare imports (e.g., 'import logconfig')
 for _subdir in ['shared', 'ui', 'system_diagrams', 'tx_diagrams', 'antenna_patterns']:
     _path = os.path.join(_base, _subdir)
-    if _path not in sys.path:
+    if os.path.isdir(_path) and _path not in sys.path:
         sys.path.insert(0, _path)
 
 import logconfig
