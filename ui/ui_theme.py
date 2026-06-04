@@ -119,38 +119,23 @@ WINDOW_DEF_H   = 900
 #      (compatible drop-ins for the legacy ui_constants style variables)
 # ============================================================================
 
-def _build_ant_pat_table_style(p: dict[str, str]) -> str:
-    return f"""
+antPatTableStyle = f"""
 QFrame#Frame {{
-    background-color: {p['BG_SECONDARY']};
-    border: 1px solid {p['BORDER']};
+    background-color: {BG_SECONDARY};
+    border: 1px solid {BORDER};
     border-radius: 6px;
 }}
 QFrame#SubFrame1 {{
-    background-color: {p['BG_SECONDARY']};
+    background-color: {BG_SECONDARY};
     border: none;
     border-radius: 6px;
 }}
 QFrame#SubFrame2 {{
-    background-color: {p['BG_TERTIARY']};
+    background-color: {BG_TERTIARY};
     border: none;
     border-radius: 6px;
 }}
-QLabel {{
-    color: {p['TEXT_PRIMARY']};
-}}
-QCheckBox {{
-    color: {p['TEXT_PRIMARY']};
-}}
 """
-
-
-antPatTableStyle = _build_ant_pat_table_style({
-    "BG_SECONDARY": BG_SECONDARY,
-    "BG_TERTIARY": BG_TERTIARY,
-    "BORDER": BORDER,
-    "TEXT_PRIMARY": TEXT_PRIMARY,
-})
 
 slideSymbolStyle = f"""
 QFrame {{
@@ -160,20 +145,13 @@ QFrame {{
 }}
 """
 
-def _build_plot_frame_style(p: dict[str, str]) -> str:
-    return f"""
+plotFrameStyle = f"""
 QFrame#PlotFrame {{
-    border: 1px solid {p['BORDER']};
+    border: 1px solid {BORDER};
     border-radius: 6px;
-    background-color: {p['BG_SECONDARY']};
+    background-color: {BG_SECONDARY};
 }}
 """
-
-
-plotFrameStyle = _build_plot_frame_style({
-    "BG_SECONDARY": BG_SECONDARY,
-    "BORDER": BORDER,
-})
 
 lineStyle = f"""
 QFrame {{
@@ -323,12 +301,12 @@ _LIGHT_LOG_BG: dict[str, str] = {
 }
 
 _LIGHT_LOG_FG: dict[str, str] = {
-    "NOTSET":   "#1a2035",
-    "DEBUG":    "#1a2035",
-    "INFO":     "#1a2035",
-    "WARNING":  "#1a2035",
-    "ERROR":    "#1a2035",
-    "CRITICAL": "#1a2035",
+    "NOTSET":   "#4a5568",
+    "DEBUG":    "#2271d4",
+    "INFO":     "#1a5db5",
+    "WARNING":  "#b7620a",
+    "ERROR":    "#c53030",
+    "CRITICAL": "#9b1919",
 }
 
 # ============================================================================
@@ -348,6 +326,7 @@ _QSS_TEMPLATE = """
     font-size: 9pt;
     color: {TEXT_PRIMARY};
     outline: none;
+    box-sizing: border-box;
 }}
 
 /* ── Root widget & main window ─────────────────────────────────────────── */
@@ -924,7 +903,7 @@ QSplitter::handle:horizontal {{
 }}
 
 QSplitter::handle:vertical {{
-    height: 8px;
+    height: 3px;
 }}
 
 /* =========================================================================
@@ -1042,9 +1021,7 @@ def _build_qss(p: dict) -> str:
     return _QSS_TEMPLATE.format(**p)
 
 
-_DARK_QSS = _build_qss(_DARK)
-_LIGHT_QSS = _build_qss(_LIGHT)
-THEME_QSS = _DARK_QSS
+THEME_QSS = _build_qss(_DARK)
 
 # ============================================================================
 # § 7  PUBLIC API
@@ -1151,14 +1128,6 @@ class ThemeManager:
         self._config_path = config_path
         self._mode = self._load_mode()
         self._listeners: list[Callable[[], None]] = []
-        self._save_timer = None
-        self._last_applied_effective_mode: str | None = None
-
-        # Ensure latest mode reaches disk even if save is still deferred.
-        try:
-            self._app.aboutToQuit.connect(self._save_mode)
-        except Exception:
-            pass
 
     @classmethod
     def create(cls, app, config_path: str) -> "ThemeManager":
@@ -1180,9 +1149,9 @@ class ThemeManager:
         """Advance dark → light → system → dark, apply, persist, notify."""
         idx = self._MODES.index(self._mode)
         self._mode = self._MODES[(idx + 1) % len(self._MODES)]
+        self._save_mode()
         self.apply()
         self._notify()
-        self._schedule_save_mode()
         return self._mode
 
     def set_mode(self, mode: str) -> None:
@@ -1190,9 +1159,9 @@ class ThemeManager:
         if mode not in self._MODES:
             raise ValueError(f"Unknown mode {mode!r}. Choose from {self._MODES}")
         self._mode = mode
+        self._save_mode()
         self.apply()
         self._notify()
-        self._schedule_save_mode()
 
     def add_change_listener(self, cb: Callable[[], None]) -> None:
         """Register a callback to call after each theme change."""
@@ -1223,8 +1192,7 @@ class ThemeManager:
             pass
         return "dark"
 
-    def palette(self) -> dict[str, str]:
-        """Return the active palette mapping for runtime style refreshes."""
+    def _palette(self) -> dict[str, str]:
         return _DARK if self._effective_mode() == "dark" else _LIGHT
 
     def log_bg_colors(self) -> dict[str, str]:
@@ -1241,13 +1209,7 @@ class ThemeManager:
 
     def apply(self) -> None:
         """Apply the active theme QSS to the QApplication."""
-        effective_mode = self._effective_mode()
-        if effective_mode == self._last_applied_effective_mode:
-            return
-
-        qss = _DARK_QSS if effective_mode == "dark" else _LIGHT_QSS
-        self._app.setStyleSheet(qss)
-        self._last_applied_effective_mode = effective_mode
+        self._app.setStyleSheet(_build_qss(self._palette()))
 
     # ------------------------------------------------------------------ #
     # Persistence
@@ -1266,27 +1228,18 @@ class ThemeManager:
 
     def _save_mode(self) -> None:
         try:
-            if self._save_timer is not None and self._save_timer.isActive():
-                self._save_timer.stop()
+            data: dict = {}
+            try:
+                with open(self._config_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+            except Exception:
+                pass
+            data["theme_mode"] = self._mode
             os.makedirs(os.path.dirname(self._config_path), exist_ok=True)
             with open(self._config_path, "w", encoding="utf-8") as f:
-                json.dump({"theme_mode": self._mode}, f, indent=2)
+                json.dump(data, f, indent=2)
         except Exception:
             pass
-
-    def _schedule_save_mode(self) -> None:
-        """Debounce disk persistence so the click path stays responsive."""
-        try:
-            from PySide6.QtCore import QTimer
-
-            if self._save_timer is None:
-                self._save_timer = QTimer(self._app)
-                self._save_timer.setSingleShot(True)
-                self._save_timer.timeout.connect(self._save_mode)
-            self._save_timer.start(180)
-        except Exception:
-            # Fallback for non-Qt contexts (tests/scripts).
-            self._save_mode()
 
     # ------------------------------------------------------------------ #
     # Toggle button label helpers
