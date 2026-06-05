@@ -74,7 +74,10 @@ def start(request: Optional[TxStartRequest] = None):
 
     parsed_data = getattr(lp, 'txAntDiagParsedDataList', [])
     if not parsed_data:
-        return {"error": "No TxAntDiag parsed data. Run /api/protocols/parse with search_txantdiag_files=true first."}
+        raise HTTPException(
+            status_code=422,
+            detail="No TxAntDiag parsed data. Run /api/protocols/parse with search_txantdiag_files=true first.",
+        )
 
     tx_ant_diags.start_data_evaluation(
         parsed_data,

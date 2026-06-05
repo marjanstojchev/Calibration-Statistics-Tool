@@ -88,13 +88,13 @@ class TestProtocolsParse:
 
 class TestSystemDiagramsStart:
     def test_returns_error_when_no_data(self):
-        """Should return error dict (not 500) when no data has been parsed."""
+        """Should return 422 (not 500) when no data has been parsed."""
         import shared.load_protocols as lp
         lp.sysDiagParsedDataList = []
 
         r = client.post("/api/system_diagrams/start")
-        assert r.status_code == 200
-        assert "error" in r.json()
+        assert r.status_code == 422
+        assert "detail" in r.json()
 
 
 # ---------------------------------------------------------------------------
@@ -107,8 +107,8 @@ class TestTxDiagramsStart:
         lp.txAntDiagParsedDataList = []
 
         r = client.post("/api/tx_diagrams/start")
-        assert r.status_code == 200
-        assert "error" in r.json()
+        assert r.status_code == 422
+        assert "detail" in r.json()
 
 
 # ---------------------------------------------------------------------------
@@ -121,8 +121,8 @@ class TestAntennaPatternsStart:
         lp.sysDiagParsedDataList = []
 
         r = client.post("/api/antenna_patterns/start")
-        assert r.status_code == 200
-        assert "error" in r.json()
+        assert r.status_code == 422
+        assert "detail" in r.json()
 
 
 # ---------------------------------------------------------------------------

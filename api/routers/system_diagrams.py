@@ -134,7 +134,7 @@ def start(request: Optional[SysDiagStartRequest] = None):
 
     parseDataList = getattr(lp, 'sysDiagParsedDataList', [])
     if not parseDataList:
-        return {"error": "No parsed data. Run /api/protocols/parse first."}
+        raise HTTPException(status_code=422, detail="No parsed data. Run /api/protocols/parse first.")
 
     ant_sys_diags.start_data_evaluation(
         parseDataList,
