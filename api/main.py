@@ -12,22 +12,34 @@ for _subdir in ['shared', 'ui', 'system_diagrams', 'tx_diagrams', 'antenna_patte
     if os.path.isdir(_path) and _path not in sys.path:
         sys.path.insert(0, _path)
 
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI
 
-from api.routers import protocols, system_diagrams, logs
+from api.routers import (
+    protocols,
+    system_diagrams,
+    tx_diagrams,
+    antenna_patterns,
+    huellkurven,
+    interactive,
+    limits,
+    protocol_stats,
+    logs,
+    downloads,
+)
 
-app = FastAPI()
+app = FastAPI(title="Calibration Statistics Tool API", version="1.0.0")
 
-app.include_router(protocols.router, prefix="/api/protocols", tags=["protocols"])
-app.include_router(system_diagrams.router, prefix="/api/system_diagrams", tags=["system_diagrams"])
-app.include_router(logs.router, prefix="/logs", tags=["logs"])
+app.include_router(protocols.router,        prefix="/api/protocols",             tags=["protocols"])
+app.include_router(system_diagrams.router,  prefix="/api/system_diagrams",       tags=["system_diagrams"])
+app.include_router(tx_diagrams.router,      prefix="/api/tx_diagrams",           tags=["tx_diagrams"])
+app.include_router(antenna_patterns.router, prefix="/api/antenna_patterns",      tags=["antenna_patterns"])
+app.include_router(huellkurven.router,      prefix="/api/huellkurven",           tags=["huellkurven"])
+app.include_router(interactive.router,      prefix="/api/interactive",           tags=["interactive"])
+app.include_router(limits.router,           prefix="/api/limits",                tags=["limits"])
+app.include_router(protocol_stats.router,   prefix="/api/stats",                 tags=["stats"])
+app.include_router(logs.router,             prefix="/logs",                      tags=["logs"])
+app.include_router(downloads.router,        prefix="/api/downloads",             tags=["downloads"])
 
 @app.get("/")
 def health():
     return {"status": "ok"}
-
-@app.post("/api/parse")
-async def parse_file(file: UploadFile = File(...)):
-    contents = await file.read()
-    # TODO: call your ParseController here
-    return {"filename": file.filename, "size": len(contents)}

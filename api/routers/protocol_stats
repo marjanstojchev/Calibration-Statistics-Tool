@@ -1,12 +1,15 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
+import shared.load_protocols as lp
 
-from shared.parse_controller import ParseController
-#
-protocol_stats_router = APIRouter()
+router = APIRouter()
 
-@router.get("/api/stats")
-def get_protocol_stats(
-    include_burn_in: bool = True,
-    include_cal: bool = True,
-    controller: ParseController = Depends(get_controller)
-):
+
+@router.get("/")
+def get_protocol_stats():
+    """Return counts of parsed protocols and PTU2 files currently in memory."""
+    parsed = getattr(lp, 'sysDiagParsedDataList', [])
+    tx_parsed = getattr(lp, 'txAntDiagParsedDataList', [])
+    return {
+        "sys_diag_ptu2_loaded": len(parsed),
+        "tx_ant_diag_loaded": len(tx_parsed),
+    }

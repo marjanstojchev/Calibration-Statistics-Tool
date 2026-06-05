@@ -60,8 +60,8 @@ def parse_protocols(req: ParseRequest):
     if req.latest_protocol:
         accepted = protocolFilter.ProtocolInfoClass.FilterNewProtocols(accepted)
 
-    # Step 3: Find PTU2 files for each accepted protocol
-    ptu2_files_list, *_ = walk_protocol_files(
+    # Step 3: Find PTU2 and TxAntDiag files for each accepted protocol
+    ptu2_files_list, txantdiag_files_list, *_ = walk_protocol_files(
         accepted,
         req.search_ptu2_files,
         req.search_txantdiag_files,
@@ -72,7 +72,7 @@ def parse_protocols(req: ParseRequest):
         protocolFilter.ProtocolInfoClass.getfiltered_txantdiagramfilelist,
     )
 
-    # Step 4: Load PTU2 data for each protocol
+    # Step 4a: Load PTU2 data (system diagrams + antenna patterns)
     sys_diag_parsed_data_list = []
     for entry in ptu2_files_list:
         ptu2_files = entry.get("ptu2FilesList", [])
@@ -82,13 +82,27 @@ def parse_protocols(req: ParseRequest):
         if loaded.invalidPath != 1:
             sys_diag_parsed_data_list += loaded.parseDataList
 
-    # Step 5: Store in shared module for system_diagrams endpoint
+    # Step 4b: Load TxAntDiag data
+    tx_ant_diag_parsed_data_list = []
+    if req.search_txantdiag_files:
+        import load_TxAntData as ld_tx
+        for entry in txantdiag_files_list:
+            tx_files = entry.get("txAntDiagList", [])
+            if not tx_files:
+                continue
+            loaded_tx = ld_tx.LoadData(tx_files, use_sensor_muster, sensor_muster_list)
+            if loaded_tx.invalidPath != 1:
+                tx_ant_diag_parsed_data_list += loaded_tx.parseDataList
+
+    # Step 5: Store in shared module for downstream endpoints
     lp.sysDiagParsedDataList = sys_diag_parsed_data_list
+    lp.txAntDiagParsedDataList = tx_ant_diag_parsed_data_list
 
     return {
         "status": "ok",
         "protocols_accepted": len(accepted),
         "ptu2_files_loaded": len(sys_diag_parsed_data_list),
+        "tx_ant_diag_loaded": len(tx_ant_diag_parsed_data_list),
     }
 
 def get_controller():
@@ -125,37 +139,33 @@ async def upload_protocols(
     return {"protocols": result, "status": "stored"}   # serialize result to JSON → back to Streamlit
 
 
-@router.get("/count")         # ← another endpoint on same router
+@router.post("/count")         # ← another endpoint on same router
 def protocol_count():
     return {"count": 42}
 
-class ProtocolType(str, Enum):
-    AUTO = "auto_recognition"
-    BURNIN = "burnin"
-    CALIBRATION = "calibration"
 
-class ParseOptions(BaseModel):
-    search_ptu2_files: bool = True
-    search_txant_diag_files: bool = True
-    latest_protocol: bool = False
-    burnin_start: bool = False
-    eol_errors: bool = False
-    eol_abort_criterion: bool = True
-    eol_meas_limits_exceeded: bool = True
-    protocol_type: ProtocolType = ProtocolType.AUTO
+@router.delete("/clear")
+def clear_protocols():
+    """Clear all parsed protocol data from memory.
 
-@router.post("/api/protocols/configure")
-def configure_parsing(
-    options: ParseOptions,                      # JSON BODY (no default, no Depends)
-    controller: "ParseController" = Depends(get_controller)
-):    # Access the enum value
-    print(options.protocol_type)           # → ProtocolType.AUTO
-    print(options.protocol_type.value)     # → "auto_recognition"
+    This resets the module-level sysDiagParsedDataList and txAntDiagParsedDataList
+    back to empty lists, equivalent to the 'Clear Data' button in the Parse Protocols tab.
     
-    # Pass to controller
-    result = controller.build_prot_path_type_list(
-        paths,
-        burn_in_cal_mode=0,
-        include_burn_in_start=options.burnin_start
-    )
-    return {"result": result}
+    Also clears the limits module state since limits depend on parsed data.
+    """
+    import shared.load_protocols as lp
+    from api.routers import limits
+
+    # Clear module-level parsed data lists
+    lp.sysDiagParsedDataList = []
+    lp.txAntDiagParsedDataList = []
+
+    # Also clear limits state since it depends on parsed data
+    limits._last_controller = None
+    limits._last_limits_type = "burn_in"
+
+    return {
+        "status": "cleared",
+        "sys_diag_ptu2_loaded": 0,
+        "tx_ant_diag_loaded": 0,
+    }
