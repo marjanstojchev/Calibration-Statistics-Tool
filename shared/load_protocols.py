@@ -8,7 +8,14 @@ import protocolsTest as protocolFilter
 # loadDataLogger=logconfig.loadDataLogger
 parseDataLogger=logconfig.mainLoadDataLogger
 parseDataLog=logconfig.mainLoadDataLogger.logger
-logconfig.mainLoadDataLogger.addTableHandler(qt.mainLogTableHandler)
+
+# In headless mode (API), qt.mainLogTableHandler won't exist.
+# Catch the error and continue.
+try:
+    logconfig.mainLoadDataLogger.addTableHandler(qt.mainLogTableHandler)
+except AttributeError:
+    pass  # Running in headless mode (API), no GUI handlers available
+
 errorStatus, errorSting = logconfig.mainLoadDataLogger.addFileHandler(logconfig.mainLoadDataLogFilePath, 'w+')
 if errorStatus ==1:
     parseDataLog.warning(errorSting)

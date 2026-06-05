@@ -3,10 +3,8 @@ from pathlib import Path
 import yaml
 import os
 
-from system_diagrams import AntennaSystemDiagrams as ant_sys_diags
 from shared import auxiliary as aux
 import logconfig
-import shared.load_protocols as lp
 
 router = APIRouter()
 
@@ -15,6 +13,10 @@ router = APIRouter()
 @router.post("/start")
 def start():
     """Generate system diagrams PPTX from already-parsed PTU2 data."""
+    
+    # Lazy-load modules that require Qt initialization
+    from system_diagrams import AntennaSystemDiagrams as ant_sys_diags
+    import shared.load_protocols as lp
     
     # Retrieve parsed data from module storage
     parseDataList = getattr(lp, 'sysDiagParsedDataList', [])

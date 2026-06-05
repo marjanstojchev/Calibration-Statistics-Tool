@@ -1,19 +1,105 @@
-from fastapi import FastAPI, UploadFile, File, APIRouter, Depends
-
-from shared.parse_controller import ParseController
-
+from fastapi import FastAPI, UploadFile, File, APIRouter, Depends, HTTPException
+from enum import Enum
+from pydantic import BaseModel
+from typing import TYPE_CHECKING
 import os
 import tempfile
+from pathlib import Path
+import yaml
+
+if TYPE_CHECKING:
+    from shared.parse_controller import ParseController
 
 router = APIRouter()
 
-def get_controller() -> ParseController:
+
+class ParseRequest(BaseModel):
+    protocol_paths: list[str]
+    search_ptu2_files: bool = True
+    search_txantdiag_files: bool = False
+    use_error: bool = False
+    use_abort: bool = True
+    use_limits_exceeded: bool = True
+    latest_protocol: bool = False
+
+
+@router.post("/parse")
+def parse_protocols(req: ParseRequest):
+    """Full parse pipeline: pre-parse → filter → find PTU2 files → load data → store.
+
+    Accepts server-side file paths (protocol .txt files already on disk).
+    PTU2 files are discovered automatically in the same directory as each protocol.
+    Stores loaded data in shared.load_protocols.sysDiagParsedDataList so that
+    /api/system_diagrams/start can use it immediately afterwards.
+    """
+    import protocolsTest as protocolFilter
+    import loaddata as ld
+    import shared.load_protocols as lp
+    from shared.parse_helpers import walk_protocol_files
+
+    # Validate paths
+    for p in req.protocol_paths:
+        if not os.path.isfile(p):
+            raise HTTPException(status_code=400, detail=f"File not found: {p}")
+
+    # Load plotSetup from YAML config (needed by LoadData)
+    config_path = Path(__file__).parent.parent.parent / "shared" / "config" / "AntennaSystemDiagramsConf.yaml"
+    with open(config_path, "r", encoding="utf8") as f:
+        config = yaml.safe_load(f)
+    use_sensor_muster = config["plotSetup"]["useSensorMuster"]
+    sensor_muster_list = config["plotSetup"]["sensorMusterList"]
+
+    # Step 1: Pre-parse protocol files
+    pre_parsed, *_ = protocolFilter.ProtocolInfoClass.PreParseProtcols(req.protocol_paths)
+
+    # Step 2: Filter protocols
+    accepted, _ = protocolFilter.ProtocolInfoClass.FilterProtocols(
+        pre_parsed, req.use_error, req.use_abort, req.use_limits_exceeded
+    )
+
+    if req.latest_protocol:
+        accepted = protocolFilter.ProtocolInfoClass.FilterNewProtocols(accepted)
+
+    # Step 3: Find PTU2 files for each accepted protocol
+    ptu2_files_list, *_ = walk_protocol_files(
+        accepted,
+        req.search_ptu2_files,
+        req.search_txantdiag_files,
+        req.use_error,
+        req.use_abort,
+        req.use_limits_exceeded,
+        protocolFilter.ProtocolInfoClass.getfiltered_ptu2filelist,
+        protocolFilter.ProtocolInfoClass.getfiltered_txantdiagramfilelist,
+    )
+
+    # Step 4: Load PTU2 data for each protocol
+    sys_diag_parsed_data_list = []
+    for entry in ptu2_files_list:
+        ptu2_files = entry.get("ptu2FilesList", [])
+        if not ptu2_files:
+            continue
+        loaded = ld.LoadData(ptu2_files, use_sensor_muster, sensor_muster_list)
+        if loaded.invalidPath != 1:
+            sys_diag_parsed_data_list += loaded.parseDataList
+
+    # Step 5: Store in shared module for system_diagrams endpoint
+    lp.sysDiagParsedDataList = sys_diag_parsed_data_list
+
+    return {
+        "status": "ok",
+        "protocols_accepted": len(accepted),
+        "ptu2_files_loaded": len(sys_diag_parsed_data_list),
+    }
+
+def get_controller():
+    # Lazy-load to avoid Qt initialization at module level
+    from shared.parse_controller import ParseController
     return ParseController()
 
 @router.post("/upload")
 async def upload_protocols(
     files: list[UploadFile] = File(...),
-    controller: ParseController = Depends(get_controller)
+    controller: "ParseController" = Depends(get_controller)
 ):
     paths = []
     for f in files:
@@ -31,8 +117,45 @@ async def upload_protocols(
         burn_in_cal_mode=0,        # 0 = normal mode, not burn-in/cal
         include_burn_in_start=False
     )
+    
+    # Store parsed data in shared module for system_diagrams endpoint
+    import shared.load_protocols as lp
+    lp.sysDiagParsedDataList = result
 
-    return {"protocols": result}   # serialize result to JSON → back to Streamlit
+    return {"protocols": result, "status": "stored"}   # serialize result to JSON → back to Streamlit
+
+
 @router.get("/count")         # ← another endpoint on same router
 def protocol_count():
     return {"count": 42}
+
+class ProtocolType(str, Enum):
+    AUTO = "auto_recognition"
+    BURNIN = "burnin"
+    CALIBRATION = "calibration"
+
+class ParseOptions(BaseModel):
+    search_ptu2_files: bool = True
+    search_txant_diag_files: bool = True
+    latest_protocol: bool = False
+    burnin_start: bool = False
+    eol_errors: bool = False
+    eol_abort_criterion: bool = True
+    eol_meas_limits_exceeded: bool = True
+    protocol_type: ProtocolType = ProtocolType.AUTO
+
+@router.post("/api/protocols/configure")
+def configure_parsing(
+    options: ParseOptions,                      # JSON BODY (no default, no Depends)
+    controller: "ParseController" = Depends(get_controller)
+):    # Access the enum value
+    print(options.protocol_type)           # → ProtocolType.AUTO
+    print(options.protocol_type.value)     # → "auto_recognition"
+    
+    # Pass to controller
+    result = controller.build_prot_path_type_list(
+        paths,
+        burn_in_cal_mode=0,
+        include_burn_in_start=options.burnin_start
+    )
+    return {"result": result}

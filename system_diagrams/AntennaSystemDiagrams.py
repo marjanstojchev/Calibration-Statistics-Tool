@@ -1833,10 +1833,13 @@ def start_data_evaluation(parseDataList, plotSetup, chirpConfig, graphConfig, di
 
 
 if bUseGui:
-    qt.SysDiaInterTableParam.cellClicked.connect(SysDiaInterTableParamCellClicked)
-    qt.SysDiaInterTableProtocol.cellClicked.connect(SysDiaInterTableProtCellClicked)
-    qt.SysDiaInterSwitchBtn.clicked.connect(TurnOnOff)
-    qt.SysDiaInterClrGrBtn.clicked.connect(ClearData)
+    try:
+        qt.SysDiaInterTableParam.cellClicked.connect(SysDiaInterTableParamCellClicked)
+        qt.SysDiaInterTableProtocol.cellClicked.connect(SysDiaInterTableProtCellClicked)
+        qt.SysDiaInterSwitchBtn.clicked.connect(TurnOnOff)
+        qt.SysDiaInterClrGrBtn.clicked.connect(ClearData)
+    except AttributeError:
+        pass  # Running in headless mode, Qt objects not available
 else:
     # configuration file if the GUI is not used
     with open(os.path.join(aux.configDir, 'AntennaSystemDiagramsConf.yaml'), 'r', encoding='utf8') as yamlfile:

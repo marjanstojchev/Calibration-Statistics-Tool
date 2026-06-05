@@ -1,0 +1,12 @@
+from fastapi import APIRouter, Depends
+
+from shared.parse_controller import ParseController
+#
+protocol_stats_router = APIRouter()
+
+@router.get("/api/stats")
+def get_protocol_stats(
+    include_burn_in: bool = True,
+    include_cal: bool = True,
+    controller: ParseController = Depends(get_controller)
+):
