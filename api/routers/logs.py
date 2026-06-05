@@ -112,25 +112,25 @@ async def stream_main_load_data_logs():
 @router.get("/system-diagrams")
 def get_system_diagrams_logs():
     """Get buffered Antenna System Diagrams logs."""
-    return {"logs": list(log_buffers["system_diagrams"])}
+    return list(log_buffers["system_diagrams"])
 
 
 @router.get("/tx-diagrams")
 def get_tx_diagrams_logs():
     """Get buffered TX Antenna Diagrams logs."""
-    return {"logs": list(log_buffers["tx_diagrams"])}
+    return list(log_buffers["tx_diagrams"])
 
 
 @router.get("/antenna-patterns")
 def get_antenna_patterns_logs():
     """Get buffered Antenna Patterns logs."""
-    return {"logs": list(log_buffers["antenna_patterns"])}
+    return list(log_buffers["antenna_patterns"])
 
 
 @router.get("/main-load-data")
 def get_main_load_data_logs():
     """Get buffered Main Load Data parser logs."""
-    return {"logs": list(log_buffers["main_load_data"])}
+    return list(log_buffers["main_load_data"])
 
 
 @router.get("/all")

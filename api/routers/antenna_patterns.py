@@ -80,7 +80,7 @@ def start(request: Optional[AntPatStartRequest] = None):
 
     parsed_data = getattr(lp, 'sysDiagParsedDataList', [])
     if not parsed_data:
-        raise HTTPException(status_code=422, detail="No parsed data. Run /api/protocols/parse first.")
+        return {"error": "No parsed data. Run /api/protocols/parse first."}
 
     # Mirror what ant_pat_handlers.antpat_data_update_and_evaluation() does:
     # set module-level state then call start_data_evaluation.
