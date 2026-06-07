@@ -63,7 +63,6 @@ test-writer-mcp = "calibration_statistics_tool.agents.zephyr.mcp_server:run_serv
 
 [tool.setuptools]
 package-dir = {"calibration_statistics_tool" = "_cst_stub"}
-packages = ["calibration_statistics_tool"]
 
 [tool.setuptools.packages.find]
 where = ["."]
