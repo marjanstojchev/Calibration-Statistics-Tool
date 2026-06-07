@@ -1,4 +1,4 @@
-﻿"""PST-66: main.py rewritten as a thin wiring file.
+"""PST-66: main.py rewritten as a thin wiring file.
 
 Responsibilities:
   1. Qt platform plugin env var + MainView creation
@@ -14,6 +14,11 @@ All handler logic lives in ui/handlers/*.py.
 import os
 import sys
 
+# Fix Windows console encoding issues
+if sys.platform == 'win32':
+    import codecs
+    sys.stdout.reconfigure(encoding='utf-8') if hasattr(sys.stdout, 'reconfigure') else None
+
 from calibration_statistics_tool.shared import logconfig
 from calibration_statistics_tool.shared.parse_controller import ParseController
 from calibration_statistics_tool.shared.plot_controller import PlotController
@@ -21,9 +26,9 @@ from calibration_statistics_tool.shared import auxiliary as aux
 from calibration_statistics_tool.shared import user_paths as _up
 
 # ── Startup: config file location + onboarding notice ───────────────────────
-print(f"\n{'─' * 60}")
+print(f"\n{'-' * 60}")
 print(f"  Calibration Statistics Tool")
-print(f"{'─' * 60}")
+print(f"{'-' * 60}")
 print(f"  Config file : {_up.PATHS_FILE}")
 print(f"  Output dir  : {_up.output_base}")
 _unconfigured = {
@@ -40,9 +45,9 @@ if _missing:
     print(f"\n  Edit the config file above to set them.")
 else:
     print(f"\n  All input directories are configured.")
-print(f"{'─' * 60}\n")
+print(f"{'-' * 60}\n")
 del _unconfigured, _missing
-# ────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
 
 import PySide6
 
