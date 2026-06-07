@@ -11,8 +11,8 @@ if _root not in sys.path:
 
 # Import Qt constants for proper comparison
 from PySide6.QtWidgets import QFileDialog
-from ui.handlers.app_context import AppContext
-from ui.handlers.parse_handlers import addAndParsePtu2Files
+from calibration_statistics_tool.ui.handlers.app_context import AppContext
+from calibration_statistics_tool.ui.handlers.parse_handlers import addAndParsePtu2Files
 
 
 def _get_pc():

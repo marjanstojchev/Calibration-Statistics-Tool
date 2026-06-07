@@ -16,10 +16,8 @@ import pytest
 # Path setup — mirrors conftest.py and main.py path initialisation
 # ---------------------------------------------------------------------------
 _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-for _subdir in ["shared", "ui", "system_diagrams", "tx_diagrams", "antenna_patterns"]:
-    _path = os.path.join(_root, _subdir)
-    if _path not in sys.path:
-        sys.path.insert(0, _path)
+if _root not in sys.path:
+    sys.path.insert(0, _root)
 
 # parse_handlers imports ``from PySide6.QtWidgets import QTableWidgetItem`` at
 # module level.  Mock PySide6 before importing it (no-op if already present).
@@ -31,7 +29,7 @@ sys.modules.setdefault("PySide6.QtCore", _pyside_mock.QtCore)
 # sys_diag_handlers / tx_ant_diag_handlers / ant_pat_handlers do NOT import Qt
 # at module level (they use lazy imports inside functions), so they are safe to
 # import here unconditionally.
-from ui.handlers.sys_diag_handlers import (   # noqa: E402
+from calibration_statistics_tool.ui.handlers.sys_diag_handlers import (   # noqa: E402
     sys_diag_data_update_and_evaluation,
     sysDiagInputSetupAngleGroupClick,
     sysDiagInputSetupChirpClick,
@@ -65,7 +63,7 @@ from ui.handlers.sys_diag_handlers import (   # noqa: E402
     sysDiagPlotWindowAllGraphsComboBox2Click,
     sysDiagPlotWindowAllGraphsComboBox3Click,
 )
-from ui.handlers.tx_ant_diag_handlers import (  # noqa: E402
+from calibration_statistics_tool.ui.handlers.tx_ant_diag_handlers import (  # noqa: E402
     txAntDiagInputSetupAngleGroupClick,
     txAntDiagInputSetupAzClick,
     txAntDiagInputSetupElClick,
@@ -74,7 +72,7 @@ from ui.handlers.tx_ant_diag_handlers import (  # noqa: E402
     txAntDiagPlotSetupScalingNormGraphsClick,
     txAntDiagPlotSetupScalingOrigGraphsClick,
 )
-from ui.handlers.ant_pat_handlers import (  # noqa: E402
+from calibration_statistics_tool.ui.handlers.ant_pat_handlers import (  # noqa: E402
     antPatControl,
     antPatInputConfFileSearchClick,
     antPatInputNameIdentifierSelClick,

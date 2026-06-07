@@ -129,7 +129,7 @@ calibration-tool
 
 When running from source:
 ```bash
-python main.py
+python -m calibration_statistics_tool.main
 ```
 
 On startup, the console prints the location of `paths.json` and lists any input directories that have not been configured yet.
@@ -139,8 +139,9 @@ On startup, the console prints the location of `paths.json` and lists any input 
 The application follows an MVC architecture split across several sub-packages:
 
 ```
-main.py                         # Thin wiring file -- startup, DI, handler wiring
-shared/                         # Domain logic (controllers, parsers, models)
+calibration_statistics_tool/
+  main.py                       # Thin wiring file -- startup, DI, handler wiring
+  shared/                       # Domain logic (controllers, parsers, models)
     models.py                   # Data model classes
     parse_controller.py         # ParseController -- protocol/PTU2 business logic
     plot_controller.py          # PlotController -- diagram/plot state management
@@ -148,7 +149,7 @@ shared/                         # Domain logic (controllers, parsers, models)
     parsePTU2data.py            # PTU2 file parser and data structures
     parse_helpers.py            # Protocol parsing helpers
     loaddata.py                 # Data loading utilities
-ui/
+  ui/
     main_view.py                # MainView -- owns QApplication and all widgets
     pyside_qtgui.py             # Backward-compat shim (delegates to MainView)
     ui_constants.py             # Pure-Python layout/size/style constants
@@ -164,10 +165,9 @@ ui/
         sys_diag_tab.py
         tx_ant_diag_tab.py
         ant_pat_tab.py
-system_diagrams/                # AntennaSystemDiagrams computation module
-antenna_patterns/               # Antenna pattern analysis (antpat_v5)
-tx_diagrams/                    # Tx-Antenna Diagrams computation module
-config/                         # YAML configuration files
+  system_diagrams/              # AntennaSystemDiagrams computation module
+  antenna_patterns/             # Antenna pattern analysis (antpat_v5)
+  tx_diagrams/                  # Tx-Antenna Diagrams computation module
 tests/                          # Pytest test suite (613 tests)
     conftest.py                 # Shared fixtures and Qt session setup
     integration/                # Real-Qt integration tests
@@ -203,7 +203,7 @@ Detailed architecture documentation is in [docs/](docs/):
 
 ## Test Writer Agent (Jira Zephyr)
 
-The `agents/zephyr` package analyses the Python source tree and generates
+The `calibration_statistics_tool/agents/zephyr` package analyses the Python source tree and generates
 **manual test cases** as a CSV file that can be imported directly into
 **Jira Zephyr Scale** (*Test Cases → Import → CSV*).
 
@@ -211,8 +211,8 @@ The `agents/zephyr` package analyses the Python source tree and generates
 
 ```bash
 # Generate Unit + Integration test cases for the shared/ module
-python -m agents.zephyr.mcp_server \
-    --source shared/ \
+python -m calibration_statistics_tool.agents.zephyr.mcp_server \
+    --source calibration_statistics_tool/shared/ \
     --level Unit \
     --level Integration \
     --output zephyr_tests.csv

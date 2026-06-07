@@ -5,10 +5,10 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'shared'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from shared.parser_factory import ParserFactory, _REGISTRY
-from shared.parser_base import ParseDataBase
-from shared.parsePTU2data import PTU2ParseData
-from shared.parseTxAntDiagramData import TxAntDiagramParseData
+from calibration_statistics_tool.shared.parser_factory import ParserFactory, _REGISTRY
+from calibration_statistics_tool.shared.parser_base import ParseDataBase
+from calibration_statistics_tool.shared.parsePTU2data import PTU2ParseData
+from calibration_statistics_tool.shared.parseTxAntDiagramData import TxAntDiagramParseData
 
 
 class TestParserFactoryKnownTypes:

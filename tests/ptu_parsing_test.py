@@ -1,7 +1,7 @@
 # Initial pytest setup for PTU file parsing
 
 import pytest
-from shared.parsePTU2data import PtuPosMeasData
+from calibration_statistics_tool.shared.parsePTU2data import PtuPosMeasData
 
 # Test the initialization of PtuPosMeasData
 # This checks that default values are set correctly

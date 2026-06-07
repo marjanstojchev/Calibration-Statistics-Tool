@@ -38,8 +38,8 @@ import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from shared.plot_controller import PlotController
-from shared.parse_controller import ParseController
+from calibration_statistics_tool.shared.plot_controller import PlotController
+from calibration_statistics_tool.shared.parse_controller import ParseController
 
 
 # --------------------------------------------------------------------------- #

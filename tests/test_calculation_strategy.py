@@ -6,8 +6,8 @@ import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'shared'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-import calculation_strategy
-from calculation_strategy import (
+from calibration_statistics_tool.shared import calculation_strategy
+from calibration_statistics_tool.shared.calculation_strategy import (
     CalculationContext,
     AntLevelStrategy,
     AvgAntLevelStrategy,

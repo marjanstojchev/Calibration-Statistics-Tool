@@ -1,11 +1,11 @@
 """
-Tests for shared/models.py — PST-44: Extract Models from shared.
+Tests for shared/models.py — PST-44: Extract Models from calibration_statistics_tool.shared.
 """
 import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'shared'))
 
-from shared.models import (
+from calibration_statistics_tool.shared.models import (
     ImportedProtcolsData,
     ProtocolData,
     PTU2Data,
@@ -148,6 +148,6 @@ class TestProtocolsTableData:
 
     def test_re_export_from_data_processing(self):
         """Verify backward-compat re-export: dp.ProtocolsTableData still works."""
-        import data_processing as dp
+        from calibration_statistics_tool.shared import data_processing as dp
         td = dp.ProtocolsTableData('p', [], [])
         assert isinstance(td, ProtocolsTableData)

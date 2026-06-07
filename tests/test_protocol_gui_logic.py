@@ -47,14 +47,10 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-for _sub in ['shared']:
-    _p = os.path.join(_root, _sub)
-    if _p not in sys.path:
-        sys.path.insert(0, _p)
 
-from shared.parse_controller import ParseController
-from shared.parse_helpers import deduplicate_protocol_list, walk_protocol_files
-from shared.protocolsTest import ProtocolInfoClass
+from calibration_statistics_tool.shared.parse_controller import ParseController
+from calibration_statistics_tool.shared.parse_helpers import deduplicate_protocol_list, walk_protocol_files
+from calibration_statistics_tool.shared.protocolsTest import ProtocolInfoClass
 
 # ---------------------------------------------------------------------------
 # Fixture file paths (same as test_protocols.py)
@@ -689,7 +685,7 @@ class TestImportDeduplication:
     def test_new_protocols_after_dedup_scheduled_for_parsing(self):
         """[INTEGRATION] New paths from deduplication are appended to
         protToBeParsedDict via collect_unparsed_protocols."""
-        from shared.parse_helpers import collect_unparsed_protocols
+        from calibration_statistics_tool.shared.parse_helpers import collect_unparsed_protocols
 
         new_paths = ['/new_a.txt', '/new_b.txt']
         accepted  = [{'protocolPath': p, 'type': 'Calibration'} for p in new_paths]
@@ -706,7 +702,7 @@ class TestImportDeduplication:
     def test_already_parsed_skipped_in_to_be_parsed(self):
         """[FUNCTIONAL] Protocol already in parsedProtDict → NOT added to
         protToBeParsedDict again (no duplicate parse)."""
-        from shared.parse_helpers import collect_unparsed_protocols
+        from calibration_statistics_tool.shared.parse_helpers import collect_unparsed_protocols
 
         existing = [{'protocolPath': '/already.txt', 'type': 'Calibration'}]
         accepted = [

@@ -15,17 +15,17 @@ import pathlib
 import pytest
 from unittest.mock import MagicMock, patch, call
 
-import shared.auxiliary as aux
+import calibration_statistics_tool.shared.auxiliary as aux
 
 # Derive the config dir from auxiliary.py's location (shared/ -> shared/config/).
 # Do NOT use aux.burnInLimitsFilePath etc. directly in tests: those paths depend
 # on sys.argv[0] (= the pytest executable) when run via pytest.
 _PROJECT_ROOT = pathlib.Path(aux.__file__).resolve().parent.parent
 _CONFIG_DIR = pathlib.Path(aux.__file__).resolve().parent / 'config'
-from shared.parse_controller import ParseController
-from ui.handlers.app_context import AppContext
-from ui.handlers.parse_handlers import parseData, clearData
-from ui.handlers.stats_handlers import (
+from calibration_statistics_tool.shared.parse_controller import ParseController
+from calibration_statistics_tool.ui.handlers.app_context import AppContext
+from calibration_statistics_tool.ui.handlers.parse_handlers import parseData, clearData
+from calibration_statistics_tool.ui.handlers.stats_handlers import (
     write_statistic,
     clear_sel_stats_data,
     _on_group_forward,

@@ -3,8 +3,8 @@ import sys, os
 sys.path.insert(0, r'c:\Calibration Statistics Tool')
 sys.path.insert(0, r'c:\Calibration Statistics Tool\shared')
 
-from shared import parsePTU2data as p2
-from shared import huellkurven_data_processing as hdp
+from calibration_statistics_tool.shared import parsePTU2data as p2
+from calibration_statistics_tool.shared import huellkurven_data_processing as hdp
 
 PTU2_DIR = r'c:\Calibration Statistics Tool\measurement_data\ptu_files'
 

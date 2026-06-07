@@ -10,7 +10,7 @@ Tests cover the pure-logic helpers extracted from main.py:
 """
 import pytest
 from types import SimpleNamespace
-from shared.parse_helpers import (
+from calibration_statistics_tool.shared.parse_helpers import (
     filter_protocol_file_lists,
     merge_into_parsed_dicts,
     deduplicate_protocol_list,
