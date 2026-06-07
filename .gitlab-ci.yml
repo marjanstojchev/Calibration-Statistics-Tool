@@ -1,61 +1,122 @@
+# ═══════════════════════════════════════════════════════════════════════════════
 # GitLab CI/CD Pipeline for Calibration Statistics Tool
-# This pipeline runs tests and validates the Python application
+# ═══════════════════════════════════════════════════════════════════════════════
+# 
+# Pipeline Overview:
+#   1. TEST        → Run pytest on Linux & Windows
+#   2. BUILD-FRONTEND  → Compile React/Vite app
+#   3. BUILD       → Build Python package + Docker image
+#   4. DEPLOY      → Push to PyPI & Azure Container Apps
+#
+# Deployment Targets:
+#   - PyPI: Python package registry (tags only)
+#   - Azure: Container Apps cloud deployment (main branch + tags)
+#   - Docker Registry: GitLab Container Registry (auto-tagged)
+#
+# Dependencies:
+#   - GitLab Runner (Linux & Windows tags)
+#   - Docker buildkit (for multi-stage builds)
+#   - Azure CLI (for deployment)
+#   - PyPI credentials (TWINE_USERNAME, TWINE_PASSWORD in CI/CD Variables)
+#   - Azure credentials (AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_TENANT_ID)
+# ═══════════════════════════════════════════════════════════════════════════════
 
 stages:
-  # - lint
-  - test
-  - build
-  - deploy
+  - test              # Unit tests (pytest)
+  - build-frontend    # React app compilation
+  - build             # Python package + Docker image
+  - deploy            # Release to PyPI + Azure
 
-# Define variables
+# ═══════════════════════════════════════════════════════════════════════════════
+# Global Variables
+# ═══════════════════════════════════════════════════════════════════════════════
 variables:
-  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"         # Where pip cache is stored
-  QT_QPA_PLATFORM: "offscreen"                        # Run Qt in headless mode for CI
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"        # Pip package cache for faster installs
+  NPM_CACHE_DIR: "$CI_PROJECT_DIR/.cache/npm"        # Node package cache
+  QT_QPA_PLATFORM: "offscreen"                       # Headless mode for Qt/PySide6 in CI
+  DOCKER_IMAGE: "$CI_REGISTRY_IMAGE"                 # GitLab Container Registry image path
+  DOCKER_TAG: "$CI_COMMIT_REF_SLUG"                  # Docker tag (branch or tag name)
 
-# Shared cache configuration
+# ═══════════════════════════════════════════════════════════════════════════════
+# Shared Configuration Templates (Anchors)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# PIP Cache Template
+# Reduces pip install time by caching downloaded packages per branch
 .pip-cache:
   cache:
-    key: ${CI_COMMIT_REF_SLUG}                        # Cache key per branch
+    key: pip-${CI_COMMIT_REF_SLUG}                  # Separate cache per branch
     paths:
-      - .cache/pip                                     # Cache pip downloads
+      - .cache/pip                                   # Cache pip packages
 
-# Shared Python installation steps
+# NPM Cache Template
+# Reduces npm install time by caching node_modules and npm packages per branch
+.npm-cache:
+  cache:
+    key: npm-${CI_COMMIT_REF_SLUG}                  # Separate cache per branch
+    paths:
+      - cst-frontend/node_modules                   # Cache node dependencies
+      - .cache/npm                                  # Cache npm registry data
+
+# Shared Python Installation Steps
+# Installs pip, project dependencies, and dev tools (pytest, flake8, etc.)
 .pip-installs:
   before_script:
-    - python -m pip install --upgrade pip             # Upgrade pip
-    - pip install -e .                                # Install project with dependencies
-    - pip install -r requirements.txt                 # Install dev tools (pytest, flake8, etc.)
+    - python -m pip install --upgrade pip           # Upgrade to latest pip version
+    - pip install -e .                              # Install this project in editable mode (for testing)
+    - pip install -r requirements.txt               # Install all dependencies (FastAPI, pytest, etc.)
 
-# Linux Python setup (apt-get dependencies + pip installs)
+# Linux Python Setup Template
+# Installs Qt/PySide6 system dependencies + Python packages
+# Used for cross-platform testing and building
 .linux-python:
   extends: .pip-cache
-  image: python:3.13
+  image: python:3.13                                # Official Python 3.13 image
   before_script:
-    - apt-get update && apt-get install -y libgl1-mesa-dev libxkbcommon0 libxcb-xinerama0 libxcb-cursor0 libxrender1 libxrandr2 libdbus-1-3 xvfb # Install Qt/PySide6 dependencies
-    - !reference [.pip-installs, before_script]       # Then run shared pip installs
+    # Install system libraries required by PySide6/Qt:
+    #   libgl1-mesa-dev     - OpenGL support
+    #   libxkbcommon0       - Keyboard input
+    #   libxcb-*            - X Window System components
+    #   libxrender1         - Rendering library
+    #   libdbus-1-3         - D-Bus system message bus
+    #   xvfb                - Virtual frame buffer (headless display)
+    - apt-get update && apt-get install -y \
+        libgl1-mesa-dev libxkbcommon0 libxcb-xinerama0 libxcb-cursor0 \
+        libxrender1 libxrandr2 libdbus-1-3 xvfb
+    # Then run shared pip installation
+    - !reference [.pip-installs, before_script]
 
-# Test Stage - Run pytest on Linux
+# ═══════════════════════════════════════════════════════════════════════════════
+# TEST STAGE - Unit tests & validation
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Test on Linux (primary CI environment)
+# Runs pytest to validate Python backend functionality
 test:linux:
   extends: .linux-python
   stage: test
   script:
-    - python -m pytest --version
+    - python -m pytest --version                    # Display pytest version
     - python -m pytest -v --benchmark-disable --junitxml=report.xml
+      # -v: verbose output (show all test names)
+      # --benchmark-disable: skip benchmark tests (too slow for CI)
+      # --junitxml=report.xml: generate JUnit XML for GitLab integration
   artifacts:
     reports:
-      junit: report.xml
-    expire_in: 30 days
+      junit: report.xml                             # GitLab reads this for test results UI
+    expire_in: 30 days                              # Keep reports for 30 days
   rules:
-    - if: $CI_COMMIT_BRANCH
+    - if: $CI_COMMIT_BRANCH                         # Run on all branch pushes
 
-# Test Stage - Run pytest on Windows
+# Test on Windows (validates cross-platform compatibility)
+# Optional/soft-fail if Windows runners not available
 test:windows:
   extends: .pip-cache
   stage: test
   before_script:
-    - !reference [.pip-installs, before_script]       # Use shared pip installs
+    - !reference [.pip-installs, before_script]    # Use shared pip installation
   tags:
-    - windows                                         # Requires Windows runner
+    - windows                                       # Requires runner tagged "windows"
   script:
     - python -m pytest --version
     - python -m pytest -v --benchmark-disable --junitxml=report.xml
@@ -65,38 +126,146 @@ test:windows:
     expire_in: 30 days
   rules:
     - if: $CI_COMMIT_BRANCH
-  allow_failure: true                                 # Don't block pipeline if Windows runner unavailable
+  allow_failure: true                               # Don't block pipeline if Windows runner not available
 
-# Build Stage - Package the application
-build:
+# ═══════════════════════════════════════════════════════════════════════════════
+# BUILD-FRONTEND STAGE - Compile React app with Vite
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Build Frontend - Compile React/JSX → static dist/ files
+# Produces optimized bundle ready for production or Docker image
+build:frontend:
+  extends: .npm-cache
+  image: node:26-alpine                             # Lightweight Node.js image
+  stage: build-frontend
+  before_script:
+    - cd cst-frontend                               # Navigate to frontend directory
+    - npm ci                                        # Clean install (locks exact versions from package-lock.json)
+  script:
+    - npm run build                                 # Run Vite build (tsx → jsx → js)
+    - ls -la dist/                                  # Display build artifacts
+  artifacts:
+    paths:
+      - cst-frontend/dist/                          # React static files (HTML, CSS, JS bundles)
+    expire_in: 1 week                               # Keep for Docker build stage
+  rules:
+    - if: $CI_COMMIT_BRANCH                         # Build on all branches
+    - if: $CI_COMMIT_TAG                            # Build on version tags
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# BUILD STAGE - Create Python package + Docker image
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Build Python Package (wheel + sdist)
+# Creates distribution files for PyPI release
+build:package:
   extends: .linux-python
   stage: build
   script:
-    - python -m pip install --upgrade build
-    - python -m build
+    - python -m pip install --upgrade build         # Install latest build tool
+    - python -m build                               # Create wheel (.whl) and sdist (.tar.gz)
+      # Output: dist/calibration-statistics-tool-*.whl
   artifacts:
     paths:
-      - dist/
-    expire_in: 1 week
+      - dist/                                       # Python distribution files
+    expire_in: 1 week                               # Keep for PyPI deployment
   rules:
-    - if: $CI_COMMIT_BRANCH                           # Build on all branches (for testing)
-    - if: $CI_COMMIT_TAG                              # Also build on tags (for deployment)
+    - if: $CI_COMMIT_BRANCH                         # Build on all branches
+    - if: $CI_COMMIT_TAG                            # Build on version tags
 
-# Deploy Stage - Publish package to PyPI
+# Build Docker Image
+# Creates multi-stage Docker image:
+#   Stage 1: Node.js alpine → builds React (small layer)
+#   Stage 2: Python 3.13 → FastAPI backend + React static files
+# Final image serves both API and React frontend from single container
+build:docker:
+  stage: build
+  image: docker:27                                  # Docker CLI image
+  services:
+    - docker:27-dind                                # Docker-in-Docker daemon (required for building)
+  before_script:
+    # Login to GitLab Container Registry
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    # Build image with commit ref tag (e.g., main, feat-new-ui)
+    - docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
+    # Also tag as 'latest' for easy access to most recent build
+    - docker tag $DOCKER_IMAGE:$DOCKER_TAG $DOCKER_IMAGE:latest
+    # Push both tags to registry
+    - docker push $DOCKER_IMAGE:$DOCKER_TAG
+    - docker push $DOCKER_IMAGE:latest
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH   # Only build main branch (cost control)
+    - if: $CI_COMMIT_TAG                            # Build all version tags
+  dependencies:
+    - build:frontend                                # Needs cst-frontend/dist/ from build:frontend
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# DEPLOY STAGE - Release to PyPI & Azure
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Deploy to PyPI (Python Package Index)
+# Publishes Python wheel package for pip install
+# Only runs on version tags (e.g., v1.0.0, v1.0.1)
 deploy:pypi:
   extends: .linux-python
   stage: deploy
   dependencies:
-    - build                                           # Download artifacts from build job
+    - build:package                                 # Download dist/ artifacts
   script:
-    - python -m pip install --upgrade twine           # Install latest twine version
-    - python -m twine check dist/*                    # Validate distribution files
-    - python -m twine upload -u "$TWINE_USERNAME" -p "$TWINE_PASSWORD" dist/* --non-interactive # Upload to PyPI using explicit credentials
+    - python -m pip install --upgrade twine         # Install package publisher
+    - python -m twine check dist/*                  # Validate distribution files before upload
+    # Upload to PyPI using provided credentials
+    - python -m twine upload -u "$TWINE_USERNAME" -p "$TWINE_PASSWORD" \
+        dist/* --non-interactive
+      # Credentials stored in GitLab CI/CD Variables (Settings → CI/CD → Variables)
+      # TWINE_USERNAME: your PyPI username
+      # TWINE_PASSWORD: your PyPI API token (preferred over password)
   rules:
-    - if: $CI_COMMIT_TAG                              # Only deploy on git tags (e.g., v1.0.0)
+    - if: $CI_COMMIT_TAG                            # Only deploy on version tags (e.g., v1.0.0)
   environment:
-    name: production
+    name: production                                # Mark deployment in GitLab UI
     url: https://pypi.org/project/calibration-statistics-tool/
+
+# Deploy to Azure Container Apps
+# Deploys Docker image to Azure cloud infrastructure
+# Requires Azure service principal credentials stored in CI/CD Variables
+deploy:azure:
+  stage: deploy
+  image: mcr.microsoft.com/azure-cli:latest        # Official Azure CLI image
+  before_script:
+    # Login to Azure using service principal (credentials in CI/CD Variables)
+    # AZURE_CLIENT_ID: Application ID from Azure AD
+    # AZURE_CLIENT_SECRET: Service principal password/secret
+    # AZURE_TENANT_ID: Azure tenant ID
+    - az login --service-principal \
+        -u $AZURE_CLIENT_ID \
+        -p $AZURE_CLIENT_SECRET \
+        --tenant $AZURE_TENANT_ID
+  script:
+    # Update running Container App with new Docker image
+    # This triggers Azure to:
+    #   1. Pull new image from registry
+    #   2. Stop old pods
+    #   3. Start new pods with updated image
+    #   4. Perform health checks
+    - |
+      az containerapp update \
+        --name cst-app \
+        --resource-group $AZURE_RESOURCE_GROUP \
+        --image $DOCKER_IMAGE:$DOCKER_TAG
+      # Environment variables stored in CI/CD Variables:
+      # AZURE_RESOURCE_GROUP: Azure resource group name (e.g., cst-rg)
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH   # Deploy main branch changes
+    - if: $CI_COMMIT_TAG                            # Deploy all version tags
+  environment:
+    name: azure-production                          # Mark deployment in GitLab UI
+    url: https://cst-app.azurecontainerapps.io     # Production app URL
+  dependencies:
+    - build:docker                                  # Needs Docker image (implicitly via registry)
+  needs:
+    - build:docker                                  # Explicitly declare dependency for optimization
 
 # Deploy Stage - Build and Push Docker image
 deploy:docker:

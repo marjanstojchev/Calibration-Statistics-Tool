@@ -13,6 +13,8 @@ for _subdir in ['shared', 'ui', 'system_diagrams', 'tx_diagrams', 'antenna_patte
         sys.path.insert(0, _path)
 
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 
 from api.routers import (
     protocols,
@@ -40,6 +42,11 @@ app.include_router(protocol_stats.router,   prefix="/api/stats",                
 app.include_router(logs.router,             prefix="/logs",                      tags=["logs"])
 app.include_router(downloads.router,        prefix="/api/downloads",             tags=["downloads"])
 
-@app.get("/")
+# Serve React frontend static files (if built)
+_react_dist = Path(__file__).parent.parent / "cst-frontend" / "dist"
+if _react_dist.exists():
+    app.mount("/", StaticFiles(directory=str(_react_dist), html=True), name="frontend")
+
+@app.get("/api/health")
 def health():
     return {"status": "ok"}

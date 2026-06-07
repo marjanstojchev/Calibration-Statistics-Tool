@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  # Backend API (FastAPI)
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cst-api
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - QT_QPA_PLATFORM=offscreen
+    volumes:
+      # Mount measurement data (read-only)
+      - ./measurement_data:/app/measurement_data:ro
+      # Mount output directories (read-write)
+      - ./output:/app/output
+      - ./output_antenna_patterns:/app/output_antenna_patterns
+      - ./output_huellkurven:/app/output_huellkurven
+      - ./output_tx_diagrams:/app/output_tx_diagrams
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/api/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Frontend Dev Server (optional, for development only)
+  frontend-dev:
+    image: node:26-alpine
+    container_name: cst-frontend-dev
+    working_dir: /app
+    command: npm run dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./cst-frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    profiles:
+      - dev

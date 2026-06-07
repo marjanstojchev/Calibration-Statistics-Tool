@@ -1,0 +1,86 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+*.whl
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Logs
+*.log
+0_logFiles/
+
+# Output directories
+output/
+output_antenna_patterns/
+output_huellkurven/
+output_merge/
+output_tx_diagrams/
+
+# Measurement data (too large for container)
+measurement_data/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# CI/CD
+.gitlab-ci.yml
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Node.js (frontend source - only include dist)
+cst-frontend/node_modules/
+cst-frontend/src/
+cst-frontend/.gitignore
+cst-frontend/eslint.config.js
+cst-frontend/vite.config.js
+cst-frontend/package*.json
+cst-frontend/README.md
+
+# Build artifacts (will be copied from builder stage)
+cst-frontend/dist/
+
+# Temporary files
+_*.py
+_*.txt
+*.tmp
+.DS_Store
+Thumbs.db
