@@ -19,7 +19,7 @@ if _REPO_ROOT not in sys.path:
 @pytest.fixture(scope="session")
 def mod():
     """Import sys_diag_tab exactly once per test session."""
-    return importlib.import_module("ui.tabs.sys_diag_tab")
+    return importlib.import_module("calibration_statistics_tool.ui.tabs.sys_diag_tab")
 
 
 # ===========================================================================
