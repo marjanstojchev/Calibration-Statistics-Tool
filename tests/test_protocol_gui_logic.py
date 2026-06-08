@@ -738,7 +738,7 @@ class TestSensorMusterFlagPropagation:
         p.write_text('dummy')
 
         pc = _make_pc()
-        with patch('shared.parse_controller.ParserFactory') as MockFactory:
+        with patch('calibration_statistics_tool.shared.parse_controller.ParserFactory') as MockFactory:
             mock_parser = MagicMock()
             mock_parser.bDataValid = True
             MockFactory.create.return_value = mock_parser
@@ -754,7 +754,7 @@ class TestSensorMusterFlagPropagation:
         muster_list = ['sensor_A', 'sensor_B']
 
         pc = _make_pc()
-        with patch('shared.parse_controller.ParserFactory') as MockFactory:
+        with patch('calibration_statistics_tool.shared.parse_controller.ParserFactory') as MockFactory:
             mock_parser = MagicMock()
             mock_parser.bDataValid = True
             MockFactory.create.return_value = mock_parser
@@ -770,7 +770,7 @@ class TestSensorMusterFlagPropagation:
         muster_list = ['muster_X']
 
         pc = _make_pc()
-        with patch('shared.parse_controller.ParserFactory') as MockFactory:
+        with patch('calibration_statistics_tool.shared.parse_controller.ParserFactory') as MockFactory:
             mock_parser = MagicMock()
             mock_parser.bDataValid = False
             MockFactory.create.return_value = mock_parser
