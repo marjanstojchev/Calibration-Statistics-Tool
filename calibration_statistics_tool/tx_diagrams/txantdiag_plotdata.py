@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.patches as mpatches
 from matplotlib.ticker import (AutoMinorLocator)
 import gc
-import txantdiag_calc as calc
+from calibration_statistics_tool.tx_diagrams import txantdiag_calc as calc
 from calibration_statistics_tool.shared import logconfig as log
 from calibration_statistics_tool.shared import auxiliary as aux
 

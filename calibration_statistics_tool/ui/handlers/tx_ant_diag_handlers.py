@@ -176,7 +176,7 @@ def _txAntDiag():
     ``tx_diagrams`` is on sys.path (added by main.py before any handler
     module is imported), so the bare-module name is correct here.
     """
-    import TxAntDiagrams as _mod  # noqa: PLC0415
+    from calibration_statistics_tool.tx_diagrams import TxAntDiagrams as _mod  # noqa: PLC0415
     return _mod
 
 

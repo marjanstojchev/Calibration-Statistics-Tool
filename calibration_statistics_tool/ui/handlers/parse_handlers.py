@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 
 from calibration_statistics_tool.shared import auxiliary as aux
 from calibration_statistics_tool.shared import data_processing as dp
-import protocolsTest as protocolFilter
+from calibration_statistics_tool.shared import protocolsTest as protocolFilter
 from PySide6.QtWidgets import QTableWidgetItem
 from calibration_statistics_tool.shared.parse_helpers import (
     collect_unparsed_protocols,
@@ -37,8 +37,8 @@ parseDataLog = logconfig.mainLoadDataLogger.logger
 # ---------------------------------------------------------------------------
 
 def parseProtSensorMusterClick(ctx: "AppContext") -> None:
-    import antpat_v5_main_v3 as _antPat1  # noqa: PLC0415
-    import TxAntDiagrams as _txAntDiag    # noqa: PLC0415
+    from calibration_statistics_tool.antenna_patterns import antpat_v5_main_v3 as _antPat1  # noqa: PLC0415
+    from calibration_statistics_tool.tx_diagrams import TxAntDiagrams as _txAntDiag    # noqa: PLC0415
     state = ctx.qt.parseProtSensorMusterCheckBox.isChecked()
     ctx.mv.set_sensor_muster_enabled(state == 1)
     ctx.plc.set_sensor_muster_enabled(state == 1)
@@ -705,8 +705,8 @@ def getprotcols(
 
 def init_widgets(ctx: "AppContext") -> None:
     """Set default widget states for the parse tab (PST-66)."""
-    import antpat_v5_main_v3 as _antPat1  # noqa: PLC0415
-    import TxAntDiagrams as _txAntDiag    # noqa: PLC0415
+    from calibration_statistics_tool.antenna_patterns import antpat_v5_main_v3 as _antPat1  # noqa: PLC0415
+    from calibration_statistics_tool.tx_diagrams import TxAntDiagrams as _txAntDiag    # noqa: PLC0415
 
     # Sensor muster
     ctx.qt.parseProtSensorMusterCheckBox.setChecked(False)

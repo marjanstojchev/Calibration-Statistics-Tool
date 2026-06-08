@@ -1,10 +1,10 @@
 from __future__ import annotations
 import os
-import protocolsTest as protocolfilter
+from calibration_statistics_tool.shared import protocolsTest as protocolfilter
 from calibration_statistics_tool.ui import pyside_qtgui as qt
 from calibration_statistics_tool.shared import safeparse as sp
 from calibration_statistics_tool.shared import logconfig
-import protocolsTest as protocolFilter
+from calibration_statistics_tool.shared import protocolsTest as protocolFilter
 # loadDataLogger=logconfig.loadDataLogger
 parseDataLogger=logconfig.mainLoadDataLogger
 parseDataLog=logconfig.mainLoadDataLogger.logger

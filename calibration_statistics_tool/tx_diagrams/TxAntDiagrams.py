@@ -1,6 +1,6 @@
 
 from calibration_statistics_tool.tx_diagrams import load_TxAntData as ld
-import powerpoint as pp
+from calibration_statistics_tool.shared import powerpoint as pp
 import os
 import numpy as np
 import pptx

@@ -38,7 +38,7 @@ _signal_mappers: dict = {}
 
 def _antPat1():
     """Return the antpat_v5_main_v3 module (imported lazily)."""
-    import antpat_v5_main_v3 as _mod  # noqa: PLC0415
+    from calibration_statistics_tool.antenna_patterns import antpat_v5_main_v3 as _mod  # noqa: PLC0415
     return _mod
 
 
