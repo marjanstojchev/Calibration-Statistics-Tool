@@ -135,11 +135,11 @@ class TestParseDataButton:
     # parseData calls several internal helpers before the limits section.
     # Patch them so the test focuses only on limits behaviour.
     _PARSE_DATA_PATCHES = (
-        'ui.handlers.parse_handlers.filter_protocol_file_lists',
-        'ui.handlers.parse_handlers.setup_progress_bar',
-        'ui.handlers.parse_handlers._load_protocol_data',
-        'ui.handlers.parse_handlers.merge_into_parsed_dicts',
-        'ui.handlers.parse_handlers._populate_accepted_protocols_table',
+        'calibration_statistics_tool.ui.handlers.parse_handlers.filter_protocol_file_lists',
+        'calibration_statistics_tool.ui.handlers.parse_handlers.setup_progress_bar',
+        'calibration_statistics_tool.ui.handlers.parse_handlers._load_protocol_data',
+        'calibration_statistics_tool.ui.handlers.parse_handlers.merge_into_parsed_dicts',
+        'calibration_statistics_tool.ui.handlers.parse_handlers._populate_accepted_protocols_table',
     )
 
     def _run_parseData(self, ctx) -> None:
@@ -228,15 +228,15 @@ class TestClearDataButton:
 
     def test_clear_data_no_crash(self):
         ctx = _make_ctx()
-        with patch('ui.handlers.parse_handlers.clearTable'):
+        with patch('calibration_statistics_tool.ui.handlers.parse_handlers.clearTable'):
             clearData(ctx)
 
     def test_clear_data_calls_pc_clear_state(self):
         """clearData must call ctx.pc.clear_state()."""
         pc = MagicMock(spec=ParseController)
         ctx = _make_ctx(pc=pc)
-        with patch('ui.handlers.parse_handlers.clearTable'), \
-             patch('ui.handlers.parse_handlers.clear_stats_ui'):
+        with patch('calibration_statistics_tool.ui.handlers.parse_handlers.clearTable'), \
+             patch('calibration_statistics_tool.ui.handlers.parse_handlers.clear_stats_ui'):
             clearData(ctx)
         pc.clear_state.assert_called_once()
 
@@ -244,7 +244,7 @@ class TestClearDataButton:
         """clearData must call mv.populate_burn_in_groups([])."""
         mv = _make_mv()
         ctx = _make_ctx(mv=mv)
-        with patch('ui.handlers.parse_handlers.clearTable'):
+        with patch('calibration_statistics_tool.ui.handlers.parse_handlers.clearTable'):
             clearData(ctx)
         mv.populate_burn_in_groups.assert_called_with([])
 
@@ -252,7 +252,7 @@ class TestClearDataButton:
         """clearData must call mv.populate_cal_groups([])."""
         mv = _make_mv()
         ctx = _make_ctx(mv=mv)
-        with patch('ui.handlers.parse_handlers.clearTable'):
+        with patch('calibration_statistics_tool.ui.handlers.parse_handlers.clearTable'):
             clearData(ctx)
         mv.populate_cal_groups.assert_called_with([])
 
@@ -275,7 +275,7 @@ class TestWriteStatisticButton:
 
     def test_write_statistic_calls_fill_stats_table(self):
         """write_statistic must invoke fill_stats_table to refresh the UI."""
-        with patch('ui.handlers.stats_handlers.fill_stats_table') as mock_fill:
+        with patch('calibration_statistics_tool.ui.handlers.stats_handlers.fill_stats_table') as mock_fill:
             ctx = _make_ctx()
             write_statistic(ctx)
             mock_fill.assert_called_once_with(ctx)
@@ -338,7 +338,7 @@ class TestGroupNavigationButtons:
         qt = _make_qt()
         qt.statsGroupsTypeButtonGroup.checkedId.return_value = 0  # BurnIn
         ctx = _make_ctx(qt=qt, pc=pc)
-        with patch('ui.handlers.stats_handlers.set_limits_group_active'):
+        with patch('calibration_statistics_tool.ui.handlers.stats_handlers.set_limits_group_active'):
             _on_group_forward(ctx)
         assert pc.burnInLimitsGroupDict['activeGroupIndex'] == 0
 
@@ -348,7 +348,7 @@ class TestGroupNavigationButtons:
         qt = _make_qt()
         qt.statsGroupsTypeButtonGroup.checkedId.return_value = 0
         ctx = _make_ctx(qt=qt, pc=pc)
-        with patch('ui.handlers.stats_handlers.set_limits_group_active'):
+        with patch('calibration_statistics_tool.ui.handlers.stats_handlers.set_limits_group_active'):
             _on_group_forward(ctx)
         assert pc.burnInLimitsGroupDict['activeGroupIndex'] == 0
 
@@ -358,7 +358,7 @@ class TestGroupNavigationButtons:
         qt = _make_qt()
         qt.statsGroupsTypeButtonGroup.checkedId.return_value = 0
         ctx = _make_ctx(qt=qt, pc=pc)
-        with patch('ui.handlers.stats_handlers.set_limits_group_active'):
+        with patch('calibration_statistics_tool.ui.handlers.stats_handlers.set_limits_group_active'):
             _on_group_back(ctx)
         assert pc.burnInLimitsGroupDict['activeGroupIndex'] == 1
 
@@ -368,7 +368,7 @@ class TestGroupNavigationButtons:
         qt = _make_qt()
         qt.statsGroupsTypeButtonGroup.checkedId.return_value = 0
         ctx = _make_ctx(qt=qt, pc=pc)
-        with patch('ui.handlers.stats_handlers.set_limits_group_active'):
+        with patch('calibration_statistics_tool.ui.handlers.stats_handlers.set_limits_group_active'):
             _on_group_back(ctx)
         assert pc.burnInLimitsGroupDict['activeGroupIndex'] == 2
 
@@ -397,7 +397,7 @@ class TestGroupNavigationButtons:
         qt = _make_qt()
         qt.statsGroupsTypeButtonGroup.checkedId.return_value = 1  # Cal
         ctx = _make_ctx(qt=qt, pc=pc)
-        with patch('ui.handlers.stats_handlers.set_limits_group_active'):
+        with patch('calibration_statistics_tool.ui.handlers.stats_handlers.set_limits_group_active'):
             _on_group_forward(ctx)
         assert pc.calLimitsGroupDict['activeGroupIndex'] == 0
 
@@ -419,11 +419,11 @@ class TestTabGroupPopulation:
         return pc
 
     def _run_parseData(self, ctx) -> None:
-        with patch('ui.handlers.parse_handlers.filter_protocol_file_lists', return_value=([], [])), \
-             patch('ui.handlers.parse_handlers.setup_progress_bar', return_value=('', 0)), \
-             patch('ui.handlers.parse_handlers._load_protocol_data', return_value=([], [], [], [])), \
-             patch('ui.handlers.parse_handlers.merge_into_parsed_dicts'), \
-             patch('ui.handlers.parse_handlers._populate_accepted_protocols_table'):
+        with patch('calibration_statistics_tool.ui.handlers.parse_handlers.filter_protocol_file_lists', return_value=([], [])), \
+             patch('calibration_statistics_tool.ui.handlers.parse_handlers.setup_progress_bar', return_value=('', 0)), \
+             patch('calibration_statistics_tool.ui.handlers.parse_handlers._load_protocol_data', return_value=([], [], [], [])), \
+             patch('calibration_statistics_tool.ui.handlers.parse_handlers.merge_into_parsed_dicts'), \
+             patch('calibration_statistics_tool.ui.handlers.parse_handlers._populate_accepted_protocols_table'):
             parseData(ctx)
 
     def test_populate_burn_in_groups_called_after_parse(self):
