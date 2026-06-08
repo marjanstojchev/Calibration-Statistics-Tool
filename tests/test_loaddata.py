@@ -5,12 +5,8 @@ Covers the error handling improvements added in this session:
 - Empty/None/falsy path guard in loadData()
 - OSError handling for os.listdir() failures in proceessPath()
 """
-import sys
 import os
 import pytest
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'shared'))
 
 from calibration_statistics_tool.shared.loaddata import LoadData
 

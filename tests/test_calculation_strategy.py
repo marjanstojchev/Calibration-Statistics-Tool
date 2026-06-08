@@ -1,10 +1,6 @@
-import sys
 import os
 import numpy as np
 import pytest
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'shared'))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from calibration_statistics_tool.shared import calculation_strategy
 from calibration_statistics_tool.shared.calculation_strategy import (

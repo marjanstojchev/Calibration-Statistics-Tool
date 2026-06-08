@@ -6,18 +6,10 @@ minimal sys.modules patching needed for any top-level Qt imports.
 """
 from __future__ import annotations
 
-import os
 import sys
 from unittest.mock import MagicMock, patch
 
 import pytest
-
-# ---------------------------------------------------------------------------
-# Path setup — mirrors conftest.py and main.py path initialisation
-# ---------------------------------------------------------------------------
-_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if _root not in sys.path:
-    sys.path.insert(0, _root)
 
 # parse_handlers imports ``from PySide6.QtWidgets import QTableWidgetItem`` at
 # module level.  Mock PySide6 before importing it (no-op if already present).

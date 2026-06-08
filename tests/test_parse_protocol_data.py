@@ -1,9 +1,5 @@
 import pytest
 import os
-import sys
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'shared'))
 
 from calibration_statistics_tool.shared.parse_protocol_data import ProtocolParseData, _detect_protocol_type
 from calibration_statistics_tool.shared.parseProtocols import ProtocolType

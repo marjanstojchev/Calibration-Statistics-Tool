@@ -29,14 +29,11 @@ Key scenarios
 
 from __future__ import annotations
 
-import sys
 import os
 import types
 from unittest.mock import MagicMock, patch, call
 
 import pytest
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from calibration_statistics_tool.shared.plot_controller import PlotController
 from calibration_statistics_tool.shared.parse_controller import ParseController

@@ -7,16 +7,9 @@ Uses fixtures from conftest.py for realistic PTU2ParseData structures.
 These tests serve as the regression baseline before Phase 2 vectorization.
 Any optimisation must produce bit-identical results for all tests here.
 """
-import sys
 import os
 import pytest
 import numpy as np
-
-_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-for _subdir in ['shared']:
-    _path = os.path.join(_root, _subdir)
-    if _path not in sys.path:
-        sys.path.insert(0, _path)
 
 from calibration_statistics_tool.shared import calcdiagram_functions as calc
 

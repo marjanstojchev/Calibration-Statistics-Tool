@@ -5,13 +5,10 @@ Uses real Qt widgets; QApplication is provided by the session-scoped qapp
 fixture in conftest.py.  The old mock-based approach is replaced with
 targeted patch.object calls and direct widget state assertions.
 """
-import sys
 import os
 from unittest.mock import patch, MagicMock
 
 import pytest
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 @pytest.fixture(scope='module')

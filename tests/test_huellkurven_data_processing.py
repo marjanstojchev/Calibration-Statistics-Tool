@@ -18,16 +18,9 @@ Covers:
 - writeLimitsDataToFile writes correct headers/data
 - savePlotImage creates PNG files
 """
-import sys
 import os
 import types
 import pytest
-
-_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-for _subdir in ['shared']:
-    _path = os.path.join(_root, _subdir)
-    if _path not in sys.path:
-        sys.path.insert(0, _path)
 
 from calibration_statistics_tool.shared.huellkurven_data_processing import (
     calcPatternLimits,

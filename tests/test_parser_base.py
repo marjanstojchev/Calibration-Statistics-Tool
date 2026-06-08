@@ -1,8 +1,5 @@
 import pytest
-import sys
 import os
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'shared'))
 
 from calibration_statistics_tool.shared.parser_base import ParseDataBase
 

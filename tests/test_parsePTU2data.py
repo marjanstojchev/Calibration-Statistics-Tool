@@ -7,14 +7,10 @@ Uses fixtures from conftest.py for realistic PTU2ParseData structures.
 These tests serve as the regression baseline before Phase 2 vectorization.
 Any optimisation must produce bit-identical results for all tests here.
 """
-import sys
 import os
 import tempfile
 import pytest
 import numpy as np
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'shared'))
 
 from calibration_statistics_tool.shared.parsePTU2data import (
     AntennaLevelData, DiffPhaseData, ChirpMeasData, PtuPosMeasData,

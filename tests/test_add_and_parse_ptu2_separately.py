@@ -1,13 +1,7 @@
 
 import pytest
-import sys
 import os
 from unittest.mock import MagicMock
-
-# Add project root to path for imports
-_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if _root not in sys.path:
-    sys.path.insert(0, _root)
 
 # Import Qt constants for proper comparison
 from PySide6.QtWidgets import QFileDialog
@@ -17,7 +11,7 @@ from calibration_statistics_tool.ui.handlers.parse_handlers import addAndParsePt
 
 def _get_pc():
     """Return the ParseController instance owned by main."""
-    import main
+    from calibration_statistics_tool import main
     return main.pc
 
 
@@ -37,7 +31,7 @@ def test_dialog_opens_user_cancels(mocker):
     mock_qt = MagicMock()
     mock_qt.parseProtAddAndParsePtu2FDialog.exec_.return_value = False  # Dialog cancelled
 
-    mocker.patch('ui.handlers.parse_handlers.clearTable')
+    mocker.patch('calibration_statistics_tool.ui.handlers.parse_handlers.clearTable')
 
     ctx = _make_ctx(mock_qt)
     addAndParsePtu2Files(ctx)
@@ -52,7 +46,7 @@ def test_dialog_opens_no_files_selected(mocker):
     mock_qt.parseProtAddAndParsePtu2FDialog.exec_.return_value = True   # User clicked OK
     mock_qt.parseProtAddAndParsePtu2FDialog.selectedFiles.return_value = []
 
-    mocker.patch('ui.handlers.parse_handlers.clearTable')
+    mocker.patch('calibration_statistics_tool.ui.handlers.parse_handlers.clearTable')
 
     pc = _get_pc()
     pc.clear_state()
@@ -80,9 +74,9 @@ def test_files_selected_all_parse_successfully(mocker):
     ]
     mock_qt.parseProtAddAndParsePtu2FDialog.selectedFiles.return_value = real_ptu_files
 
-    mocker.patch('ui.handlers.parse_handlers.parseDataLog')
-    mock_clearTable = mocker.patch('ui.handlers.parse_handlers.clearTable')
-    mocker.patch('ui.handlers.parse_handlers.QTableWidgetItem')
+    mocker.patch('calibration_statistics_tool.ui.handlers.parse_handlers.parseDataLog')
+    mock_clearTable = mocker.patch('calibration_statistics_tool.ui.handlers.parse_handlers.clearTable')
+    mocker.patch('calibration_statistics_tool.ui.handlers.parse_handlers.QTableWidgetItem')
 
     pc = _get_pc()
     pc.clear_state()
@@ -111,9 +105,9 @@ def test_files_selected_some_fail_parsing(mocker):
     bad_file  = os.path.join(test_dir, 'tests', 'bad_ptu2_test_file.txt')
     mock_qt.parseProtAddAndParsePtu2FDialog.selectedFiles.return_value = [good_file, bad_file]
 
-    mocker.patch('ui.handlers.parse_handlers.parseDataLog')
-    mock_clearTable = mocker.patch('ui.handlers.parse_handlers.clearTable')
-    mocker.patch('ui.handlers.parse_handlers.QTableWidgetItem')
+    mocker.patch('calibration_statistics_tool.ui.handlers.parse_handlers.parseDataLog')
+    mock_clearTable = mocker.patch('calibration_statistics_tool.ui.handlers.parse_handlers.clearTable')
+    mocker.patch('calibration_statistics_tool.ui.handlers.parse_handlers.QTableWidgetItem')
 
     pc = _get_pc()
     pc.clear_state()
@@ -140,9 +134,9 @@ def test_duplicate_files_not_added_twice(mocker):
     duplicate_file_path = os.path.join(test_dir, 'measurement_data', 'ptu_files', '2024-01-15_08-15-30_Tuner1_rf12345_dsp67890_Seq1_TxAnt0_Diagram0_Az_ptu2.txt')
     mock_qt.parseProtAddAndParsePtu2FDialog.selectedFiles.return_value = [duplicate_file_path]
 
-    mocker.patch('ui.handlers.parse_handlers.parseDataLog')
-    mocker.patch('ui.handlers.parse_handlers.clearTable')
-    mocker.patch('ui.handlers.parse_handlers.QTableWidgetItem')
+    mocker.patch('calibration_statistics_tool.ui.handlers.parse_handlers.parseDataLog')
+    mocker.patch('calibration_statistics_tool.ui.handlers.parse_handlers.clearTable')
+    mocker.patch('calibration_statistics_tool.ui.handlers.parse_handlers.QTableWidgetItem')
 
     pc = _get_pc()
     pc.clear_state()
@@ -171,7 +165,7 @@ def test_dialog_only_accepts_ptu2_files(mocker):
     mock_qt.parseProtAddAndParsePtu2FDialog.fileMode.return_value = QFileDialog.ExistingFiles
     mock_qt.parseProtAddAndParsePtu2FDialog.exec_.return_value = False  # User cancels
 
-    mocker.patch('ui.handlers.parse_handlers.clearTable')
+    mocker.patch('calibration_statistics_tool.ui.handlers.parse_handlers.clearTable')
 
     actual_filter = mock_qt.parseProtAddAndParsePtu2FDialog.nameFilter()
     assert "ptu2" in actual_filter.lower(), f"Expected PTU2 filter, got: {actual_filter}"
@@ -200,9 +194,9 @@ def test_counters_update_correctly(mocker):
     bad_file  = os.path.join(test_dir, 'tests', 'bad_ptu2_test_file.txt')
     mock_qt.parseProtAddAndParsePtu2FDialog.selectedFiles.return_value = [good_file, bad_file]
 
-    mocker.patch('ui.handlers.parse_handlers.parseDataLog')
-    mocker.patch('ui.handlers.parse_handlers.clearTable')
-    mocker.patch('ui.handlers.parse_handlers.QTableWidgetItem')
+    mocker.patch('calibration_statistics_tool.ui.handlers.parse_handlers.parseDataLog')
+    mocker.patch('calibration_statistics_tool.ui.handlers.parse_handlers.clearTable')
+    mocker.patch('calibration_statistics_tool.ui.handlers.parse_handlers.QTableWidgetItem')
 
     pc = _get_pc()
     pc.clear_state()
@@ -226,9 +220,9 @@ def test_log_entries_created_with_timestamps_and_status(mocker):
     ]
     mock_qt.parseProtAddAndParsePtu2FDialog.selectedFiles.return_value = test_files
 
-    mocker.patch('ui.handlers.parse_handlers.parseDataLog')
-    mocker.patch('ui.handlers.parse_handlers.clearTable')
-    mocker.patch('ui.handlers.parse_handlers.QTableWidgetItem')
+    mocker.patch('calibration_statistics_tool.ui.handlers.parse_handlers.parseDataLog')
+    mocker.patch('calibration_statistics_tool.ui.handlers.parse_handlers.clearTable')
+    mocker.patch('calibration_statistics_tool.ui.handlers.parse_handlers.QTableWidgetItem')
 
     pc = _get_pc()
     pc.clear_state()

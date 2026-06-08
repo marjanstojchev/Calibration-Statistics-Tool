@@ -3,10 +3,7 @@ Unit tests for PlotController (PST-46).
 No Qt required.
 """
 import pytest
-import sys
 import os
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from calibration_statistics_tool.shared.plot_controller import PlotController
 

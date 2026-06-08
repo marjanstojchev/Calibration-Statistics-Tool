@@ -2,7 +2,6 @@
 Shared pytest fixtures for Calibration Statistics Tool tests.
 Provides reusable mock PTU2ParseData structures matching real parsed data.
 """
-import sys
 import os
 import pytest
 import numpy as np
@@ -40,17 +39,9 @@ def shared_main_view(_qapp_session):
     module-level PySide6 setdefault mock does not interfere during collection.
     The _qapp_session parameter guarantees a real QApplication exists first.
     """
-    _root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    if _root_dir not in sys.path:
-        sys.path.insert(0, _root_dir)
     from calibration_statistics_tool.ui.main_view import MainView
     v = MainView()
     yield v
-
-# Add project root to path
-_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if _root not in sys.path:
-    sys.path.insert(0, _root)
 
 from calibration_statistics_tool.shared.parsePTU2data import (
     PTU2ParseData, AntennaInfo, ChirpInfo,

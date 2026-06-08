@@ -2,16 +2,11 @@
 Tests for PTU2ParseData.buildArrays() and the flat NumPy arrays
 (angles_array, levels_array, phases_array) added as part of PST-29.
 """
-import sys
 import os
 import pytest
 import numpy as np
 
 _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-for _subdir in ['shared', 'system_diagrams', 'tx_diagrams', 'antenna_patterns']:
-    _path = os.path.join(_root, _subdir)
-    if _path not in sys.path:
-        sys.path.insert(0, _path)
 
 from calibration_statistics_tool.shared.parsePTU2data import PTU2ParseData
 

@@ -1,10 +1,7 @@
 """
 Tests for shared/models.py — PST-44: Extract Models from calibration_statistics_tool.shared.
 """
-import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'shared'))
-
 from calibration_statistics_tool.shared.models import (
     ImportedProtcolsData,
     ProtocolData,
