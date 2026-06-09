@@ -613,9 +613,15 @@ def init_widgets(ctx: "AppContext") -> None:
 # Evaluation orchestrator (PST-59) — wired to sysDiagStartPushBtn
 # ---------------------------------------------------------------------------
 
+def _antSysDiag():
+    """Return the AntennaSystemDiagrams module (imported lazily)."""
+    from calibration_statistics_tool.system_diagrams import AntennaSystemDiagrams as _mod  # noqa: PLC0415
+    return _mod
+
+
 def sys_diag_data_update_and_evaluation(ctx: "AppContext") -> None:
     """Read widget state, build graph lists, then start the sysDiag evaluation."""
-    from calibration_statistics_tool.system_diagrams import AntennaSystemDiagrams as antSysDiag  # noqa: PLC0415
+    antSysDiag = _antSysDiag()
     from calibration_statistics_tool.shared import auxiliary as aux           # noqa: PLC0415
 
     twoGraphSetupList:      list = []
@@ -871,7 +877,7 @@ def wire(ctx: "AppContext") -> None:
 
 def _fill_in_ptu(ctx: "AppContext") -> None:
     """Delegate the fill-PTU-table action to AntennaSystemDiagrams."""
-    from calibration_statistics_tool.system_diagrams import AntennaSystemDiagrams as antSysDiag  # noqa: PLC0415
+    antSysDiag = _antSysDiag()
     antSysDiag.fillInPTU(
         _resolve_sys_diag_parsed_data(ctx),
         logconfig.antSysDiagLogger,
