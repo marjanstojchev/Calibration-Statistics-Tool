@@ -135,11 +135,11 @@ class TestParseDataButton:
     # parseData calls several internal helpers before the limits section.
     # Patch them so the test focuses only on limits behaviour.
     _PARSE_DATA_PATCHES = (
-        'ui.handlers.parse_handlers.filter_protocol_file_lists',
-        'ui.handlers.parse_handlers.setup_progress_bar',
-        'ui.handlers.parse_handlers._load_protocol_data',
-        'ui.handlers.parse_handlers.merge_into_parsed_dicts',
-        'ui.handlers.parse_handlers._populate_accepted_protocols_table',
+        'calibration_statistics_tool.ui.handlers.parse_handlers.filter_protocol_file_lists',
+        'calibration_statistics_tool.ui.handlers.parse_handlers.setup_progress_bar',
+        'calibration_statistics_tool.ui.handlers.parse_handlers._load_protocol_data',
+        'calibration_statistics_tool.ui.handlers.parse_handlers.merge_into_parsed_dicts',
+        'calibration_statistics_tool.ui.handlers.parse_handlers._populate_accepted_protocols_table',
     )
 
     def _run_parseData(self, ctx) -> None:
