@@ -1,0 +1,526 @@
+================================================================================
+DEPLOYMENT VERIFICATION GUIDE
+Calibration Statistics Tool - All Installation & Testing Methods
+================================================================================
+
+TABLE OF CONTENTS
+1. Quick Reference - All Commands
+2. Detailed Explanations
+3. When to Use Each Method
+4. Release Workflow (Tag & Publish)
+5. Troubleshooting Tips
+6. EXTENDED EXPLANATIONS FOR DEPLOYMENT GUIDE
+
+================================================================================
+1. QUICK REFERENCE - ALL COMMANDS
+================================================================================
+
+METHOD 1: Clone + Local Dev Install (FOR DEVELOPMENT)
+-----------------------------------------------
+git clone https://github.com/marjanstojchev/Calibration-Statistics-Tool.git
+cd Calibration-Statistics-Tool
+git checkout copilot/create-package-directory-structure
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -e ".[dev]"
+python -m pytest tests/ -q
+
+WHAT IT DOES: Downloads full repo, installs in editable mode with all dev deps
+WHEN TO USE: Testing during development, before pushing
+EXPECTED RESULT: 975 passed, 6 skipped
+
+
+METHOD 2: Build Wheel (BINARY PACKAGE)
+-----------------------------------------------
+python -m pip install build
+python -m build
+
+WHAT IT DOES: Creates compressed .whl file in dist/ folder
+WHEN TO USE: Preparing for PyPI upload
+FILES CREATED: dist/calibration-statistics-tool-1.0.14-py3-none-any.whl
+
+
+METHOD 3: Install Wheel in Fresh Virtualenv (SIMULATE END USER)
+-----------------------------------------------
+python -m venv fresh_test_env
+fresh_test_env\Scripts\Activate.ps1
+pip install dist/calibration-statistics-tool-*.whl
+python -c "import calibration_statistics_tool; print('✓ Import works')"
+
+WHAT IT DOES: Tests package in clean environment (no dev deps)
+WHEN TO USE: Verify package works for end users (not developers)
+EXPECTED RESULT: Import succeeds, prints "✓ Import works"
+
+
+METHOD 4: Install Direct from Git Branch (NO CLONE NEEDED)
+-----------------------------------------------
+python -m venv git_test_env
+git_test_env\Scripts\Activate.ps1
+pip install git+https://github.com/marjanstojchev/Calibration-Statistics-Tool.git@copilot/create-package-directory-structure
+
+WHAT IT DOES: Downloads & installs from GitHub without cloning repo
+WHEN TO USE: Quick testing without taking up disk space
+EXPECTED RESULT: Package installs from latest branch code
+
+
+METHOD 5: Test PyPI Upload (STAGING)
+-----------------------------------------------
+python -m pip install twine
+twine upload --repository testpypi dist/*
+
+WHAT IT DOES: Uploads wheel to TestPyPI (staging environment)
+WHEN TO USE: Before uploading to production PyPI
+EXPECTED RESULT: Package appears on https://test.pypi.org/
+NOTE: Create account at https://test.pypi.org/
+
+THEN TEST INSTALL FROM TEST PyPI:
+pip install -i https://test.pypi.org/simple calibration-statistics-tool
+
+
+METHOD 6: CI/CD Pipeline Check (AUTOMATED TESTING)
+-----------------------------------------------
+GitHub: https://github.com/marjanstojchev/Calibration-Statistics-Tool/actions
+GitLab: https://gitlab.com/marjanstojchev-group/Calibration-Statistics-Tool/-/pipelines
+
+WHAT IT DOES: Automated tests run on every push to branch
+WHEN TO USE: Before merging - most authoritative verification
+EXPECTED RESULT: All jobs pass (green checkmarks)
+NOTE: This is what matters most for production
+
+
+METHOD 7: Docker Test (CROSS-PLATFORM)
+-----------------------------------------------
+Create Dockerfile with:
+  FROM python:3.13
+  COPY . /app
+  WORKDIR /app
+  RUN pip install -e ".[dev]"
+  RUN pytest tests/ -q
+
+docker build -t cst-test .
+docker run cst-test
+
+WHAT IT DOES: Tests in isolated containerized environment
+WHEN TO USE: Verify cross-platform compatibility (Linux, Windows, macOS)
+EXPECTED RESULT: Container builds and tests pass
+
+
+METHOD 8: Check Package Metadata (VERIFY INFO)
+-----------------------------------------------
+pip show calibration-statistics-tool
+python -c "from calibration_statistics_tool import __version__; print(__version__)"
+
+WHAT IT DOES: Displays installed package info
+WHEN TO USE: Quick verification after install
+EXPECTED RESULT: Shows version, dependencies, location
+
+
+METHOD 9: Run Application (IF GUI)
+-----------------------------------------------
+calibration-tool
+
+WHAT IT DOES: Launches the GUI application (if entry point defined)
+WHEN TO USE: Manual testing of user-facing features
+EXPECTED RESULT: Application window opens
+
+
+================================================================================
+2. DETAILED EXPLANATIONS
+================================================================================
+
+WHAT IS "-e" FLAG?
+------------------
+pip install -e ".[dev]"
+           ↑      ↑
+           |      └─ Install dev dependencies group
+           └─ Editable mode (source changes = immediate)
+
+Editable mode means: if you change Python files, no need to reinstall.
+Useful for development, bad for production (never use -e ".[dev]" for users).
+
+
+WHAT IS ".[dev]"?
+------------------
+The square brackets reference a dependency group in pyproject.toml:
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-mock>=3.14.0",
+    "pytest-benchmark>=4.0.0",
+    ...
+]
+
+[dev] = "install this optional group"
+No brackets = install only base dependencies
+
+
+WHAT IS A WHEEL?
+------------------
+.whl file = pre-built binary package
+- Faster to install (no compilation needed)
+- Portable across machines
+- What PyPI distributes
+
+Format: calibration-statistics-tool-{version}-{python_version}-{platform}.whl
+Example: calibration-statistics-tool-1.0.14-py3-none-any.whl
+         └─ Version 1.0.14, Python 3.x, any platform
+
+
+WHAT IS TESTPYPI?
+------------------
+TestPyPI = staging server for PyPI
+- Separate from production PyPI
+- No real users install from here
+- Perfect for testing uploads before going live
+- Create free account: https://test.pypi.org/
+
+
+WHAT IS A TAG?
+------------------
+git tag v1.0.14
+
+A tag = permanent marker on a specific commit
+- Not a branch (branches move, tags don't)
+- Used for releases (PyPI automation watches for tags)
+- Should only be on master/main branch
+
+
+GIT CHECKOUT vs NO CHECKOUT
+------------------
+When you git clone:
+  - Default branch (usually main) is checked out
+  - To switch: git checkout branch-name
+
+No checkout needed if:
+  - Using pip install git+https://...@branch-name (installs directly)
+  - Already on the right branch
+
+
+================================================================================
+3. WHEN TO USE EACH METHOD
+================================================================================
+
+DEVELOPMENT WORKFLOW
+---------------------
+1. Make changes → push to feature branch
+2. Run: "Method 1: Clone + Dev Install" locally
+3. Verify: 975 tests pass
+4. Push → CI/CD runs automatically (Method 6)
+5. If CI passes → ready for review
+
+
+BEFORE MERGE TO MASTER
+-----------------------
+1. CI/CD pipeline passing (Method 6) ✓ REQUIRED
+2. Local tests passing (Method 1) ✓ REQUIRED
+3. Code review approved ✓ REQUIRED
+Then: Can merge safely
+
+
+BEFORE PyPI UPLOAD
+-------------------
+1. All tests passing ✓
+2. Version bumped in pyproject.toml ✓
+3. Build wheel (Method 2) ✓
+4. Test wheel install (Method 3) ✓
+5. Test PyPI upload (Method 5) ✓ OPTIONAL BUT RECOMMENDED
+6. Create tag on master (Method 10) ✓
+7. Push tag → GitHub automatically uploads to real PyPI
+
+
+AFTER PyPI UPLOAD
+------------------
+1. Verify on PyPI.org
+2. Test install from production PyPI:
+   pip install calibration-statistics-tool
+3. Run Method 8 to check metadata
+
+
+TROUBLESHOOTING SCENARIO
+------------------------
+"Tests pass locally but fail in CI?"
+  → Check: Are all sys.modules patches targeting helpers?
+  → Check: Are imports using full namespace?
+  → Check: Does CI install requirements.txt or pyproject.toml[dev]?
+
+"Wheel installs but import fails?"
+  → Check: Is package structure in namespace format?
+  → Check: Does setup.py/pyproject.toml include all packages?
+  → Check: Are __init__.py files present?
+
+"Tag created but PyPI didn't update?"
+  → Check: Did you push the tag? (git push --tags)
+  → Check: Does GitHub workflow trigger on tag event?
+  → Check: Are PyPI credentials in GitHub Secrets?
+
+
+================================================================================
+4. RELEASE WORKFLOW (TAG & PUBLISH)
+================================================================================
+
+STEP-BY-STEP RELEASE PROCESS
+-------------------------------
+
+1. VERIFY BRANCH IS READY
+   Command: git status
+   Expected: "working tree clean"
+   
+2. ENSURE ALL TESTS PASS
+   Command: python -m pytest tests/ -q
+   Expected: 975 passed, 6 skipped
+   
+3. UPDATE VERSION IN pyproject.toml
+   Current: version = "1.0.13"
+   New:     version = "1.0.14"
+   Command: Replace in [project] section
+   
+4. COMMIT VERSION BUMP
+   Command: git add pyproject.toml
+            git commit -m "bump: version 1.0.14"
+            git push origin copilot/create-package-directory-structure
+   
+5. MERGE TO MASTER (after code review)
+   Command: git checkout master
+            git pull origin master
+            git merge origin/copilot/create-package-directory-structure
+            git push origin master
+   
+6. CREATE TAG ON MASTER
+   Command: git tag v1.0.14
+            git push origin v1.0.14
+   
+7. VERIFY PyPI UPDATE
+   Command: Visit https://pypi.org/project/calibration-statistics-tool/
+            Check version 1.0.14 appears
+   
+8. VERIFY END-USER INSTALL
+   Command: pip install --upgrade calibration-statistics-tool
+            python -c "from calibration_statistics_tool import __version__; print(__version__)"
+   Expected: Prints "1.0.14"
+
+
+FULL TERMINAL SEQUENCE (COPY-PASTE READY)
+-------------------------------------------
+# 1. Make sure on right branch
+git checkout copilot/create-package-directory-structure
+git pull origin copilot/create-package-directory-structure
+
+# 2. Run tests
+python -m pytest tests/ -q
+
+# 3. Update version
+# Edit pyproject.toml: version = "1.0.14"
+
+# 4. Commit & push
+git add pyproject.toml
+git commit -m "bump: version 1.0.14"
+git push origin copilot/create-package-directory-structure
+
+# 5. Merge to master
+git checkout master
+git pull origin master
+git merge origin/copilot/create-package-directory-structure
+git push origin master
+
+# 6. Tag on master
+git tag v1.0.14
+git push origin v1.0.14
+
+# 7. Verify (wait ~5 minutes for PyPI to update)
+pip install --upgrade calibration-statistics-tool
+python -c "from calibration_statistics_tool import __version__; print(__version__)"
+
+
+================================================================================
+5. TROUBLESHOOTING TIPS
+================================================================================
+
+GIT SAYS "Already up to date" BUT IT'S NOT?
+-------------------------------------------
+Symptom: "git pull says Already up to date" but new changes exist
+Cause: Local git cache is stale
+Solution:
+  1. git fetch origin --prune
+  2. Restart PowerShell/Terminal
+  3. git pull origin branch-name
+
+PYTEST FIXTURE NOT FOUND?
+--------------------------
+Symptom: "ERROR at setup of test_... fixture 'mocker' not found"
+Cause: pytest-mock or pytest-benchmark not installed
+Solution:
+  pip install pytest-mock==3.14.0 pytest-benchmark==4.0.0
+
+IMPORT ERROR IN TESTS?
+----------------------
+Symptom: "ModuleNotFoundError: No module named 'calibration_statistics_tool'"
+Cause: Package not installed in editable mode
+Solution:
+  pip install -e ".[dev]"
+
+WHEEL BUILD FAILS?
+------------------
+Symptom: "ERROR: Could not build wheels for project"
+Cause: build tool not installed or syntax error in pyproject.toml
+Solution:
+  pip install build
+  Check pyproject.toml for TOML syntax errors
+
+VIRTUALENV ACTIVATION FAILS?
+-----------------------------
+Symptom: PowerShell: "cannot be loaded because running scripts is disabled"
+Cause: Execution policy restriction
+Solution:
+  Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+  Then: .venv\Scripts\Activate.ps1
+
+
+================================================================================
+QUICK DECISION TREE
+================================================================================
+
+Q: I just made changes, should I test?
+A: YES → Use Method 1 (Clone + Dev Install)
+
+Q: Is my branch ready to merge?
+A: Check → Method 6 (CI/CD Pipeline) - if green, ready
+
+Q: Should I upload to PyPI now?
+A: Only if → CI/CD passes + Code reviewed + Merged to master
+
+Q: Will end users be able to install?
+A: Test with → Method 3 (Fresh venv + wheel install)
+
+Q: Should I create a tag?
+A: YES but only → After merge to master + version bumped
+
+Q: What happens after I push tag?
+A: GitHub/GitLab → Trigger automation → Auto-upload to PyPI
+
+Q: How do I verify it's on PyPI?
+A: Visit → https://pypi.org/project/calibration-statistics-tool/
+
+
+================================================================================
+CURRENT STATUS (as of 2026-06-09)
+================================================================================
+
+Branch: copilot/create-package-directory-structure
+Tests: 975 passed, 6 skipped ✓
+CI/CD: All pipelines passing ✓
+Ready for: Code review & merge to master
+
+Next steps:
+1. Create merge request (GitHub) / merge request (GitLab)
+2. Code review approved
+3. Merge to master
+4. Bump version in pyproject.toml
+5. Create tag v1.0.14
+6. Push tag (triggers PyPI upload)
+
+
+================================================================================
+EXTENDED EXPLANATIONS FOR DEPLOYMENT GUIDE
+Additional Details - Integration into Main Guide Section 2
+================================================================================
+
+GIT CLONE vs pip install git+ (KEY DIFFERENCES)
+------------------
+CLONING (Full Download):
+  git clone https://github.com/marjanstojchev/Calibration-Statistics-Tool.git
+  
+  Downloads ENTIRE repository (source code, tests, docs, .git history)
+  Takes up ~500MB+ disk space
+  You get .git folder (can make commits, push, create branches)
+  When to use: Development work, need to make commits
+
+
+pip install git+ (Direct Install):
+  pip install git+https://github.com/marjanstojchev/Calibration-Statistics-Tool.git@branch-name
+  
+  Downloads ONLY source code (no .git history)
+  Takes up ~50MB (just the code)
+  Installs immediately to site-packages
+  When to use: Quick testing, end users installing
+
+
+COMPARISON: Clone vs git+
+
+| Aspect                  | git clone        | pip install git+ |
+|-------------------------|------------------|------------------|
+| What downloads          | Full repo + .git | Only source code |
+| Disk space              | ~500MB           | ~50MB            |
+| Install step needed     | Yes (pip setup)  | No, automatic    |
+| Can make commits        | Yes              | No               |
+| Purpose                 | Development      | Testing/Using    |
+| Speed                   | Slow (large DL)  | Fast             |
+
+
+WHAT IS "CLEAN ENV WITH WHL"? (CRITICAL CONCEPT)
+------------------
+"Clean environment" = Fresh Python venv with NO pre-installed packages
+
+WHY? Simulate what REAL USERS experience
+  - Real users don't have dev dependencies
+  - If it works in clean env, it works for everyone
+
+TEST:
+  python -m venv clean_test_env
+  clean_test_env\Scripts\Activate.ps1
+  pip install dist/calibration-statistics-tool-1.0.14-py3-none-any.whl
+  python -c "import calibration_statistics_tool; print('✓ Works')"
+
+WHAT YOU'RE CHECKING:
+  ✓ Can users import the package?
+  ✓ Are all dependencies in pyproject.toml?
+  ✓ Works WITHOUT dev tools?
+  ✓ No broken imports?
+
+
+WHAT DOES "python -m pip install build" DO?
+------------------
+Installs the "build" tool that creates wheels
+
+WITHOUT build tool:
+  python -m build  → ERROR (No module named build)
+
+WITH build tool:
+  python -m pip install build  # Install builder
+  python -m build              # NOW works!
+  → Creates: dist/calibration-statistics-tool-1.0.14.whl
+
+ORDER REQUIRED:
+
+  Step 1: python -m pip install build
+  Step 2: python -m build
+  Step 3: pip install dist/calibration-statistics-tool-*.whl
+
+IMPORTANT: End users DON'T need build tool!
+  Wheel already built, they just: pip install calibration-statistics-tool
+  Build tool only for DEVELOPERS packaging
+
+
+KEY TAKEAWAYS TABLE
+------------------
+| Question                    | Answer                                |
+|-----------------------------|---------------------------------------|
+| Clone or git+?              | Clone=dev, git+=quick test            |
+| Clean env?                  | Fresh venv (no dev deps)              |
+| With whl?                   | Test wheel (what users get)           |
+| pip install build needed?   | YES, once, before python -m build     |
+| Order matters?              | YES: install build → run → test       |
+| End users skip build tool?  | YES, wheel already built              |
+
+
+INTEGRATION INSTRUCTIONS:
+
+Insert these sections into: DEPLOYMENT_VERIFICATION_GUIDE.txt
+Location: Section 2 (DETAILED EXPLANATIONS)
+After: "GIT CHECKOUT vs NO CHECKOUT" section
+Before: Section 3 divider line
+
+================================================================================
+================================================================================
+END OF GUIDE
+================================================================================

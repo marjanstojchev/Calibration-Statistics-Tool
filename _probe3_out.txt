@@ -1,7 +1,0 @@
-STARTING PROBE
-[ERR] https://api.zephyr-essential.smartbear.com/v1/testcase?projectKey=PST: HTTPSConnectionPool(host='api.zephyr-essential.smartbear.com', port=443): Max retries exceeded with url: /v1/testcase?projectKey=PST (Caused by NameResolutionError("HTTPSConnection(host='api.zephyr-essential.smartbear.com', port=443): Failed to resolve 'api.zephyr-essential.smartbear.com' ([Errno 11001] getaddrinfo failed)"))
-[ERR] https://api.zephyr-squad.smartbear.com/v1/testcase?projectKey=PST: HTTPSConnectionPool(host='api.zephyr-squad.smartbear.com', port=443): Max retries exceeded with url: /v1/testcase?projectKey=PST (Caused by NameResolutionError("HTTPSConnection(host='api.zephyr-squad.smartbear.com', port=443): Failed to resolve 'api.zephyr-squad.smartbear.com' ([Errno 11001] getaddrinfo failed)"))
-[404] https://prod-api.zephyr4jiracloud.com/connect/api/1.0/testcase?projectKey=PST
-[404] https://prod-play.zephyr4jiracloud.com/connect/backend/rest/api/1.0/testcase?projectKey=PST
-[ERR] https://prod.zephyr4jiracloud.com/connect/public/rest/api/1.0/testcase?projectKey=PST: HTTPSConnectionPool(host='prod.zephyr4jiracloud.com', port=443): Max retries exceeded with url: /connect/public/rest/api/1.0/testcase?projectKey=PST (Caused by NameResolutionError("HTTPSConnection(host='prod.zephyr4jiracloud.com', port=443): Failed to resolve 'prod.zephyr4jiracloud.com' ([Errno 11001] getaddrinfo failed)"))
-DONE
