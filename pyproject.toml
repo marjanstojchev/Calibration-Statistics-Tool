@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "calibration-statistics-tool"
-version = "1.0.11"
+version = "1.0.14"
 description = "Statistics and antenna pattern analysis tool for radar systems"
 readme = "README.md"
 license = {text = "MIT"}
@@ -62,30 +62,19 @@ calibration-tool = "calibration_statistics_tool.main:run"
 test-writer-mcp = "calibration_statistics_tool.agents.zephyr.mcp_server:run_server"
 
 [tool.setuptools]
-packages = [
-    "calibration_statistics_tool",
-    "calibration_statistics_tool.shared",
-    "calibration_statistics_tool.ui",
-    "calibration_statistics_tool.ui.tabs",
-    "calibration_statistics_tool.ui.handlers",
-    "calibration_statistics_tool.system_diagrams",
-    "calibration_statistics_tool.tx_diagrams",
-    "calibration_statistics_tool.antenna_patterns",
-    "calibration_statistics_tool.agents",
-    "calibration_statistics_tool.agents.zephyr",
-]
+package-dir = {"calibration_statistics_tool" = "_cst_stub"}
 
-[tool.setuptools.package-dir]
-"calibration_statistics_tool"                    = "_cst_stub"
-"calibration_statistics_tool.shared"             = "shared"
-"calibration_statistics_tool.ui"                 = "ui"
-"calibration_statistics_tool.ui.tabs"            = "ui/tabs"
-"calibration_statistics_tool.ui.handlers"        = "ui/handlers"
-"calibration_statistics_tool.system_diagrams"    = "system_diagrams"
-"calibration_statistics_tool.tx_diagrams"        = "tx_diagrams"
-"calibration_statistics_tool.antenna_patterns"   = "antenna_patterns"
-"calibration_statistics_tool.agents"             = "agents"
-"calibration_statistics_tool.agents.zephyr"      = "agents/zephyr"
+[tool.setuptools.packages.find]
+where = ["."]
+include = [
+    "agents*",
+    "antenna_patterns*",
+    "shared*",
+    "system_diagrams*",
+    "tx_diagrams*",
+    "ui*",
+]
+exclude = ["tests*", "docs*", "_cst_stub*"]
 
 [tool.setuptools.package-data]
 "calibration_statistics_tool.shared" = ["config/*.yaml", "config/*.json", "assets/*.pptx"]

@@ -11,15 +11,11 @@ import sys
 
 import pytest
 
-_REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-if _REPO_ROOT not in sys.path:
-    sys.path.insert(0, _REPO_ROOT)
-
 
 @pytest.fixture(scope="session")
 def mod():
     """Import sys_diag_tab exactly once per test session."""
-    return importlib.import_module("ui.tabs.sys_diag_tab")
+    return importlib.import_module("calibration_statistics_tool.ui.tabs.sys_diag_tab")
 
 
 # ===========================================================================
