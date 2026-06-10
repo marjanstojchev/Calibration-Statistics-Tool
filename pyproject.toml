@@ -61,18 +61,10 @@ calibration-tool = "calibration_statistics_tool.main:run"
 [project.scripts]
 test-writer-mcp = "calibration_statistics_tool.agents.zephyr.mcp_server:run_server"
 
-[tool.setuptools]
-package-dir = {"calibration_statistics_tool" = "_cst_stub"}
-
 [tool.setuptools.packages.find]
 where = ["."]
 include = [
-    "agents*",
-    "antenna_patterns*",
-    "shared*",
-    "system_diagrams*",
-    "tx_diagrams*",
-    "ui*",
+    "calibration_statistics_tool*",
 ]
 exclude = ["tests*", "docs*", "_cst_stub*"]
 
