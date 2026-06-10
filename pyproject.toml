@@ -61,12 +61,27 @@ calibration-tool = "calibration_statistics_tool.main:run"
 [project.scripts]
 test-writer-mcp = "calibration_statistics_tool.agents.zephyr.mcp_server:run_server"
 
-[tool.setuptools.packages.find]
-where = ["."]
-include = [
-    "calibration_statistics_tool*",
+[tool.setuptools]
+packages = [
+    "calibration_statistics_tool",
+    "calibration_statistics_tool.ui",
+    "calibration_statistics_tool.ui.handlers",
+    "calibration_statistics_tool.ui.tabs",
+    "calibration_statistics_tool.shared",
+    "calibration_statistics_tool.system_diagrams",
+    "calibration_statistics_tool.tx_diagrams",
+    "calibration_statistics_tool.antenna_patterns",
+    "calibration_statistics_tool.agents",
+    "calibration_statistics_tool.agents.zephyr",
 ]
-exclude = ["tests*", "docs*", "_cst_stub*"]
+
+[tool.setuptools.package-dir]
+"calibration_statistics_tool.ui" = "ui"
+"calibration_statistics_tool.shared" = "shared"
+"calibration_statistics_tool.system_diagrams" = "system_diagrams"
+"calibration_statistics_tool.tx_diagrams" = "tx_diagrams"
+"calibration_statistics_tool.antenna_patterns" = "antenna_patterns"
+"calibration_statistics_tool.agents" = "agents"
 
 [tool.setuptools.package-data]
 "calibration_statistics_tool.shared" = ["config/*.yaml", "config/*.json", "assets/*.pptx"]
