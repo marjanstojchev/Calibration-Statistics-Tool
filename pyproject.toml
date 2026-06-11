@@ -76,6 +76,7 @@ packages = [
 ]
 
 [tool.setuptools.package-dir]
+"calibration_statistics_tool" = "calibration_statistics_tool"
 "calibration_statistics_tool.ui" = "ui"
 "calibration_statistics_tool.shared" = "shared"
 "calibration_statistics_tool.system_diagrams" = "system_diagrams"
