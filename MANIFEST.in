@@ -1,0 +1,7 @@
+recursive-include calibration_statistics_tool *.py
+recursive-include ui *.py
+recursive-include shared *.py
+recursive-include system_diagrams *.py
+recursive-include tx_diagrams *.py
+recursive-include antenna_patterns *.py
+recursive-include agents *.py
