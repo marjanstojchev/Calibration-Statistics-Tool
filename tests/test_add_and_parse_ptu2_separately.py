@@ -16,9 +16,9 @@ from ui.handlers.parse_handlers import addAndParsePtu2Files
 
 
 def _get_pc():
-    """Return the ParseController instance owned by main."""
-    import main
-    return main.pc
+    """Return a fresh ParseController instance for testing."""
+    from shared.parse_controller import ParseController
+    return ParseController()
 
 
 def _make_ctx(mock_qt, pc=None):
