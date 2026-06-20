@@ -14,6 +14,16 @@ The Calibration Statistics Tool REST API provides full programmatic access to al
 
 ### 1. Protocols (Parse & Upload)
 
+**Key Difference:**
+- **`POST /api/protocols/upload`** — For web browsers: upload files + apply filters in ONE request
+- **`POST /api/protocols/parse`** — For servers/CLIs: parse existing server-side files + apply filters
+
+Both endpoints accept the same filtering parameters and produce identical results in memory. Choose based on your use case:
+- Web UI → use **upload**
+- Server-side files → use **parse**
+
+---
+
 #### `POST /api/protocols/parse`
 Parse protocol files and discover PTU2/TxAntDiag measurement files.
 
@@ -30,6 +40,17 @@ Parse protocol files and discover PTU2/TxAntDiag measurement files.
 }
 ```
 
+**UI Configuration Mapping** (from Load Data panel):
+
+| API Field | UI Checkbox | Default | Description |
+|-----------|-------------|---------|-------------|
+| `search_ptu2_files` | ✓ Search PTU2 Files | true | Include PTU2 measurement files |
+| `search_txantdiag_files` | ✓ Search for TxAnt. Diag. Files | false | Include TX antenna diagram files |
+| `use_error` | ✓ EOL Error(s) | false | Include protocols flagged with errors (EOL = End-of-Line) |
+| `use_abort` | ✓ EOL Abort Criterion(s) | true | Include protocols with abort criteria met |
+| `use_limits_exceeded` | ✓ EOL Meas. Limits Exceeded | true | Include protocols where measurement limits were exceeded |
+| `latest_protocol` | (not shown in screenshot) | false | Keep only the most recent protocol per device/tuner/sensor |
+
 **Response**:
 ```json
 {
@@ -40,12 +61,71 @@ Parse protocol files and discover PTU2/TxAntDiag measurement files.
 }
 ```
 
+**Filter Logic** (what each EOL flag controls):
+- **`use_error: false`** (default) — Exclude protocols flagged with errors during measurement
+- **`use_error: true`** — Include error protocols in analysis
+- **`use_abort: true`** (default) — Include protocols where abort criteria (timeout, safety threshold) were triggered
+- **`use_abort: false`** — Exclude protocols with abort flags
+- **`use_limits_exceeded: true`** (default) — Include protocols that exceeded measurement limits
+- **`use_limits_exceeded: false`** — Exclude protocols with exceeded limits
+- **`latest_protocol: true`** — Keep only the most recent protocol per device (useful for deduplicating protocol runs)
+
+**Common Scenarios**:
+- **Full dataset** (default): `use_error: false, use_abort: true, use_limits_exceeded: true` — Clean data only
+- **Relaxed filtering**: `use_error: true, use_abort: true, use_limits_exceeded: true` — All protocols including errors
+- **Strict filtering**: `use_error: false, use_abort: false, use_limits_exceeded: false` — Only perfect runs
+
 ---
 
 #### `POST /api/protocols/upload`
-Upload protocol files from client (multipart/form-data).
+Upload protocol files from client and apply filtering options (multipart/form-data). Mirrors the Qt GUI Load Data panel: files are uploaded, classified by type, and filtered in a single operation.
 
-**Not yet implemented** – use `/parse` with server-side paths for now.
+**Content-Type**: `multipart/form-data`
+
+**Form fields**:
+- `files` (required) — one or more `.txt` protocol files
+- `search_ptu2_files` (optional, default: true) — include PTU2 measurement files
+- `search_txantdiag_files` (optional, default: false) — include TX antenna diagram files
+- `use_error` (optional, default: false) — include protocols flagged with errors
+- `use_abort` (optional, default: true) — include protocols with abort criteria met
+- `use_limits_exceeded` (optional, default: true) — include protocols exceeding limits
+- `latest_protocol` (optional, default: false) — keep only most recent per device
+
+**Response**:
+```json
+{
+  "status": "ok",
+  "protocols_accepted": 4,
+  "protocols_classified": 5,
+  "ptu2_files_loaded": 32,
+  "tx_ant_diag_loaded": 0,
+  "filter_applied": {
+    "use_error": false,
+    "use_abort": true,
+    "use_limits_exceeded": true,
+    "latest_protocol": false
+  }
+}
+```
+
+**Difference from `/parse`**: 
+- **Upload**: Accepts files from browser (multipart), classifies AND filters in one step
+- **Parse**: Accepts server-side file paths, applies filtering to existing files
+
+Both endpoints apply the same filtering logic and produce identical `sysDiagParsedDataList` results.
+
+---
+
+#### `POST /api/protocols/count`
+
+**Purpose**: Utility endpoint for testing/diagnostics.
+
+**Response 200**:
+```json
+{"count": 42}
+```
+
+**Note**: This is a placeholder/stub endpoint. Returns a fixed value (42) and is not used in the normal workflow. Use `GET /api/stats/` for actual protocol counts.
 
 ---
 
@@ -454,10 +534,52 @@ Alias for `DELETE /api/protocols/clear` (clears parsed data).
 ### 9. Logs
 
 #### `GET /logs/all`
-Get all buffered log entries from all modules.
+Get all buffered log entries from all modules as a combined object.
+
+**Response**:
+```json
+{
+  "system_diagrams": ["2024-01-15 10:30:01 INFO Processing diagram 1/48", ...],
+  "tx_diagrams": [],
+  "antenna_patterns": [],
+  "main_load_data": ["2024-01-15 10:29:58 INFO Loading PTU2 file 1/12", ...]
+}
+```
+
+---
 
 #### `GET /logs/{module}`
-Get logs for specific module (system_diagrams, tx_diagrams, antenna_patterns, main_load_data).
+Get buffered log messages for a specific module (up to 1000 entries).
+
+**Available modules**: `system-diagrams`, `tx-diagrams`, `antenna-patterns`, `main-load-data`
+
+**Response**: `["2024-01-15 10:30:01 INFO ...", ...]` (array of strings)
+
+---
+
+#### `GET /logs/stream/{module}` — Server-Sent Events (SSE)
+Subscribe to live log output while a computation is running. Use `EventSource` in the browser for real-time progress display.
+
+**Available streams**:
+| Endpoint | Module logs |
+|----------|-------------|
+| `/logs/stream/system-diagrams` | Antenna System Diagrams generation |
+| `/logs/stream/tx-diagrams` | TX Antenna Diagrams generation |
+| `/logs/stream/antenna-patterns` | Antenna Patterns generation |
+| `/logs/stream/main-load-data` | PTU2 binary file loading |
+
+**Media-type**: `text/event-stream`
+
+**Browser usage**:
+```javascript
+const source = new EventSource('http://localhost:8000/logs/stream/system-diagrams');
+source.onmessage = (event) => {
+  console.log(event.data);  // e.g. "2024-01-15 10:30:01 INFO Processing diagram 1/48"
+};
+source.onerror = () => source.close();
+```
+
+Each SSE `data:` line is a single formatted log string. Poll interval is 500 ms.
 
 ---
 
@@ -510,39 +632,69 @@ Delete all files in the output directory (equivalent to "Clear" button before ge
 
 ## Typical Workflow
 
-### 1. Parse protocols
+### Option A: Upload from Browser (Web UI)
 ```bash
-POST /api/protocols/parse
-{
-  "protocol_paths": ["C:\\...\\protocol1.txt"],
-  "search_ptu2_files": true
-}
+# 1. Upload files + apply filtering in one step
+POST /api/protocols/upload
+(multipart/form-data)
+  files: [protocol1.txt, protocol2.txt]
+  search_ptu2_files: true
+  use_error: false
+  use_abort: true
+  use_limits_exceeded: true
+  latest_protocol: false
+
+# 2. Generate outputs
+POST /api/system_diagrams/start
+{}
+
+# 3. Download generated files
+GET /api/downloads/list/system_diagrams
+GET /api/downloads/download/system_diagrams/Antenna_diagrams.pptx
 ```
 
-### 2. Generate outputs
+### Option B: Parse Server-Side Files (CLI or Desktop)
 ```bash
-# System diagrams with custom config
-POST /api/system_diagrams/start
+# 1. Parse files on server + apply filtering
+POST /api/protocols/parse
 {
-  "chirp_config": {"chirp0": 1},
-  "pptx_title": "MyDiagrams.pptx"
+  "protocol_paths": ["C:\\...\\protocol1.txt", "C:\\...\\protocol2.txt"],
+  "search_ptu2_files": true,
+  "use_error": false,
+  "use_abort": true,
+  "use_limits_exceeded": true,
+  "latest_protocol": false
 }
 
-# TX diagrams with defaults
+# 2. Generate outputs
+POST /api/system_diagrams/start
+{}
+
+# 3. List and download
+GET /api/downloads/list/system_diagrams
+GET /api/downloads/download/system_diagrams/Antenna_diagrams.pptx
+```
+
+### Option C: Complete Analysis Pipeline
+```bash
+# Step 1: Upload and filter
+POST /api/protocols/upload
+{multipart: files[], use_error: false, use_abort: true, use_limits_exceeded: true}
+
+# Step 2: Generate all outputs in parallel
+POST /api/system_diagrams/start
+{}
+
 POST /api/tx_diagrams/start
 {}
 
-# Antenna patterns
 POST /api/antenna_patterns/start
 {}
 
-# Hüllkurven limits
 POST /api/huellkurven/start
 {}
-```
 
-### 3. Compute limits statistics
-```bash
+# Step 3: Compute limits statistics
 POST /api/limits/compute
 {
   "limits_type": "burn_in",
@@ -552,29 +704,16 @@ POST /api/limits/compute
 
 GET /api/limits/rows
 GET /api/limits/groups
-```
 
-### 4. Download generated files
-```bash
-# List available files
+# Step 4: Download everything
 GET /api/downloads/list/system_diagrams
+GET /api/downloads/list/tx_diagrams
+GET /api/downloads/list/antenna_patterns
+GET /api/downloads/list/huellkurven
 
-# Download PPTX
-GET /api/downloads/download/system_diagrams/MyDiagrams.pptx
-
-# List Hüllkurven files recursively
-GET /api/downloads/list/huellkurven/recursive
-
-# Download a specific DAT file
-GET /api/downloads/download/huellkurven/AntType1/Az_TxAnt0_Diagram0_Chirp0.dat
-```
-
-### 5. Clear data when done
-```bash
-DELETE /api/protocols/clear       # Clear parsed data
-DELETE /api/limits/clear          # Clear computed statistics
-DELETE /api/interactive/clear      # Clear interactive state
-DELETE /api/downloads/clear/system_diagrams  # Clear output files
+# Step 5: Clean up when done
+DELETE /api/protocols/clear
+DELETE /api/limits/clear
 ```
 
 ---
@@ -610,11 +749,49 @@ Use `GET /config/defaults` to see all available options and their defaults.
 
 ## Error Handling
 
-All endpoints return standard HTTP status codes:
-- **200**: Success
-- **400**: Bad request (invalid parameters, file not found)
-- **422**: Unprocessable entity (no parsed data, missing dependencies)
-- **500**: Internal server error
+All endpoints use standard HTTP status codes:
+
+| Code | Meaning | Example |
+|------|---------|----------|
+| **200** | Success | Data returned successfully |
+| **400** | Bad Request | Invalid parameter, invalid file path, invalid output_type |
+| **404** | Not Found | Limit name not found, file not found, no data for series |
+| **422** | Unprocessable Entity | Missing prerequisites (e.g., /parse not called before /compute) |
+| **500** | Server Error | Internal processing failure |
+
+Error responses include a `detail` message:
+```json
+{"detail": "No parsed data. Run /api/protocols/parse first."}
+```
+
+### Common Prerequisites & Error Scenarios
+
+**Before calling `/start` endpoints** (system_diagrams, tx_diagrams, antenna_patterns, huellkurven):
+- Must call `POST /api/protocols/parse` or `POST /api/protocols/upload` first
+- Returns **422** if no parsed data
+
+**Before calling `/api/limits/*` endpoints**:
+- Must call `POST /api/protocols/parse` first for data
+- `/compute` requires paths to limits YAML files (returns **400** if not found)
+- `/rows`, `/groups`, `/series/*`, `/export/pptx` require `/compute` to have been called (return **422** if not)
+- `/series/{limit_name}` returns **404** if limit name or data not found
+
+**For `/api/downloads/download` endpoint**:
+- Returns **400** for invalid `output_type` or path traversal attempts
+- Returns **404** if file not found
+- Security: normalized paths prevent directory traversal attacks
+
+---
+
+## Error Handling & Prerequisites
+
+### HTTP Status Codes
+
+| Code | Meaning | When Used |
+|------|---------|-----------|
+| **200** | Success | Data returned successfully |\n| **400** | Bad Request | Invalid parameter, invalid file path, invalid output_type, file not found |\n| **404** | Not Found | Limit name not found, file not found in downloads |
+| **422** | Unprocessable Entity | Missing prerequisites (e.g., /parse not called before /compute) |
+| **500** | Server Error | Internal processing failure |
 
 Error responses include a `detail` message:
 ```json
@@ -622,6 +799,24 @@ Error responses include a `detail` message:
   "detail": "No parsed data. Run /api/protocols/parse first."
 }
 ```
+
+### Common Prerequisites by Endpoint Group
+
+**Before calling `/start` endpoints** (system_diagrams, tx_diagrams, antenna_patterns, huellkurven):
+- ✅ Must call `POST /api/protocols/parse` or `POST /api/protocols/upload` first
+- ❌ Returns **422** with `"No parsed data..."` if missing
+
+**Before calling `/api/limits/*` computation endpoints**:
+- ✅ Requires `POST /api/protocols/parse` first
+- ✅ `/compute` needs paths to limits YAML files
+- ❌ Returns **400** if YAML file paths not found
+- ❌ `/rows`, `/groups`, `/series/*` return **422** if `/compute` not called first
+- ❌ `/series/{limit_name}` returns **404** if limit or data not found
+
+**For `/api/downloads/download/{type}/{file}`**:
+- ❌ Returns **400** for invalid `output_type` or detected path traversal attempts
+- ❌ Returns **404** if file not found
+- ✅ Security: normalized paths prevent directory traversal
 
 ---
 
@@ -649,12 +844,30 @@ Error responses include a `detail` message:
 
 ---
 
+---
+
+## Health & Diagnostics
+
+#### `GET /api/health`
+Simple health check endpoint. Returns OK status if API is running.
+
+**Response 200**:
+```json
+{"status": "ok"}
+```
+
+**Use case**: Monitor API availability. Can be called without authentication or prerequisites.
+
+---
+
 ## All Endpoints Summary
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
 | **Protocols** |
-| POST | `/api/protocols/parse` | Parse protocol files |
+| POST | `/api/protocols/parse` | Parse protocol files + discover PTU2/TxAntDiag |
+| POST | `/api/protocols/upload` | Upload protocol files from browser (multipart) |
+| POST | `/api/protocols/count` | Diagnostics stub (returns fixed value) |
 | DELETE | `/api/protocols/clear` | Clear parsed data |
 | **System Diagrams** |
 | GET | `/api/system_diagrams/config/defaults` | Get defaults |
@@ -684,14 +897,32 @@ Error responses include a `detail` message:
 | GET | `/api/stats/` | Get loaded data counts |
 | DELETE | `/api/stats/clear` | Clear (alias for protocols/clear) |
 | **Logs** |
-| GET | `/logs/all` | Get all logs |
-| GET | `/logs/{module}` | Get module logs |
+| GET | `/logs/all` | Get all buffered logs from all modules |
+| GET | `/logs/{module}` | Get buffered logs for specific module |
+| GET | `/logs/stream/{module}` | Real-time SSE stream for specific module |
 | **Downloads** |
 | GET | `/api/downloads/list/{type}` | List files |
 | GET | `/api/downloads/list/{type}/recursive` | List files recursively |
 | GET | `/api/downloads/download/{type}/{file}` | Download file |
 | DELETE | `/api/downloads/clear/{type}` | Clear output directory |
 | **Health** |
-| GET | `/` | Health check |
+| GET | `/api/health` | API health check |
 
-Total: **35 endpoints** covering all desktop UI functionality.
+**Total: 41+ endpoints** covering all desktop UI functionality + streaming + health checks.
+
+---
+
+## Endpoint Status & Implementation Notes
+
+### Fully Implemented (Production Ready)
+✅ All endpoints except those listed below.
+
+### Partially Implemented / Placeholder
+⚠️ `POST /api/protocols/count` — Diagnostic stub, returns fixed value (42). Not for production use.
+
+### API Characteristics
+- **Stateful**: All `/start` endpoints require prior `/parse` or `/upload` call
+- **In-memory storage**: Module-level state shared across requests
+- **Optional fields**: Most `/start` endpoint configs are optional; use `GET /config/defaults` to see all available options
+- **CORS enabled**: Allows requests from frontend on ports 5173/5174
+- **Streaming support**: `/logs/stream/{module}` uses Server-Sent Events for real-time updates

@@ -14,6 +14,7 @@ for _subdir in ['shared', 'ui', 'system_diagrams', 'tx_diagrams', 'antenna_patte
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 
 from api.routers import (
@@ -30,6 +31,15 @@ from api.routers import (
 )
 
 app = FastAPI(title="Calibration Statistics Tool API", version="1.0.0")
+
+# Enable CORS for development (allow frontend on different ports)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://localhost:5174", "http://127.0.0.1:5173", "http://127.0.0.1:5174"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(protocols.router,        prefix="/api/protocols",             tags=["protocols"])
 app.include_router(system_diagrams.router,  prefix="/api/system_diagrams",       tags=["system_diagrams"])

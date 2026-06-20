@@ -1,0 +1,402 @@
+topic: "CST REST API"
+description: "Calibration Statistics Tool REST API — all routers, endpoints, inputs, outputs and usage flow"
+nodes:
+  - id: root
+    label: "CST REST API"
+    description: "FastAPI backend (port 8000) covering all 6 desktop GUI tabs. Base URL: http://localhost:8000 | Swagger UI: /docs"
+    children:
+
+      - id: overview
+        label: "Overview & Workflow"
+        relation: "start here"
+        description: "Always parse protocols first, then run any generation endpoint, then download results."
+        keywords: [workflow, pipeline, order]
+        children:
+          - id: workflow
+            label: "Pipeline Order"
+            relation: "must follow"
+            description: "1. POST /api/protocols/upload or /parse → 2. POST /api/*/start → 3. GET /api/downloads/download"
+            keywords: [pipeline, dependency, order]
+          - id: error-codes
+            label: "HTTP Error Codes"
+            relation: "returns"
+            description: "200=ok | 400=bad input / file not found | 404=resource not found | 422=precondition not met (no parsed data) | 500=server error"
+            keywords: [errors, http, status]
+
+      - id: protocols
+        label: "/api/protocols"
+        relation: "router"
+        description: "Entry point. Parse or upload protocol .txt files to populate shared server memory for all downstream endpoints."
+        keywords: [protocols, upload, parse, classification, BurnIn, Calibration]
+        children:
+          - id: protocols-upload
+            label: "POST /upload"
+            relation: "endpoint"
+            description: "Browser file upload + filtering in one step (mirrors Qt GUI Load Data panel). Uploads, classifies, and applies filter options."
+            keywords: [upload, multipart, form-data, files, filtering, use_error, use_abort]
+            children:
+              - id: protocols-upload-in
+                label: "Input"
+                relation: "accepts"
+                description: "Form fields: files[] (required) + search_ptu2_files, search_txantdiag_files, use_error, use_abort, use_limits_exceeded, latest_protocol (all optional with defaults)"
+                keywords: [multipart, files, filters]
+              - id: protocols-upload-filters
+                label: "Filter Parameters"
+                relation: "options"
+                description: "Same filtering as POST /parse: use_error, use_abort, use_limits_exceeded, latest_protocol. Allows classification AND filtering in single upload request."
+                keywords: [use_error, use_abort, use_limits_exceeded, latest_protocol]
+              - id: protocols-upload-out
+                label: "Output 200"
+                relation: "returns"
+                description: '{"status": "ok", "protocols_accepted": 4, "ptu2_files_loaded": 32, "filter_applied": {...}}'
+                keywords: [protocols_accepted, ptu2_files_loaded, filter_applied]
+          - id: protocols-parse
+            label: "POST /parse"
+            relation: "endpoint"
+            description: "Full server-side pipeline: pre-parse → filter → find PTU2 files → load binary data into memory. Use when files are already on the server."
+            keywords: [parse, server-side, PTU2, TxAntDiag, pipeline]
+            children:
+              - id: protocols-parse-in
+                label: "Input"
+                relation: "accepts"
+                description: "protocol_paths: string[] (required, server-side paths) | search_ptu2_files: bool=true (find PTU2 binary files) | search_txantdiag_files: bool=false (find TX antenna files) | use_error: bool=false (include error protocols) | use_abort: bool=true (include abort-flagged) | use_limits_exceeded: bool=true (include over-limit protocols) | latest_protocol: bool=false (deduplicate)"
+                keywords: [protocol_paths, search_ptu2_files, search_txantdiag_files, filter]
+              - id: protocols-parse-eol
+                label: "EOL Filter Flags (End-of-Line)"
+                relation: "configuration"
+                description: "Maps to desktop UI Load Data panel checkboxes. use_error: Include/exclude protocols with measurement errors (default=false=exclude). use_abort: Include/exclude protocols where abort criteria triggered like timeout or safety threshold (default=true=include). use_limits_exceeded: Include/exclude protocols exceeding measurement limits (default=true=include). latest_protocol: Keep only most recent protocol per device to deduplicate (default=false)."
+                keywords: [use_error, use_abort, use_limits_exceeded, EOL, filter, error, abort, limits]
+              - id: protocols-parse-out
+                label: "Output 200"
+                relation: "returns"
+                description: '{"status":"ok", "protocols_accepted":12, "ptu2_files_loaded":48, "tx_ant_diag_loaded":0}'
+                keywords: [accepted, loaded]
+          - id: protocols-clear
+            label: "DELETE /clear"
+            relation: "endpoint"
+            description: "Clear all parsed protocol data and limits state from server memory. Equivalent to Clear Data button."
+            keywords: [clear, reset, memory]
+
+      - id: system-diagrams
+        label: "/api/system_diagrams"
+        relation: "router"
+        description: "Generates Antenna System Diagrams PPTX. Mirrors the System Diagrams tab."
+        keywords: [PPTX, system diagrams, antenna, slides]
+        children:
+          - id: sys-defaults
+            label: "GET /config/defaults"
+            relation: "endpoint"
+            description: "Returns the full default SysDiagStartRequest as JSON — use to pre-fill the UI configuration form."
+            keywords: [defaults, config, form]
+          - id: sys-start
+            label: "POST /start"
+            relation: "endpoint"
+            description: "Generate Antenna_diagrams.pptx. All fields optional — send only what you want to override. Requires /protocols/parse first."
+            keywords: [generate, pptx, chirp, graph, slides]
+            children:
+              - id: sys-start-in
+                label: "Input"
+                relation: "accepts"
+                description: "plot_setup (targetAngle, upsideDown, xScaleSize, imageDpi, graphsPerSlide...) | chirp_config (chirp0..3) | graph_config (level, normLevel, phaseDiff, corrPhaseDiff...) | diagram_config (selectDiagrams 0=all/1=range/2=list, oddOrEven) | pptx_title"
+                keywords: [plot_setup, chirp_config, graph_config, diagram_config]
+              - id: sys-start-out
+                label: "Output 200"
+                relation: "returns"
+                description: '{"status":"success", "output_path":"C:\\...\\output\\Antenna_diagrams.pptx"}'
+                keywords: [output_path, pptx]
+
+      - id: tx-diagrams
+        label: "/api/tx_diagrams"
+        relation: "router"
+        description: "Generates TX Antenna Diagrams PPTX. Requires /protocols/parse with search_txantdiag_files=true."
+        keywords: [TX, antenna, diagrams, PPTX, azimuth, elevation]
+        children:
+          - id: tx-defaults
+            label: "GET /config/defaults"
+            relation: "endpoint"
+            description: "Returns default TxStartRequest as JSON."
+            keywords: [defaults, config]
+          - id: tx-start
+            label: "POST /start"
+            relation: "endpoint"
+            description: "Generate TxAntenna_diagrams.pptx from parsed TX antenna data. Requires parse with txantdiag=true."
+            keywords: [generate, pptx, AzDiag, ElDiag]
+            children:
+              - id: tx-start-in
+                label: "Input"
+                relation: "accepts"
+                description: "plot_setup (AzDiag=1, ElDiag=1, targetAngle=0, plotOrigGraphs, plotNormGraphs, xScaleSize, imageDpi) | graph_config (level=1, levelPowMet, frequency, time) | pptx_title"
+                keywords: [AzDiag, ElDiag, plotOrigGraphs, level]
+              - id: tx-start-out
+                label: "Output 200"
+                relation: "returns"
+                description: '{"status":"success","output_path":"C:\\...\\output_tx_diagrams\\TxAntenna_diagrams.pptx"}'
+                keywords: [output_path]
+
+      - id: antenna-patterns
+        label: "/api/antenna_patterns"
+        relation: "router"
+        description: "Generates antenna pattern YAML/JSON output files. Mirrors the Antenna Patterns tab."
+        keywords: [antenna patterns, YAML, JSON, gain, tables]
+        children:
+          - id: ant-defaults
+            label: "GET /config/defaults"
+            relation: "endpoint"
+            description: "Returns default AntPatStartRequest as JSON."
+            keywords: [defaults, config]
+          - id: ant-start
+            label: "POST /start"
+            relation: "endpoint"
+            description: "Generate pattern output files from parsed PTU2 data. Table list maps to the 8-table layout in the UI."
+            keywords: [generate, yaml, json, tables, gain]
+            children:
+              - id: ant-start-in
+                label: "Input"
+                relation: "accepts"
+                description: "chirp_config | ptu2_input_conf.tables[]: {antenna_pattern_idx, patternType(1=TX-RX/2=TX/3=RX), rotationAxis(1=Az/2=El), applTxAntInd[], applRxAntInd[], gainCalcMethod(1=step/2=interp)} | output_version(0=json/1=yaml-v1/2=yaml-v2)"
+                keywords: [patternType, rotationAxis, gainCalcMethod, output_version]
+              - id: ant-start-out
+                label: "Output 200"
+                relation: "returns"
+                description: '{"status":"success"} — files written to antenna_patterns output dir'
+                keywords: [success]
+
+      - id: huellkurven
+        label: "/api/huellkurven"
+        relation: "router"
+        description: "Computes envelope curve (Hüllkurven) limits. Generates per-antenna-type, per-angle-setup DAT limit files and PNG plots."
+        keywords: [Hüllkurven, envelope, limits, DAT, PNG, sigma]
+        children:
+          - id: hk-defaults
+            label: "GET /config/defaults"
+            relation: "endpoint"
+            description: "Returns default HuellkurvenStartRequest as JSON."
+            keywords: [defaults, config]
+          - id: hk-start
+            label: "POST /start"
+            relation: "endpoint"
+            description: "Generate envelope limit DAT files + PNG plots. Output structure: output_huellkurven/AntType{N}/{angleSetup}/."
+            keywords: [generate, DAT, PNG, AzDiag, ElDiag, sigma]
+            children:
+              - id: hk-start-in
+                label: "Input"
+                relation: "accepts"
+                description: "data_conf (AzDiag=1, ElDiag=1, minSigma=-10, maxSigma=10, patternLimitsMethod=0(sigma)/1(minmax), minPhaseFactor, maxPhaseFactor) | plot_setup (xScaleSize) | chirp_config | diagram_config | input_config (diagTypeInfo, targetAngle, upsideDown)"
+                keywords: [AzDiag, ElDiag, sigma, patternLimitsMethod]
+              - id: hk-start-out
+                label: "Output 200"
+                relation: "returns"
+                description: '{"status":"success","output_path":"C:\\...\\output_huellkurven"}'
+                keywords: [output_path, huellkurven]
+
+      - id: limits
+        label: "/api/limits"
+        relation: "router"
+        description: "Computes calibration/burn-in statistics. Full pipeline: parse limits YAML → build groups → build rows → compute stats."
+        keywords: [limits, statistics, burn-in, calibration, rows, groups, histogram]
+        children:
+          - id: limits-compute
+            label: "POST /compute"
+            relation: "endpoint"
+            description: "Full limits statistics pipeline. Results stored in memory. Requires /protocols/parse first."
+            keywords: [compute, statistics, pipeline, yaml]
+            children:
+              - id: limits-compute-in
+                label: "Input"
+                relation: "accepts"
+                description: "limits_type: burn_in|calibration | input_limits_file_path: string (required) | extend_input_limits: bool | limits_groups_file_path: string (required) | extend_limits_groups: bool | active_limits_group: string"
+                keywords: [limits_type, file_path, extend]
+              - id: limits-compute-out
+                label: "Output 200"
+                relation: "returns"
+                description: '{"status":"ok","limits_type":"burn_in","row_count":45}'
+                keywords: [row_count]
+          - id: limits-rows
+            label: "GET /rows"
+            relation: "endpoint"
+            description: "All computed rows with full statistics per limit. Must call /compute first."
+            keywords: [rows, statistics, mean, stDev, cg, limits]
+            children:
+              - id: limits-rows-out
+                label: "Output 200"
+                relation: "returns"
+                description: '{"limits_type":"burn_in","row_count":45,"rows":[{"index":0,"limitName":"...","lowerLimit":-80,"upperLimit":-20,"mean":-45.3,"min":-52,"max":-38,"stDev":3.14,"maxDev":6.6,"cg":1.05,"error":0}]}'
+                keywords: [limitName, lowerLimit, upperLimit, mean, stDev, cg]
+          - id: limits-groups
+            label: "GET /groups"
+            relation: "endpoint"
+            description: "All limits groups with their member row lists. Must call /compute first."
+            keywords: [groups, name, protType, rows]
+          - id: limits-groups-save
+            label: "POST /groups/save"
+            relation: "endpoint"
+            description: "Create a new limits group and optionally persist it to the YAML file. Mirrors the Save Group dialog."
+            keywords: [save, group, yaml, ExactMatch, Contains]
+            children:
+              - id: limits-groups-save-in
+                label: "Input"
+                relation: "accepts"
+                description: "group_name: string | limits_type: burn_in|calibration | limit_names: string[] | match_type: ExactMatch|Contains | save_to_yaml: bool"
+                keywords: [group_name, match_type, limit_names]
+          - id: limits-series
+            label: "GET /series/{limit_name}"
+            relation: "endpoint"
+            description: "Histogram data for a specific limit name. Query param limits_type=burn_in. Used for Statistical Series visualization."
+            keywords: [histogram, series, values, bins, counts]
+            children:
+              - id: limits-series-out
+                label: "Output 200"
+                relation: "returns"
+                description: '{"limit_name":"...","values":[...],"histogram":{"bins":[...],"counts":[...]},"statistics":{"mean":...,"stDev":...,"min":...,"max":...}}'
+                keywords: [values, histogram, statistics]
+          - id: limits-clear
+            label: "DELETE /clear"
+            relation: "endpoint"
+            description: "Clear computed limits statistics. Does NOT clear parsed protocols."
+            keywords: [clear, reset]
+
+      - id: stats
+        label: "/api/stats"
+        relation: "router"
+        description: "Protocol statistics — counts of data currently loaded in server memory."
+        keywords: [stats, count, loaded]
+        children:
+          - id: stats-get
+            label: "GET /"
+            relation: "endpoint"
+            description: "Returns count of sys_diag_ptu2_loaded and tx_ant_diag_loaded."
+            keywords: [sys_diag_ptu2_loaded, tx_ant_diag_loaded]
+          - id: stats-clear
+            label: "DELETE /clear"
+            relation: "endpoint"
+            description: "Alias for DELETE /api/protocols/clear. Clears all parsed data."
+            keywords: [clear, alias]
+
+      - id: interactive
+        label: "/api/interactive"
+        relation: "router"
+        description: "Interactive System Diagrams tab. Exposes protocol and parameter metadata for client-side rendering (no Qt required)."
+        keywords: [interactive, protocols, parameters, graph types, rx channel]
+        children:
+          - id: interactive-fill
+            label: "POST /fill"
+            relation: "endpoint"
+            description: "Read parsed PTU2 data and return all unique protocols (date/tuner/sensor) and all parameter combinations (antenna type x graph type x diagram x RX channel). Use to build selection tables in UI."
+            keywords: [fill, protocols, parameters, antenna_type, graph_type]
+            children:
+              - id: interactive-fill-out
+                label: "Output 200"
+                relation: "returns"
+                description: '{"filled":true,"protocol_count":12,"parameter_count":384,"protocols":[{"date_time":"...","tuner":"...","sensor":"...","label":"..."}],"parameters":[{"antenna_type":1,"graph_type":"level","diagram_num":0,"rx_channel":0,"label":"..."}]}'
+                keywords: [protocols, parameters, label]
+          - id: interactive-state
+            label: "GET /state"
+            relation: "endpoint"
+            description: "Return last fill result without recomputing. Returns filled=false if never filled."
+            keywords: [state, cached]
+          - id: interactive-clear
+            label: "DELETE /clear"
+            relation: "endpoint"
+            description: "Clear the fill state."
+            keywords: [clear]
+
+      - id: downloads
+        label: "/api/downloads"
+        relation: "router"
+        description: "List and download generated output files (PPTX, YAML, DAT, PNG) from all output directories."
+        keywords: [download, files, output, PPTX, DAT, PNG, YAML]
+        children:
+          - id: downloads-types
+            label: "Output Types"
+            relation: "supports"
+            description: "system_diagrams | tx_diagrams | antenna_patterns | huellkurven | statistic | certificates | merge"
+            keywords: [output_type, system_diagrams, huellkurven]
+          - id: downloads-list
+            label: "GET /list/{output_type}"
+            relation: "endpoint"
+            description: "List all files (non-recursive) in an output directory."
+            keywords: [list, files, directory]
+            children:
+              - id: downloads-list-out
+                label: "Output 200"
+                relation: "returns"
+                description: '{"files":["Antenna_diagrams.pptx"],"directory":"C:\\...\\output"}'
+                keywords: [files, directory]
+          - id: downloads-list-recursive
+            label: "GET /list/{output_type}/recursive"
+            relation: "endpoint"
+            description: "Recursively list all files including subdirectories. Essential for huellkurven (has AntType{N} subdirs)."
+            keywords: [recursive, subdirectories, AntType, path, size]
+            children:
+              - id: downloads-list-recursive-out
+                label: "Output 200"
+                relation: "returns"
+                description: '{"files":[{"path":"AntType1/Az_NofPts=181.dat","size":4096,"modified":1705312200.0}],"directory":"..."}'
+                keywords: [path, size, modified]
+          - id: downloads-download
+            label: "GET /download/{output_type}/{filename:path}"
+            relation: "endpoint"
+            description: "Download a specific file. Supports subdirectory paths. Returns file with correct Content-Type."
+            keywords: [download, FileResponse, Content-Type, PPTX, DAT]
+            children:
+              - id: downloads-download-note
+                label: "Security"
+                relation: "enforces"
+                description: "Path is sanitized to prevent directory traversal attacks. Only files inside the output_type directory can be accessed."
+                keywords: [security, traversal, normpath]
+          - id: downloads-clear
+            label: "DELETE /clear/{output_type}"
+            relation: "endpoint"
+            description: "Delete all files in the specified output directory. Use before generating new output."
+            keywords: [clear, delete, output]
+
+      - id: logs
+        label: "/logs"
+        relation: "router"
+        description: "Centralized logging. In-memory circular buffer (1000 lines/module) + SSE streaming for real-time progress."
+        keywords: [logs, SSE, streaming, EventSource, real-time]
+        children:
+          - id: logs-modules
+            label: "Log Modules"
+            relation: "covers"
+            description: "system-diagrams | tx-diagrams | antenna-patterns | main-load-data"
+            keywords: [modules, loggers]
+          - id: logs-all
+            label: "GET /all"
+            relation: "endpoint"
+            description: "Get all buffered log messages from all 4 modules as a combined object."
+            keywords: [all, combined, buffered]
+          - id: logs-module
+            label: "GET /{module}"
+            relation: "endpoint"
+            description: "Get buffered logs for a specific module as a string array (up to 1000 entries)."
+            keywords: [module, snapshot, array]
+          - id: logs-sse
+            label: "GET /stream/{module}"
+            relation: "endpoint"
+            description: "Server-Sent Events stream. Subscribe with EventSource for real-time log output while a computation runs. Poll interval: 500ms."
+            keywords: [SSE, EventSource, stream, real-time, text/event-stream]
+            children:
+              - id: logs-sse-usage
+                label: "Browser Usage"
+                relation: "example"
+                description: "const src = new EventSource('/logs/stream/system-diagrams'); src.onmessage = e => console.log(e.data);"
+                keywords: [EventSource, onmessage, data]
+
+      - id: health
+        label: "/api/health"
+        relation: "router"
+        description: "Health check endpoint. Returns simple status without prerequisites."
+        keywords: [health, status, diagnostics]
+        children:
+          - id: health-check
+            label: "GET /api/health"
+            relation: "endpoint"
+            description: "Simple health check. Returns OK status if API is running."
+            keywords: [health, status, ok]
+            children:
+              - id: health-output
+                label: "Output 200"
+                relation: "returns"
+                description: '{"status": "ok"}'
+                keywords: [status, ok]

@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CST REST API Reference</title>
+<style>
+  :root {
+    --bg: #ffffff; --surface: #f8f9fa; --border: #dee2e6;
+    --text: #212529; --text-muted: #6c757d; --accent: #0d6efd;
+    --method-post: #198754; --method-get: #0d6efd; --method-delete: #dc3545;
+    --tag-bg: #e9ecef; --tag-text: #495057;
+    --node-hover: #e7f1ff; --expand-icon: #adb5bd;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1d23; --surface: #24282f; --border: #3a3f4a;
+      --text: #e9ecef; --text-muted: #9ba3af; --accent: #4d9fff;
+      --method-post: #2ea043; --method-get: #4d9fff; --method-delete: #e05252;
+      --tag-bg: #2d3139; --tag-text: #b0b8c4;
+      --node-hover: #1e2a3a; --expand-icon: #6c757d;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; }
+  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 18px 24px; display: flex; align-items: center; gap: 16px; }
+  header h1 { font-size: 20px; font-weight: 700; }
+  header p { color: var(--text-muted); font-size: 13px; }
+  .meta { display: flex; gap: 12px; flex-wrap: wrap; padding: 10px 24px; background: var(--surface); border-bottom: 1px solid var(--border); font-size: 12px; }
+  .meta a { color: var(--accent); text-decoration: none; }
+  .meta span { color: var(--text-muted); }
+  .controls { display: flex; gap: 8px; padding: 10px 24px; }
+  .controls button { padding: 5px 12px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); color: var(--text); cursor: pointer; font-size: 12px; }
+  .controls button:hover { background: var(--node-hover); }
+  main { padding: 16px 24px; max-width: 1100px; }
+  .tree { list-style: none; }
+  .tree ul { list-style: none; padding-left: 20px; border-left: 2px solid var(--border); margin-left: 8px; }
+  .node { margin: 4px 0; }
+  .node-header { display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px; border-radius: 6px; cursor: pointer; transition: background 0.15s; }
+  .node-header:hover { background: var(--node-hover); }
+  .toggle { font-size: 11px; color: var(--expand-icon); min-width: 14px; margin-top: 2px; user-select: none; transition: transform 0.2s; }
+  .toggle.open { transform: rotate(90deg); }
+  .toggle.leaf { visibility: hidden; }
+  .node-content { flex: 1; }
+  .node-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .label { font-weight: 600; font-size: 14px; }
+  .method-badge { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 3px; color: #fff; }
+  .method-badge.POST { background: var(--method-post); }
+  .method-badge.GET { background: var(--method-get); }
+  .method-badge.DELETE { background: var(--method-delete); }
+  .relation { font-size: 11px; color: var(--text-muted); font-style: italic; }
+  .description { font-size: 13px; color: var(--text); margin-top: 3px; }
+  .keyword-list { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+  .kw { background: var(--tag-bg); color: var(--tag-text); font-size: 11px; padding: 1px 6px; border-radius: 3px; }
+  .children { overflow: hidden; animation: slideDown 0.2s ease; }
+  .children.hidden { display: none; }
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+  .router-badge { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 3px; background: var(--accent); color: #fff; opacity: 0.85; }
+  .url { font-family: "Consolas","Courier New",monospace; font-size: 12px; color: var(--accent); }
+  code { background: var(--tag-bg); padding: 1px 5px; border-radius: 3px; font-family: monospace; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>CST REST API</h1>
+    <p>Calibration Statistics Tool — all routers, endpoints, inputs and outputs</p>
+  </div>
+</header>
+
+<div class="meta">
+  <span>Base URL: <a href="http://localhost:8000">http://localhost:8000</a></span>
+  <span>Swagger: <a href="http://localhost:8000/docs" target="_blank">/docs</a></span>
+  <span>Health: <code>GET /api/health</code></span>
+</div>
+
+<div class="controls">
+  <button onclick="expandAll()">Expand All</button>
+  <button onclick="collapseAll()">Collapse All</button>
+</div>
+
+<main>
+<ul class="tree" id="tree"></ul>
+</main>
+
+<script>
+const tree = [
+  { id:"overview", label:"Overview & Workflow", relation:"start here",
+    description:"Always parse protocols first, then run any generation endpoint, then download results.",
+    keywords:["workflow","pipeline","order"],
+    children:[
+      { id:"workflow", label:"Pipeline Order", relation:"must follow",
+        description:"1. POST /api/protocols/upload or /parse → 2. POST /api/*/start (system_diagrams, tx_diagrams, antenna_patterns, huellkurven, limits) → 3. GET /api/downloads/download to retrieve files",
+        keywords:["pipeline","dependency","order"] },
+      { id:"error-codes", label:"HTTP Error Codes", relation:"reference",
+        description:"200=ok | 400=bad input/file not found | 404=resource not found | 422=precondition not met (no parsed data in memory) | 500=server error",
+        keywords:["errors","http","status"] }
+    ]
+  },
+  { id:"protocols", label:"/api/protocols", relation:"router",
+    description:"Entry point. Parse or upload protocol .txt files to populate shared server memory for all downstream endpoints.",
+    keywords:["protocols","upload","parse","BurnIn","Calibration"],
+    children:[
+      { id:"protocols-upload", label:"POST /api/protocols/upload", method:"POST", relation:"endpoint",
+        description:"Multipart file upload from browser. Saves files to temp dir on server, classifies each as BurnIn/Calibration, stores classified list in memory for downstream use.",
+        keywords:["multipart","form-data","files","browser"],
+        children:[
+          { id:"protocols-upload-in", label:"Input", relation:"accepts",
+            description:"Content-Type: multipart/form-data | Form field: files[] — one or more .txt protocol files" },
+          { id:"protocols-upload-out", label:"Output 200", relation:"returns",
+            description:'{ "protocols": [{"protocolPath": "C:\\\\...\\\\tmpXXX.txt", "type": "Calibration"}, {"protocolPath": "...", "type": "BurnIn"}], "status": "stored" }',
+            keywords:["protocolPath","type","Calibration","BurnIn"] }
+        ]
+      },
+      { id:"protocols-parse", label:"POST /api/protocols/parse", method:"POST", relation:"endpoint",
+        description:"Full server-side pipeline: pre-parse → filter → find PTU2 files → load binary data into memory. For files already on the server. Heavier but more complete than /upload.",
+        keywords:["parse","server-side","PTU2","TxAntDiag","pipeline","filter","EOL"],
+        children:[
+          { id:"protocols-parse-in", label:"Input", relation:"accepts",
+            description:'{ "protocol_paths": ["C:\\\\...\\\\protocol1.txt"], "search_ptu2_files": true, "search_txantdiag_files": false, "use_error": false, "use_abort": true, "use_limits_exceeded": true, "latest_protocol": false }',
+            keywords:["protocol_paths","search_ptu2_files","search_txantdiag_files","use_error"] },
+          { id:"protocols-parse-filters", label:"EOL Filter Flags (End-of-Line checks)", relation:"configuration",
+            description:"UI checkboxes from Load Data panel → API boolean fields. use_error: Include protocols flagged with errors (default=false). use_abort: Include protocols where abort criteria triggered (timeout/safety, default=true). use_limits_exceeded: Include protocols exceeding measurement limits (default=true). latest_protocol: Keep only most recent per device (default=false)",
+            keywords:["use_error","use_abort","use_limits_exceeded","EOL","filter","error","abort"] },
+          { id:"protocols-parse-out", label:"Output 200", relation:"returns",
+            description:'{ "status": "ok", "protocols_accepted": 12, "ptu2_files_loaded": 48, "tx_ant_diag_loaded": 0 }' }
+        ]
+      },
+      { id:"protocols-clear", label:"DELETE /api/protocols/clear", method:"DELETE", relation:"endpoint",
+        description:"Clear all parsed protocol data and limits controller state from server memory. Equivalent to the Clear Data button in the desktop UI.",
+        keywords:["clear","reset","memory"],
+        children:[
+          { id:"protocols-clear-out", label:"Output 200", relation:"returns",
+            description:'{ "status": "cleared", "sys_diag_ptu2_loaded": 0, "tx_ant_diag_loaded": 0 }' }
+        ]
+      }
+    ]
+  },
+  { id:"system-diagrams", label:"/api/system_diagrams", relation:"router",
+    description:"Generates Antenna System Diagrams PPTX. Mirrors the System Diagrams tab. Requires parsed data first.",
+    keywords:["PPTX","system diagrams","antenna","slides","graphs"],
+    children:[
+      { id:"sys-defaults", label:"GET /api/system_diagrams/config/defaults", method:"GET", relation:"endpoint",
+        description:"Returns the full default SysDiagStartRequest configuration as JSON. Use this to pre-fill the UI form before submitting." },
+      { id:"sys-start", label:"POST /api/system_diagrams/start", method:"POST", relation:"endpoint",
+        description:"Generate Antenna_diagrams.pptx. All fields are optional — only send what you want to override from defaults. Requires /protocols/parse or /upload first.",
+        keywords:["generate","pptx","chirp","graph","slides","dpi"],
+        children:[
+          { id:"sys-start-in", label:"Input (all optional)", relation:"accepts",
+            description:'plot_setup: { targetAngle:1, upsideDown:0, xScaleSizeAz:90.0, xScaleSizeEl:45.0, idealPhaseDiff:1, SeparateRxCh:1, threeGraphLayout:1, allOnOneSlide:1, imageDpi:220, nofSensorMeasToShow:32, graphsPerSlide:1 } | chirp_config: { chirp0:1, chirp1:0, chirp2:0, chirp3:0 } | graph_config: { level:1, normLevel:1, phaseDiff:1, corrPhaseDiff:1, avgLevel:0, ... } | diagram_config: { selectDiagrams:0(all)/1(range)/2(list), oddOrEven:0(both)/1(odd)/2(even), lowerNumber:0, higherNumber:4 } | pptx_title: "Antenna_diagrams.pptx"',
+            keywords:["targetAngle","graphsPerSlide","chirp","selectDiagrams","oddOrEven"] },
+          { id:"sys-start-out", label:"Output 200", relation:"returns",
+            description:'{ "status": "success", "output_path": "C:\\\\...\\\\output\\\\Antenna_diagrams.pptx" }' },
+          { id:"sys-start-422", label:"Error 422", relation:"on failure",
+            description:"No parsed data in memory. Run /api/protocols/parse or /upload first." }
+        ]
+      }
+    ]
+  },
+  { id:"tx-diagrams", label:"/api/tx_diagrams", relation:"router",
+    description:"Generates TX Antenna Diagrams PPTX. Requires /protocols/parse with search_txantdiag_files=true.",
+    keywords:["TX","antenna","diagrams","PPTX","azimuth","elevation","power"],
+    children:[
+      { id:"tx-defaults", label:"GET /api/tx_diagrams/config/defaults", method:"GET", relation:"endpoint",
+        description:"Returns default TxStartRequest configuration." },
+      { id:"tx-start", label:"POST /api/tx_diagrams/start", method:"POST", relation:"endpoint",
+        description:"Generate TxAntenna_diagrams.pptx from parsed TX antenna data.",
+        keywords:["generate","pptx","AzDiag","ElDiag","normalised"],
+        children:[
+          { id:"tx-start-in", label:"Input (all optional)", relation:"accepts",
+            description:'plot_setup: { AzDiag:1, ElDiag:1, targetAngle:0(PTU angle), plotOrigGraphs:1, plotNormGraphs:1, xScaleSizeAz:90.0, xScaleSizeEl:45.0, imageDpi:220, graphsPerSlide:1 } | graph_config: { level:1(corrected dBm via spectrum), levelPowMet:0, levelMeasSpec:0, levelMeasPowMet:0, frequency:0, time:0 } | pptx_title: "TxAntenna_diagrams.pptx"',
+            keywords:["AzDiag","ElDiag","level","levelPowMet"] },
+          { id:"tx-start-out", label:"Output 200", relation:"returns",
+            description:'{ "status": "success", "output_path": "C:\\\\...\\\\output_tx_diagrams\\\\TxAntenna_diagrams.pptx" }' },
+          { id:"tx-start-422", label:"Error 422", relation:"on failure",
+            description:"No TxAntDiag parsed data. Run /api/protocols/parse with search_txantdiag_files=true." }
+        ]
+      }
+    ]
+  },
+  { id:"antenna-patterns", label:"/api/antenna_patterns", relation:"router",
+    description:"Generates antenna pattern YAML/JSON output files. Mirrors the Antenna Patterns tab.",
+    keywords:["antenna patterns","YAML","JSON","gain","TX","RX","tables"],
+    children:[
+      { id:"ant-defaults", label:"GET /api/antenna_patterns/config/defaults", method:"GET", relation:"endpoint",
+        description:"Returns default AntPatStartRequest configuration." },
+      { id:"ant-start", label:"POST /api/antenna_patterns/start", method:"POST", relation:"endpoint",
+        description:"Generate pattern output files. The tables[] list maps to the 8-table layout in the UI. Only include enabled tables.",
+        keywords:["tables","gain","patternType","rotationAxis","gainCalcMethod"],
+        children:[
+          { id:"ant-start-in", label:"Input (all optional)", relation:"accepts",
+            description:'chirp_config | ptu2_input_conf.tables[]: { antenna_pattern_idx, patternType:1(TX-RX)/2(TX)/3(RX), rotationAxis:1(Az)/2(El), nofApplicableTxAnt, nofApplicableRxAnt, applTxAntInd:[], applRxAntInd:[], gainCalcMethod:1(stepwise)/2(interpolation) } | output_version:0(json)/1(yaml-v1)/2(yaml-v2) | header_name | header_type',
+            keywords:["patternType","rotationAxis","gainCalcMethod","output_version"] },
+          { id:"ant-start-out", label:"Output 200", relation:"returns",
+            description:'{ "status": "success" } — files written to antenna_patterns output directory' }
+        ]
+      }
+    ]
+  },
+  { id:"huellkurven", label:"/api/huellkurven", relation:"router",
+    description:"Computes Hüllkurven (envelope curve) limits. Generates DAT limit files and PNG plots per antenna type, per angle setup.",
+    keywords:["Hüllkurven","envelope","limits","DAT","PNG","sigma","azimuth","elevation"],
+    children:[
+      { id:"hk-defaults", label:"GET /api/huellkurven/config/defaults", method:"GET", relation:"endpoint",
+        description:"Returns default HuellkurvenStartRequest configuration." },
+      { id:"hk-start", label:"POST /api/huellkurven/start", method:"POST", relation:"endpoint",
+        description:"Generate envelope limit files. Output structure: output_huellkurven/AntType{N}/{angleSetup}/",
+        keywords:["DAT","PNG","AzDiag","ElDiag","sigma","patternLimitsMethod"],
+        children:[
+          { id:"hk-start-in", label:"Input (all optional)", relation:"accepts",
+            description:'data_conf: { AzDiag:1, ElDiag:1, minSigma:-10, maxSigma:10, patternLimitsMethod:0(sigma-based)/1(min/max-based), minPhaseFactor:5, maxPhaseFactor:5 } | plot_setup: { xScaleSizeAz:90.0, xScaleSizeEl:45.0 } | chirp_config | diagram_config | input_config: { diagTypeInfo:1, targetAngle:1, upsideDown:0, useSensorMuster:0 }',
+            keywords:["patternLimitsMethod","sigma","AzDiag","ElDiag"] },
+          { id:"hk-start-out", label:"Output 200", relation:"returns",
+            description:'{ "status": "success", "output_path": "C:\\\\...\\\\output_huellkurven" }' },
+          { id:"hk-start-400", label:"Error 400 / 422", relation:"on failure",
+            description:"400: No active chirps configured. 422: No parsed data or no antenna types found." }
+        ]
+      }
+    ]
+  },
+  { id:"limits", label:"/api/limits", relation:"router",
+    description:"Computes calibration/burn-in statistics. Pipeline: parse limits YAML → build groups → build rows → compute stats.",
+    keywords:["limits","statistics","burn-in","calibration","rows","groups","histogram","cg"],
+    children:[
+      { id:"limits-compute", label:"POST /api/limits/compute", method:"POST", relation:"endpoint",
+        description:"Full limits statistics pipeline. Results stored in memory. Requires /protocols/parse first. Returns row count.",
+        keywords:["compute","pipeline","limits_type","burn_in","calibration"],
+        children:[
+          { id:"limits-compute-in", label:"Input", relation:"accepts",
+            description:'{ "limits_type": "burn_in", "input_limits_file_path": "C:\\\\...\\\\BurnInLimits.yaml", "extend_input_limits": false, "limits_groups_file_path": "C:\\\\...\\\\BurnInLimGroups.yaml", "extend_limits_groups": false, "active_limits_group": "" }',
+            keywords:["limits_type","input_limits_file_path","limits_groups_file_path","extend"] },
+          { id:"limits-compute-out", label:"Output 200", relation:"returns",
+            description:'{ "status": "ok", "limits_type": "burn_in", "row_count": 45 }' }
+        ]
+      },
+      { id:"limits-rows", label:"GET /api/limits/rows", method:"GET", relation:"endpoint",
+        description:"All computed limit rows with full statistics. Must call /compute first.",
+        keywords:["rows","limitName","lowerLimit","upperLimit","mean","stDev","cg","error"],
+        children:[
+          { id:"limits-rows-out", label:"Output 200", relation:"returns",
+            description:'{ "limits_type": "burn_in", "row_count": 45, "rows": [{ "index":0, "limitName":"RxChannel0_Level_dBm", "protType":"BurnIn", "lowerLimit":-80.0, "upperLimit":-20.0, "mean":-45.3, "min":-52.1, "max":-38.7, "stDev":3.14, "maxDev":6.6, "cg":1.05, "error":0 }] }' }
+        ]
+      },
+      { id:"limits-groups", label:"GET /api/limits/groups", method:"GET", relation:"endpoint",
+        description:"All limits groups with member row lists. Must call /compute first.",
+        keywords:["groups","name","protType","rows"],
+        children:[
+          { id:"limits-groups-out", label:"Output 200", relation:"returns",
+            description:'{ "limits_type": "burn_in", "group_count": 5, "groups": [{ "name": "RxChannel0", "protType": "BurnIn", "rows": [...] }] }' }
+        ]
+      },
+      { id:"limits-groups-save", label:"POST /api/limits/groups/save", method:"POST", relation:"endpoint",
+        description:"Create a new limits group and optionally persist to YAML. Mirrors the Save Group dialog in the Statistics tab.",
+        keywords:["save","group","yaml","ExactMatch","Contains"],
+        children:[
+          { id:"limits-groups-save-in", label:"Input", relation:"accepts",
+            description:'{ "group_name": "MyGroup", "limits_type": "burn_in", "limit_names": ["RxCh0_Level_dBm", "RxCh1_Level_dBm"], "match_type": "ExactMatch", "save_to_yaml": true }',
+            keywords:["group_name","limit_names","match_type","save_to_yaml"] },
+          { id:"limits-groups-save-out", label:"Output 200", relation:"returns",
+            description:'{ "status": "saved", "group_name": "MyGroup", "limits_count": 2, "yaml_path": "C:\\\\...\\\\BurnInLimGroups.yaml" }' }
+        ]
+      },
+      { id:"limits-series", label:"GET /api/limits/series/{limit_name}", method:"GET", relation:"endpoint",
+        description:"Histogram data for a specific limit. Query param: limits_type=burn_in. Used for Statistical Series chart in UI.",
+        keywords:["histogram","series","values","bins","counts","statistics"],
+        children:[
+          { id:"limits-series-note", label:"URL Example", relation:"example",
+            description:'GET /api/limits/series/RxChannel0_Level_dBm?limits_type=burn_in' },
+          { id:"limits-series-out", label:"Output 200", relation:"returns",
+            description:'{ "limit_name":"RxChannel0_Level_dBm", "limits_type":"burn_in", "values":[-45.3,-47.1,...], "histogram":{"bins":[-52,-50,...], "counts":[2,5,...]}, "stats":{"mean":-45.3,"stDev":3.14,"min":-52.1,"max":-38.7} }' }
+        ]
+      },
+      { id:"limits-clear", label:"DELETE /api/limits/clear", method:"DELETE", relation:"endpoint",
+        description:"Clear computed limits statistics. Does NOT clear parsed protocols — use /api/protocols/clear for that.",
+        keywords:["clear","reset","statistics"] }
+    ]
+  },
+  { id:"stats", label:"/api/stats", relation:"router",
+    description:"Protocol statistics — lightweight check of how many files are currently loaded in memory.",
+    keywords:["stats","count","loaded","memory"],
+    children:[
+      { id:"stats-get", label:"GET /api/stats/", method:"GET", relation:"endpoint",
+        description:"Returns current count of loaded sys_diag PTU2 files and TX antenna diagram files.",
+        children:[
+          { id:"stats-get-out", label:"Output 200", relation:"returns",
+            description:'{ "sys_diag_ptu2_loaded": 48, "tx_ant_diag_loaded": 0 }' }
+        ]
+      },
+      { id:"stats-clear", label:"DELETE /api/stats/clear", method:"DELETE", relation:"endpoint",
+        description:'Alias for DELETE /api/protocols/clear. Clears all parsed data from memory.' }
+    ]
+  },
+  { id:"interactive", label:"/api/interactive", relation:"router",
+    description:"Interactive System Diagrams tab. Exposes protocol metadata and parameter combinations as JSON for client-side charting (no Qt required).",
+    keywords:["interactive","protocols","parameters","graph types","rx channel","antenna type"],
+    children:[
+      { id:"interactive-fill", label:"POST /api/interactive/fill", method:"POST", relation:"endpoint",
+        description:"Read parsed PTU2 data and return all unique protocols (date/tuner/sensor) and all parameter combinations (antenna type × graph type × diagram × RX channel). Build selection tables in UI from this.",
+        keywords:["fill","protocols","parameters","antenna_type","graph_type","diagram_num","rx_channel"],
+        children:[
+          { id:"interactive-fill-note", label:"Graph Types Available", relation:"lists",
+            description:"level | avgLevel | normLevel | avgNormLevel | phaseDiff | avgPhaseDiff | diffPhaseDiff | corrPhaseDiff",
+            keywords:["level","normLevel","phaseDiff","corrPhaseDiff"] },
+          { id:"interactive-fill-out", label:"Output 200", relation:"returns",
+            description:'{ "filled": true, "protocol_count": 12, "parameter_count": 384, "protocols": [{"date_time":"2024-01-15 10:30:00","tuner":"Tuner_01","sensor":"Sensor_A","label":"..."}], "parameters": [{"antenna_type":1,"graph_type":"level","diagram_num":0,"rx_channel":0,"label":"level_AntType1_Diag0_RxCh0"}] }' }
+        ]
+      },
+      { id:"interactive-state", label:"GET /api/interactive/state", method:"GET", relation:"endpoint",
+        description:"Return last fill result without re-computing. Returns filled=false if /fill has never been called." },
+      { id:"interactive-clear", label:"DELETE /api/interactive/clear", method:"DELETE", relation:"endpoint",
+        description:"Clear the fill state. filled will become false." }
+    ]
+  },
+  { id:"downloads", label:"/api/downloads", relation:"router",
+    description:"List and download generated output files (PPTX, YAML, DAT, PNG) from all output directories.",
+    keywords:["download","files","output","PPTX","DAT","PNG","YAML"],
+    children:[
+      { id:"downloads-types", label:"Output Type Values", relation:"supports",
+        description:"system_diagrams | tx_diagrams | antenna_patterns | huellkurven | statistic | certificates | merge",
+        keywords:["output_type","system_diagrams","huellkurven","tx_diagrams"] },
+      { id:"downloads-list", label:"GET /api/downloads/list/{output_type}", method:"GET", relation:"endpoint",
+        description:"List all files (non-recursive) in an output directory.",
+        children:[
+          { id:"downloads-list-out", label:"Output 200", relation:"returns",
+            description:'{ "files": ["Antenna_diagrams.pptx"], "directory": "C:\\\\...\\\\output" }' }
+        ]
+      },
+      { id:"downloads-list-recursive", label:"GET /api/downloads/list/{output_type}/recursive", method:"GET", relation:"endpoint",
+        description:"Recursively list all files including subdirectories. Essential for huellkurven (AntType{N} subdirs) and antenna_patterns.",
+        children:[
+          { id:"downloads-recursive-out", label:"Output 200", relation:"returns",
+            description:'{ "files": [{"path":"AntType1/Az_NofPts=181.dat","size":4096,"modified":1705312200.0}], "directory":"..." }' }
+        ]
+      },
+      { id:"downloads-download", label:"GET /api/downloads/download/{output_type}/{filename:path}", method:"GET", relation:"endpoint",
+        description:"Download a specific file. Supports subdirectory paths. Returns file with correct Content-Type header. Path is sanitized (no directory traversal).",
+        keywords:["FileResponse","Content-Type","PPTX","DAT","PNG"],
+        children:[
+          { id:"downloads-download-ex", label:"URL Examples", relation:"example",
+            description:'GET /api/downloads/download/system_diagrams/Antenna_diagrams.pptx\nGET /api/downloads/download/huellkurven/AntType1/Az_NofPts%3D181.dat' }
+        ]
+      },
+      { id:"downloads-clear", label:"DELETE /api/downloads/clear/{output_type}", method:"DELETE", relation:"endpoint",
+        description:"Delete all files in the specified output directory. Use before generating new output to clear stale files.",
+        children:[
+          { id:"downloads-clear-out", label:"Output 200", relation:"returns",
+            description:'{ "status": "cleared", "path": "C:\\\\...\\\\output_huellkurven" }' }
+        ]
+      }
+    ]
+  },
+  { id:"logs", label:"/logs", relation:"router",
+    description:"Centralized logging for all computation modules. In-memory circular buffer (1000 lines/module) plus SSE streaming for real-time progress in the UI.",
+    keywords:["logs","SSE","streaming","EventSource","real-time","buffer"],
+    children:[
+      { id:"logs-all", label:"GET /logs/all", method:"GET", relation:"endpoint",
+        description:"Get all buffered log messages from all modules as a combined JSON object.",
+        children:[
+          { id:"logs-all-out", label:"Output 200", relation:"returns",
+            description:'{ "system_diagrams": ["2024-01-15 10:30:01 INFO Processing diagram 1/48", ...], "tx_diagrams": [], "antenna_patterns": [], "main_load_data": [...] }' }
+        ]
+      },
+      { id:"logs-module", label:"GET /logs/{module}", method:"GET", relation:"endpoint",
+        description:"Get buffered logs for a specific module as a string array (up to 1000 entries). Modules: system-diagrams, tx-diagrams, antenna-patterns, main-load-data" },
+      { id:"logs-sse", label:"GET /logs/stream/{module}  — SSE", method:"GET", relation:"endpoint",
+        description:"Server-Sent Events real-time stream. Subscribe with EventSource while a computation runs. Poll interval: 500ms. Media-type: text/event-stream.",
+        keywords:["SSE","EventSource","stream","real-time","text/event-stream","500ms"],
+        children:[
+          { id:"logs-sse-streams", label:"Available Streams", relation:"lists",
+            description:"/logs/stream/system-diagrams | /logs/stream/tx-diagrams | /logs/stream/antenna-patterns | /logs/stream/main-load-data",
+            keywords:["system-diagrams","tx-diagrams","antenna-patterns","main-load-data"] },
+          { id:"logs-sse-usage", label:"Browser Usage", relation:"example",
+            description:"const src = new EventSource('http://localhost:8000/logs/stream/system-diagrams');\nsrc.onmessage = (e) => appendToLogPanel(e.data);\nsrc.onerror = () => src.close();" }
+        ]
+      }
+    ]
+  }
+];
+
+function getMethod(label) {
+  const m = label.match(/^(POST|GET|DELETE|PUT|PATCH)\s/);
+  return m ? m[1] : null;
+}
+
+function buildNode(node, level) {
+  const li = document.createElement('li');
+  li.className = 'node';
+  const hasChildren = node.children && node.children.length > 0;
+  const method = getMethod(node.label || '');
+
+  const header = document.createElement('div');
+  header.className = 'node-header';
+  header.setAttribute('tabindex','0');
+  header.setAttribute('role','button');
+  header.setAttribute('aria-expanded', level < 2 ? 'true' : 'false');
+
+  const toggle = document.createElement('span');
+  toggle.className = 'toggle' + (hasChildren ? '' : ' leaf');
+  toggle.innerHTML = '▶';
+
+  const content = document.createElement('div');
+  content.className = 'node-content';
+
+  const titleRow = document.createElement('div');
+  titleRow.className = 'node-title';
+
+  const labelSpan = document.createElement('span');
+  labelSpan.className = 'label';
+  // Remove method prefix from display label if it's there
+  const displayLabel = node.label.replace(/^(POST|GET|DELETE|PUT|PATCH)\s/, '');
+  labelSpan.textContent = displayLabel;
+
+  titleRow.appendChild(labelSpan);
+
+  if (method) {
+    const badge = document.createElement('span');
+    badge.className = 'method-badge ' + method;
+    badge.textContent = method;
+    titleRow.appendChild(badge);
+  }
+
+  if (node.relation) {
+    const rel = document.createElement('span');
+    rel.className = 'relation';
+    rel.textContent = '— ' + node.relation;
+    titleRow.appendChild(rel);
+  }
+
+  content.appendChild(titleRow);
+
+  if (node.description) {
+    const desc = document.createElement('div');
+    desc.className = 'description';
+    desc.textContent = node.description;
+    content.appendChild(desc);
+  }
+
+  if (node.keywords && node.keywords.length) {
+    const kwList = document.createElement('div');
+    kwList.className = 'keyword-list';
+    node.keywords.forEach(kw => {
+      const k = document.createElement('span');
+      k.className = 'kw';
+      k.textContent = kw;
+      kwList.appendChild(k);
+    });
+    content.appendChild(kwList);
+  }
+
+  header.appendChild(toggle);
+  header.appendChild(content);
+  li.appendChild(header);
+
+  if (hasChildren) {
+    const childUl = document.createElement('ul');
+    childUl.className = 'tree children' + (level < 2 ? '' : ' hidden');
+    node.children.forEach(child => childUl.appendChild(buildNode(child, level + 1)));
+    li.appendChild(childUl);
+
+    const activate = () => {
+      const open = !childUl.classList.contains('hidden');
+      childUl.classList.toggle('hidden', open);
+      toggle.classList.toggle('open', !open);
+      header.setAttribute('aria-expanded', String(!open));
+    };
+    header.addEventListener('click', activate);
+    header.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' ') { e.preventDefault(); activate(); } });
+
+    if (level < 2) toggle.classList.add('open');
+  }
+
+  return li;
+}
+
+const treeEl = document.getElementById('tree');
+tree.forEach(node => treeEl.appendChild(buildNode(node, 0)));
+
+function expandAll() {
+  document.querySelectorAll('.children').forEach(el => el.classList.remove('hidden'));
+  document.querySelectorAll('.toggle:not(.leaf)').forEach(el => el.classList.add('open'));
+}
+function collapseAll() {
+  document.querySelectorAll('.children').forEach(el => el.classList.add('hidden'));
+  document.querySelectorAll('.toggle:not(.leaf)').forEach(el => el.classList.remove('open'));
+}
+</script>
+</body>
+</html>
