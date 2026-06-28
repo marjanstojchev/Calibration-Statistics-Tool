@@ -267,24 +267,3 @@ deploy:azure:
   needs:
     - build:docker                                  # Explicitly declare dependency for optimization
 
-# Deploy Stage - Build and Push Docker image
-deploy:docker:
-  image: docker:latest
-  stage: deploy
-  services:
-    - docker:dind
-  variables:
-    DOCKER_DRIVER: overlay2
-  before_script:
-    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
-  script:
-    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG .
-    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG
-  rules:
-    - if: $CI_COMMIT_TAG
-  dependencies:
-    - build
-  environment:
-    name: docker-production
-    url: $CI_REGISTRY_IMAGE
-
