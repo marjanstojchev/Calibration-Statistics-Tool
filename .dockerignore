@@ -68,11 +68,9 @@ docs/
 
 # Node.js (frontend source - only include dist)
 cst-frontend/node_modules/
-cst-frontend/src/
 cst-frontend/.gitignore
 cst-frontend/eslint.config.js
 cst-frontend/vite.config.js
-cst-frontend/package*.json
 cst-frontend/README.md
 
 # Build artifacts (will be copied from builder stage)

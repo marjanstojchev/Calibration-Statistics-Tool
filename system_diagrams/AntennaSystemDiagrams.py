@@ -10,13 +10,19 @@ import plotdata as plt
 import sys
 import auxiliary as aux
 import matplotlib.pyplot as plot
-import pyside_qtgui as qt
+
+# Import PySide6 GUI only if available (not available in headless/API mode)
+try:
+    import pyside_qtgui as qt
+except (ImportError, ModuleNotFoundError):
+    qt = None
+
 import re
 from pptx import Presentation
 import yaml
 
 
-bUseGui = True
+bUseGui = True if qt is not None else False
 
 lenofargs = len(sys.argv)
 if( lenofargs == 1): # ptu file / pfad hier vorgeben ( als erstes argument in sys.argv ist immer die script datei selbst enthalten)

@@ -5,22 +5,16 @@ WORKDIR /frontend
 
 # Copy package files first for better layer caching
 COPY cst-frontend/package*.json ./
-RUN npm ci
+RUN npm install
 
 # Copy source and build
 COPY cst-frontend/ ./
 RUN npm run build
 
 # Stage 2: Python backend with FastAPI
-FROM python:3.13-slim
+FROM python:3.13
 
 WORKDIR /app
-
-# Install system dependencies for PySide6 (if needed in production)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgl1-mesa-glx \
-    libxkbcommon0 \
-    && rm -rf /var/lib/apt/lists/*
 
 # Copy and install Python dependencies
 COPY requirements.txt ./

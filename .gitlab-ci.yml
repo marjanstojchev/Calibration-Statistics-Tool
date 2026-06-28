@@ -64,7 +64,7 @@ variables:
   before_script:
     - python -m pip install --upgrade pip           # Upgrade to latest pip version
     - pip install -e .                              # Install this project in editable mode (for testing)
-    - pip install -r requirements.txt               # Install all dependencies (FastAPI, pytest, etc.)
+    - pip install -r requirements-dev.txt           # Install all dependencies including dev/test tools
 
 # Linux Python Setup Template
 # Installs Qt/PySide6 system dependencies + Python packages

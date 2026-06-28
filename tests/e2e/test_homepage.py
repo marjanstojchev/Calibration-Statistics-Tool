@@ -24,3 +24,5 @@ def test_navigate_to_limits_tab_text(page):
     
     # Wait for Limits tab content (specific h3 that only appears in Limits tab)
     page.locator('h3:has-text("Limits Configuration")').wait_for(timeout=5000)
+
+

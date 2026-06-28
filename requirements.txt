@@ -4,12 +4,9 @@ python-dotenv==1.0.1
 fastapi==0.136.3
 uvicorn==0.48.0
 python-multipart==0.0.30
-pytest==8.3.3
-pytest-mock==3.14.0
-pytest-benchmark==4.0.0
-playwright==1.45.0
-flake8==7.1.1
-black==24.10.0
-bandit==1.7.9
-build==1.0.3
+pydantic>=2.0.0
+numpy>=1.24.0
+matplotlib>=3.5.0
+python-pptx>=0.6.21
 mcp>=1.23.0
+pyyaml>=6.0

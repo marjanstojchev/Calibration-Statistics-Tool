@@ -1,18 +1,24 @@
 from __future__ import annotations
 import os
 import protocolsTest as protocolfilter
-import pyside_qtgui as qt
 from shared import safeparse as sp
 import logconfig
 import protocolsTest as protocolFilter
-# loadDataLogger=logconfig.loadDataLogger
-parseDataLogger=logconfig.mainLoadDataLogger
-parseDataLog=logconfig.mainLoadDataLogger.logger
+
+# Import PySide6 GUI only if available (not available in headless/API mode)
+try:
+    import pyside_qtgui as qt
+except (ImportError, ModuleNotFoundError):
+    qt = None
+
+parseDataLogger = logconfig.mainLoadDataLogger
+parseDataLog = logconfig.mainLoadDataLogger.logger
 
 # In headless mode (API), qt.mainLogTableHandler won't exist.
 # Catch the error and continue.
 try:
-    logconfig.mainLoadDataLogger.addTableHandler(qt.mainLogTableHandler)
+    if qt is not None:
+        logconfig.mainLoadDataLogger.addTableHandler(qt.mainLogTableHandler)
 except AttributeError:
     pass  # Running in headless mode (API), no GUI handlers available
 
