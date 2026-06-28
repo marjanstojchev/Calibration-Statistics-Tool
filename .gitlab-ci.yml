@@ -33,7 +33,6 @@ stages:
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"        # Pip package cache for faster installs
   NPM_CACHE_DIR: "$CI_PROJECT_DIR/.cache/npm"        # Node package cache
-  QT_QPA_PLATFORM: "offscreen"                       # Headless mode for Qt/PySide6 in CI
   DOCKER_IMAGE: "$CI_REGISTRY_IMAGE"                 # GitLab Container Registry image path
   DOCKER_TAG: "$CI_COMMIT_REF_SLUG"                  # Docker tag (branch or tag name)
 
@@ -67,23 +66,11 @@ variables:
     - pip install -r requirements-dev.txt           # Install all dependencies including dev/test tools
 
 # Linux Python Setup Template
-# Installs Qt/PySide6 system dependencies + Python packages
-# Used for cross-platform testing and building
+# Installs Python packages for API/backend testing (no Qt/GUI)
 .linux-python:
   extends: .pip-cache
   image: python:3.13                                # Official Python 3.13 image
   before_script:
-    # Install system libraries required by PySide6/Qt:
-    #   libgl1-mesa-dev     - OpenGL support
-    #   libxkbcommon0       - Keyboard input
-    #   libxcb-*            - X Window System components
-    #   libxrender1         - Rendering library
-    #   libdbus-1-3         - D-Bus system message bus
-    #   xvfb                - Virtual frame buffer (headless display)
-    - apt-get update && apt-get install -y \
-        libgl1-mesa-dev libxkbcommon0 libxcb-xinerama0 libxcb-cursor0 \
-        libxrender1 libxrandr2 libdbus-1-3 xvfb
-    # Then run shared pip installation
     - !reference [.pip-installs, before_script]
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -97,9 +84,10 @@ test:linux:
   stage: test
   script:
     - python -m pytest --version                    # Display pytest version
-    - python -m pytest -v --benchmark-disable --junitxml=report.xml
+    - python -m pytest -v --benchmark-disable --ignore=tests/test_handlers.py --ignore=tests/test_add_and_parse_ptu2_separately.py --ignore=tests/integration/ --junitxml=report.xml
       # -v: verbose output (show all test names)
       # --benchmark-disable: skip benchmark tests (too slow for CI)
+      # --ignore: skip Qt/GUI tests (web-cloud-ui branch is API-only)
       # --junitxml=report.xml: generate JUnit XML for GitLab integration
   artifacts:
     reports:
@@ -119,7 +107,7 @@ test:windows:
     - windows                                       # Requires runner tagged "windows"
   script:
     - python -m pytest --version
-    - python -m pytest -v --benchmark-disable --junitxml=report.xml
+    - python -m pytest -v --benchmark-disable --ignore=tests/test_handlers.py --ignore=tests/test_add_and_parse_ptu2_separately.py --ignore=tests/integration/ --junitxml=report.xml
   artifacts:
     reports:
       junit: report.xml
