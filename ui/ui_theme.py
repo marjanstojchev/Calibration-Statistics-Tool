@@ -1021,6 +1021,52 @@ def _build_qss(p: dict) -> str:
     return _QSS_TEMPLATE.format(**p)
 
 
+def _build_ant_pat_table_style(p: dict[str, str]) -> str:
+    """Build stylesheet for antenna pattern table frames from palette dict.
+    
+    Args:
+        p: Palette dict with BG_SECONDARY, BG_TERTIARY, BORDER keys
+        
+    Returns:
+        QSS stylesheet string for Frame, SubFrame1, SubFrame2
+    """
+    return f"""
+QFrame#Frame {{
+    background-color: {p.get('BG_SECONDARY', BG_SECONDARY)};
+    border: 1px solid {p.get('BORDER', BORDER)};
+    border-radius: 6px;
+}}
+QFrame#SubFrame1 {{
+    background-color: {p.get('BG_SECONDARY', BG_SECONDARY)};
+    border: none;
+    border-radius: 6px;
+}}
+QFrame#SubFrame2 {{
+    background-color: {p.get('BG_TERTIARY', BG_TERTIARY)};
+    border: none;
+    border-radius: 6px;
+}}
+"""
+
+
+def _build_plot_frame_style(p: dict[str, str]) -> str:
+    """Build stylesheet for plot frame from palette dict.
+    
+    Args:
+        p: Palette dict with BG_SECONDARY, BORDER keys
+        
+    Returns:
+        QSS stylesheet string for PlotFrame
+    """
+    return f"""
+QFrame#PlotFrame {{
+    border: 1px solid {p.get('BORDER', BORDER)};
+    border-radius: 6px;
+    background-color: {p.get('BG_SECONDARY', BG_SECONDARY)};
+}}
+"""
+
+
 THEME_QSS = _build_qss(_DARK)
 
 # ============================================================================
@@ -1194,6 +1240,10 @@ class ThemeManager:
 
     def _palette(self) -> dict[str, str]:
         return _DARK if self._effective_mode() == "dark" else _LIGHT
+
+    def palette(self) -> dict[str, str]:
+        """Return the active palette dict (public accessor for _palette)."""
+        return self._palette()
 
     def log_bg_colors(self) -> dict[str, str]:
         """Return log-row background color map for the active mode."""
