@@ -82,12 +82,16 @@ variables:
 test:linux:
   extends: .linux-python
   stage: test
+  before_script:
+    - !reference [.pip-installs, before_script]    # Use shared pip installation
+    - apt-get update && apt-get install -y chromium-browser xvfb  # Install Chromium + virtual display
   script:
     - python -m pytest --version                    # Display pytest version
-    - python -m pytest -v --benchmark-disable --ignore=tests/test_handlers.py --ignore=tests/test_add_and_parse_ptu2_separately.py --ignore=tests/test_limits_smoke.py --ignore=tests/integration/ --ignore=tests/e2e/ --junitxml=report.xml
+    - xvfb-run python -m pytest -v --benchmark-disable --ignore=tests/test_handlers.py --ignore=tests/test_add_and_parse_ptu2_separately.py --ignore=tests/test_limits_smoke.py --ignore=tests/integration/ --junitxml=report.xml
       # -v: verbose output (show all test names)
       # --benchmark-disable: skip benchmark tests (too slow for CI)
-      # --ignore: skip Qt/GUI tests (web-cloud-ui branch is API-only)
+      # --ignore: skip Qt/GUI tests and some integration tests
+      # xvfb-run: run with virtual frame buffer for E2E browser tests
       # --junitxml=report.xml: generate JUnit XML for GitLab integration
   artifacts:
     reports:
@@ -103,11 +107,12 @@ test:windows:
   stage: test
   before_script:
     - !reference [.pip-installs, before_script]    # Use shared pip installation
+    - choco install chromium -y                     # Install Chromium via Chocolatey
   tags:
     - windows                                       # Requires runner tagged "windows"
   script:
     - python -m pytest --version
-    - python -m pytest -v --benchmark-disable --ignore=tests/test_handlers.py --ignore=tests/test_add_and_parse_ptu2_separately.py --ignore=tests/test_limits_smoke.py --ignore=tests/integration/ --ignore=tests/e2e/ --junitxml=report.xml
+    - python -m pytest -v --benchmark-disable --ignore=tests/test_handlers.py --ignore=tests/test_add_and_parse_ptu2_separately.py --ignore=tests/test_limits_smoke.py --ignore=tests/integration/ --junitxml=report.xml
   artifacts:
     reports:
       junit: report.xml
