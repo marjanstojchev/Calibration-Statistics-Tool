@@ -15,18 +15,24 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 # conftest.py is collected first by pytest, so this guarantees the real
 # PySide6 package is in sys.modules before any test module runs its
 # module-level code.
-from PySide6.QtWidgets import QApplication as _QApplication  # noqa: F401
-from PySide6.QtGui import QFont as _QFont                    # noqa: F401
-from PySide6.QtCore import Qt as _Qt                         # noqa: F401
+try:
+    from PySide6.QtWidgets import QApplication as _QApplication  # noqa: F401
+    from PySide6.QtGui import QFont as _QFont                    # noqa: F401
+    from PySide6.QtCore import Qt as _Qt                         # noqa: F401
+    HAS_PYSIDE6 = True
+except (ImportError, ModuleNotFoundError):
+    HAS_PYSIDE6 = False
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def _qapp_session():
     """Ensure a single QApplication exists for the entire test session.
 
-    Session-scoped and autouse so it is created before any Qt widget is
-    instantiated, including module-level widget creation in sys_diag_tab.py.
+    Session-scoped fixture that is used by Qt-dependent tests.
+    Instantiates QApplication before any Qt widget is created.
     """
+    if not HAS_PYSIDE6:
+        pytest.skip("PySide6 not available - skipping Qt tests")
     from PySide6.QtWidgets import QApplication
     app = QApplication.instance() or QApplication([])
     yield app
@@ -40,6 +46,8 @@ def shared_main_view(_qapp_session):
     module-level PySide6 setdefault mock does not interfere during collection.
     The _qapp_session parameter guarantees a real QApplication exists first.
     """
+    if not HAS_PYSIDE6:
+        pytest.skip("PySide6 not available - skipping Qt tests")
     _root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     _ui_path = os.path.join(_root_dir, 'ui')
     if _ui_path not in sys.path:
