@@ -13,7 +13,12 @@ from typing import TYPE_CHECKING
 import auxiliary as aux
 import data_processing as dp
 import protocolsTest as protocolFilter
-from PySide6.QtWidgets import QTableWidgetItem
+
+try:
+    from PySide6.QtWidgets import QTableWidgetItem
+except (ImportError, ModuleNotFoundError):
+    QTableWidgetItem = None  # type: ignore
+
 from shared.parse_helpers import (
     collect_unparsed_protocols,
     deduplicate_protocol_list,
