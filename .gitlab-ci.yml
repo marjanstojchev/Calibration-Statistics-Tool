@@ -3,10 +3,11 @@
 # ═══════════════════════════════════════════════════════════════════════════════
 # 
 # Pipeline Overview:
-#   1. TEST        → Run pytest on Linux & Windows
-#   2. BUILD-FRONTEND  → Compile React/Vite app
-#   3. BUILD       → Build Python package + Docker image
-#   4. DEPLOY      → Push to PyPI & Azure Container Apps
+#   1. TEST         → Run pytest backend tests (Linux & Windows)
+#   2. BUILD-FRONTEND   → Compile React/Vite app
+#   3. TEST-E2E     → Full-stack E2E tests (API + UI)
+#   4. BUILD        → Build Python package + Docker image
+#   5. DEPLOY       → Push to PyPI & Azure Container Apps
 #
 # Deployment Targets:
 #   - PyPI: Python package registry (tags only)
@@ -22,8 +23,9 @@
 # ═══════════════════════════════════════════════════════════════════════════════
 
 stages:
-  - test              # Unit tests (pytest)
+  - test              # Backend unit tests (pytest)
   - build-frontend    # React app compilation
+  - test-e2e          # E2E integration tests (full stack)
   - build             # Python package + Docker image
   - deploy            # Release to PyPI + Azure
 
@@ -88,11 +90,11 @@ test:linux:
     - python -m playwright install --with-deps chromium  # Install Chromium via Playwright
   script:
     - python -m pytest --version                    # Display pytest version
-    - xvfb-run python -m pytest -v --benchmark-disable --ignore=tests/test_handlers.py --ignore=tests/test_add_and_parse_ptu2_separately.py --ignore=tests/test_limits_smoke.py --ignore=tests/integration/ --junitxml=report.xml
+    - xvfb-run python -m pytest -v --benchmark-disable --ignore=tests/test_handlers.py --ignore=tests/test_add_and_parse_ptu2_separately.py --ignore=tests/test_limits_smoke.py --ignore=tests/integration/ --ignore=tests/e2e/ --junitxml=report.xml
       # -v: verbose output (show all test names)
       # --benchmark-disable: skip benchmark tests (too slow for CI)
-      # --ignore: skip Qt/GUI tests and some integration tests
-      # xvfb-run: run with virtual frame buffer for E2E browser tests
+      # --ignore: skip Qt/GUI tests, integration tests, and E2E tests (run separately)
+      # xvfb-run: run with virtual frame buffer for headless testing
       # --junitxml=report.xml: generate JUnit XML for GitLab integration
   artifacts:
     reports:
@@ -113,7 +115,7 @@ test:windows:
     - windows                                       # Requires runner tagged "windows"
   script:
     - python -m pytest --version
-    - python -m pytest -v --benchmark-disable --ignore=tests/test_handlers.py --ignore=tests/test_add_and_parse_ptu2_separately.py --ignore=tests/test_limits_smoke.py --ignore=tests/integration/ --junitxml=report.xml
+    - python -m pytest -v --benchmark-disable --ignore=tests/test_handlers.py --ignore=tests/test_add_and_parse_ptu2_separately.py --ignore=tests/test_limits_smoke.py --ignore=tests/integration/ --ignore=tests/e2e/ --junitxml=report.xml
   artifacts:
     reports:
       junit: report.xml
@@ -145,6 +147,96 @@ build:frontend:
   rules:
     - if: $CI_COMMIT_BRANCH                         # Build on all branches
     - if: $CI_COMMIT_TAG                            # Build on version tags
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TEST-E2E STAGE - End-to-end integration tests (full stack)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# E2E Tests - Full stack integration testing with Playwright
+# Tests the complete user flow: Frontend (React) ↔ Backend (FastAPI)
+# Requires both frontend static files (from build:frontend) and backend API running
+test:e2e:linux:
+  extends: .linux-python
+  stage: test-e2e
+  dependencies:
+    - build:frontend                                # Get cst-frontend/dist/ artifacts
+  variables:
+    BACKEND_PORT: "8000"                            # FastAPI backend port (configurable in CI/CD vars)
+    FRONTEND_PORT: "5173"                           # Frontend static server port (configurable in CI/CD vars)
+  before_script:
+    - !reference [.pip-installs, before_script]    # Install Python dependencies
+    - apt-get update && apt-get install -y xvfb    # Virtual display for headless browser
+    - python -m playwright install --with-deps chromium  # Install Chromium browser
+  script:
+    # Helper function: Try to start server on port, fallback if needed
+    - |
+      start_backend() {
+        for port in $BACKEND_PORT 8001 8002 8003; do
+          echo "Trying backend port: $port"
+          timeout 3 python -c "import socket; s = socket.socket(); s.bind(('', $port)); s.close()" 2>/dev/null && {
+            export BACKEND_PORT=$port
+            echo "Backend port available: $BACKEND_PORT"
+            return 0
+          }
+        done
+        echo "ERROR: No available backend ports!" && exit 1
+      }
+    
+    - |
+      start_frontend() {
+        for port in $FRONTEND_PORT 5174 5175 5176; do
+          echo "Trying frontend port: $port"
+          timeout 3 python -c "import socket; s = socket.socket(); s.bind(('', $port)); s.close()" 2>/dev/null && {
+            export FRONTEND_PORT=$port
+            export FRONTEND_URL="http://localhost:$port"
+            echo "Frontend port available: $FRONTEND_PORT"
+            return 0
+          }
+        done
+        echo "ERROR: No available frontend ports!" && exit 1
+      }
+    
+    - start_backend
+    - start_frontend
+    
+    # Start FastAPI backend in background
+    - uvicorn api.main:app --host 0.0.0.0 --port $BACKEND_PORT &
+    - BACKEND_PID=$!
+    - echo "Backend started on port $BACKEND_PORT with PID $BACKEND_PID"
+    
+    # Serve React frontend static files in background
+    - cd cst-frontend/dist && python -m http.server $FRONTEND_PORT &
+    - FRONTEND_PID=$!
+    - echo "Frontend server started on port $FRONTEND_PORT with PID $FRONTEND_PID"
+    - cd ../..
+    
+    # Wait for servers to be ready with health checks
+    - sleep 5
+    - |
+      for i in {1..10}; do
+        curl -sf http://localhost:$BACKEND_PORT/api/health && echo "✓ Backend ready" && break
+        echo "Backend health check attempt $i/10..."
+        sleep 1
+      done
+    - |
+      for i in {1..10}; do
+        curl -sf http://localhost:$FRONTEND_PORT/ >/dev/null && echo "✓ Frontend ready" && break
+        echo "Frontend health check attempt $i/10..."
+        sleep 1
+      done
+    
+    # Run E2E tests with detected frontend URL
+    - FRONTEND_URL="$FRONTEND_URL" xvfb-run python -m pytest tests/e2e/ -v --junitxml=report-e2e.xml
+    
+    # Cleanup background processes
+    - kill $BACKEND_PID $FRONTEND_PID || true
+  artifacts:
+    reports:
+      junit: report-e2e.xml
+    expire_in: 30 days
+  rules:
+    - if: $CI_COMMIT_BRANCH                         # Run on all branches
+  allow_failure: false                              # E2E failures should block pipeline
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # BUILD STAGE - Create Python package + Docker image
