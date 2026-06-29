@@ -682,62 +682,62 @@ if qt is not None:
         """Computes plot data for all 'Off' rows; runs off the main thread."""
         batch_ready = qt.Signal(list)
 
-    def __init__(self, row_params):
-        super().__init__()
-        self._row_params = row_params
+        def __init__(self, row_params):
+            super().__init__()
+            self._row_params = row_params
 
-    def run(self):
-        parseDataList = list(parseData['parseDataList'])  # snapshot
-        if not parseDataList:
-            self.batch_ready.emit([])
-            return
+        def run(self):
+            parseDataList = list(parseData['parseDataList'])  # snapshot
+            if not parseDataList:
+                self.batch_ready.emit([])
+                return
 
-        antennaTypesList   = dp.getAntennaTypesList(parseDataList)
-        ptu2List           = dp.getPtu2ListPerAntennaType(antennaTypesList[0], parseDataList)
-        dateTimeSensorList = dp.getDateTimeSensorCombList(antennaTypesList[0], ptu2List)
-        desiredDiagList    = dp.getDiagramList(antennaTypesList[0], parseDataList)
+            antennaTypesList   = dp.getAntennaTypesList(parseDataList)
+            ptu2List           = dp.getPtu2ListPerAntennaType(antennaTypesList[0], parseDataList)
+            dateTimeSensorList = dp.getDateTimeSensorCombList(antennaTypesList[0], ptu2List)
+            desiredDiagList    = dp.getDiagramList(antennaTypesList[0], parseDataList)
 
-        batch = []
-        for rp in self._row_params:
-            row        = rp['row']
-            graphIndex = rp['graphIndex']
-            diagIdx    = rp['diagIdx']
-            rxCh       = rp['rxCh']
-            graphType  = rp['graphType']
-            AntChan    = rp['AntChan']
-            ax         = rp['ax']
+            batch = []
+            for rp in self._row_params:
+                row        = rp['row']
+                graphIndex = rp['graphIndex']
+                diagIdx    = rp['diagIdx']
+                rxCh       = rp['rxCh']
+                graphType  = rp['graphType']
+                AntChan    = rp['AntChan']
+                ax         = rp['ax']
 
-            for pdIdx in range(len(parseDataList)):
-                angBiggerThan45 = 0
-                for dtsIdx in range(len(dateTimeSensorList)):
-                    if (desiredDiagList[diagIdx] == parseDataList[pdIdx].fileTitle.diagram
-                            and dateTimeSensorList[dtsIdx]['sensor'] == parseDataList[pdIdx].fileTitle.sensor
-                            and dateTimeSensorList[dtsIdx]['dateAndTime'] == parseDataList[pdIdx].fileTitle.dateAndTime):
+                for pdIdx in range(len(parseDataList)):
+                    angBiggerThan45 = 0
+                    for dtsIdx in range(len(dateTimeSensorList)):
+                        if (desiredDiagList[diagIdx] == parseDataList[pdIdx].fileTitle.diagram
+                                and dateTimeSensorList[dtsIdx]['sensor'] == parseDataList[pdIdx].fileTitle.sensor
+                                and dateTimeSensorList[dtsIdx]['dateAndTime'] == parseDataList[pdIdx].fileTitle.dateAndTime):
 
-                        label    = (parseDataList[pdIdx].fileTitle.fileNamePath
-                                    + '_' + AntChan + '_Diagram' + str(diagIdx))
-                        angle    = plt.getAngle(parseDataList, pdIdx)
-                        tarAngle = plt.getTargetAngle(plotSetup, parseDataList, pdIdx)
+                            label    = (parseDataList[pdIdx].fileTitle.fileNamePath
+                                        + '_' + AntChan + '_Diagram' + str(diagIdx))
+                            angle    = plt.getAngle(parseDataList, pdIdx)
+                            tarAngle = plt.getTargetAngle(plotSetup, parseDataList, pdIdx)
 
-                        if abs(angle[0]) > 45:
-                            angBiggerThan45 = 1
+                            if abs(angle[0]) > 45:
+                                angBiggerThan45 = 1
 
-                        validChirpList = dp.getValidChirp(chirpConfig, parseDataList, pdIdx)
+                            validChirpList = dp.getValidChirp(chirpConfig, parseDataList, pdIdx)
 
-                        if plt.isAvgDiagram(graphType):
-                            actualGraphData = plt.getActualGraphData(graphType, rxCh, 0, parseDataList, pdIdx)
-                        else:
-                            actualGraphData = None
-                            for chirp in range(len(validChirpList)):
-                                actualGraphData = plt.getActualGraphData(graphType, rxCh, chirp, parseDataList, pdIdx)
+                            if plt.isAvgDiagram(graphType):
+                                actualGraphData = plt.getActualGraphData(graphType, rxCh, 0, parseDataList, pdIdx)
+                            else:
+                                actualGraphData = None
+                                for chirp in range(len(validChirpList)):
+                                    actualGraphData = plt.getActualGraphData(graphType, rxCh, chirp, parseDataList, pdIdx)
 
-                        if plotSetup['targetAngle'] == 1:
-                            angle = tarAngle
+                            if plotSetup['targetAngle'] == 1:
+                                angle = tarAngle
 
-                        batch.append((row, graphIndex, ax, angle, actualGraphData,
-                                      label, graphType, dtsIdx, angBiggerThan45))
+                            batch.append((row, graphIndex, ax, angle, actualGraphData,
+                                          label, graphType, dtsIdx, angBiggerThan45))
 
-        self.batch_ready.emit(batch)
+            self.batch_ready.emit(batch)
 
 
 _turn_on_thread = None  # module-level reference prevents GC while thread runs
