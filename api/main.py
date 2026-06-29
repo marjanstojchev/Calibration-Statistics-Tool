@@ -41,6 +41,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/api/health")
+def health():
+    return {"status": "ok"}
+
 app.include_router(protocols.router,        prefix="/api/protocols",             tags=["protocols"])
 app.include_router(system_diagrams.router,  prefix="/api/system_diagrams",       tags=["system_diagrams"])
 app.include_router(tx_diagrams.router,      prefix="/api/tx_diagrams",           tags=["tx_diagrams"])
@@ -56,7 +60,3 @@ app.include_router(downloads.router,        prefix="/api/downloads",            
 _react_dist = Path(__file__).parent.parent / "cst-frontend" / "dist"
 if _react_dist.exists():
     app.mount("/", StaticFiles(directory=str(_react_dist), html=True), name="frontend")
-
-@app.get("/api/health")
-def health():
-    return {"status": "ok"}

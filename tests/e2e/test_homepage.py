@@ -1,14 +1,14 @@
-def test_page_loads(page):
-    page.goto('http://localhost:5174')
+def test_page_loads(page, frontend_url):
+    page.goto(frontend_url)
     assert page.title() != ''  # Title exists
 
-def test_heading_present(page):
-    page.goto('http://localhost:5174')
+def test_heading_present(page, frontend_url):
+    page.goto(frontend_url)
     title = page.locator('.app-title')
     assert 'Calibration Statistics Tool' in title.text_content()
 
-def test_navigate_to_limits_tab_class_name(page):
-    page.goto('http://localhost:5174')
+def test_navigate_to_limits_tab_class_name(page, frontend_url):
+    page.goto(frontend_url)
     
     # Click "Limits" button
     limits_btn = page.locator('button:has-text("Limits")')
@@ -17,8 +17,8 @@ def test_navigate_to_limits_tab_class_name(page):
     # Verify button is now active (has 'active' class)
     assert 'active' in limits_btn.get_attribute('class')
 
-def test_navigate_to_limits_tab_text(page):
-    page.goto('http://localhost:5174')
+def test_navigate_to_limits_tab_text(page, frontend_url):
+    page.goto(frontend_url)
     limits_btn = page.locator('button:has-text("Limits")')
     limits_btn.click()
     

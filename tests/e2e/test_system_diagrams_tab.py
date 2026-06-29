@@ -1,5 +1,5 @@
-# def test_tab_launch(page):
-#     page.goto('http://localhost:5173')
+# def test_tab_launch(page, frontend_url):
+#     page.goto(frontend_url)
 #     page.get_by_role("button", name="System Diagrams").click()
 #     page.locator('h3:has-text("System Diagrams")').wait_for(timeout=5000)
 
@@ -7,8 +7,8 @@
 from playwright.sync_api import expect
 
 
-def test_two_slides_combo_conf1(page):
-    page.goto('http://localhost:5173')
+def test_two_slides_combo_conf1(page, frontend_url):
+    page.goto(frontend_url)
     page.get_by_role("button", name="System Diagrams").click()
     
     # Get first primGraph select
@@ -35,8 +35,8 @@ def test_two_slides_combo_conf1(page):
     print(f"Selected option text: {option_text}")
     assert 'normLevel' in option_text
 
-# def test_two_slides_combo_conf2(page):
-#     page.goto('http://localhost:5173')
+# def test_two_slides_combo_conf2(page, frontend_url):
+#     page.goto(frontend_url)
 #     page.get_by_role("button", name="System Diagrams").click()
 
 #     # Get first secGraph select
@@ -63,8 +63,8 @@ def test_two_slides_combo_conf1(page):
 #     print(f"Selected option text: {option_text}")
 #     assert 'diffPhaseDiff' in option_text
 
-def test_two_plot_setup_inputs(page):
-    page.goto('http://localhost:5173')
+def test_two_plot_setup_inputs(page, frontend_url):
+    page.goto(frontend_url)
     page.get_by_role("button", name="System Diagrams").click()
 
     az_input = page.locator('#az')

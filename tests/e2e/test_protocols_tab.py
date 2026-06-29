@@ -1,7 +1,7 @@
 protocol_file_path = 'C:\\Calibration Statistics Tool\\measurement_data\\protocol_files\\2024-01-15_12-30-45_Tuner1_rf12345_dsp67890_Seq1_TxAnt1_Diagram1_Protocol.txt'  # Update with actual test file path
 ptu2_file_path = 'C:\\Calibration Statistics Tool\\measurement_data\\ptu_files\\2024-01-15_08-15-30_Tuner1_rf12345_dsp67890_Seq1_TxAnt0_Diagram0_Az_ptu2.txt'  # Update with actual test file path
-def test_protocols_input(page):
-    page.goto('http://localhost:5174')
+def test_protocols_input(page, frontend_url):
+    page.goto(frontend_url)
     loadprot_btn = page.locator('#proto-input')
 
     # loadprot_btn.click()
@@ -12,8 +12,8 @@ def test_protocols_input(page):
     assert badge.is_visible()
     assert '1 protocol files' in badge.text_content()  # or whatever count
 
-def test_multiple_checkboxes(page):
-    page.goto('http://localhost:5174')
+def test_multiple_checkboxes(page, frontend_url):
+    page.goto(frontend_url)
     
     expected = {
         "Search PTU2 Files": True,    # should be checked
@@ -31,9 +31,9 @@ def test_multiple_checkboxes(page):
         checkbox.click()  # verify toggle
 
 
-def test_protocol_type_radio(page):
+def test_protocol_type_radio(page, frontend_url):
 
-    page.goto('http://localhost:5174')
+    page.goto(frontend_url)
     page.get_by_role("radio", name="Auto Recognition").click()
     assert page.get_by_role("radio", name="Auto Recognition").is_checked()
 
@@ -43,9 +43,9 @@ def test_protocol_type_radio(page):
     page.get_by_role("radio", name="Calibration").click()
     assert page.get_by_role("radio", name="Calibration").is_checked()
 
-def test_protocol_add_ptu2_files(page):
+def test_protocol_add_ptu2_files(page, frontend_url):
 
-    page.goto('http://localhost:5174')
+    page.goto(frontend_url)
     page.get_by_text("Add PTU2 Files").click()
 
     file_input = page.locator('#ptu2-input')
