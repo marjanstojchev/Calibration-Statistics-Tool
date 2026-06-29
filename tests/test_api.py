@@ -30,7 +30,7 @@ client = TestClient(app)
 
 class TestHealth:
     def test_health_returns_ok(self):
-        r = client.get("/")
+        r = client.get("/api/health")
         assert r.status_code == 200
         assert r.json() == {"status": "ok"}
 

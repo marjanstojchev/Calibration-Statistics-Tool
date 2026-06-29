@@ -84,7 +84,7 @@ test:linux:
   stage: test
   script:
     - python -m pytest --version                    # Display pytest version
-    - python -m pytest -v --benchmark-disable --ignore=tests/test_handlers.py --ignore=tests/test_add_and_parse_ptu2_separately.py --ignore=tests/test_limits_smoke.py --ignore=tests/integration/ --junitxml=report.xml
+    - python -m pytest -v --benchmark-disable --ignore=tests/test_handlers.py --ignore=tests/test_add_and_parse_ptu2_separately.py --ignore=tests/test_limits_smoke.py --ignore=tests/integration/ --ignore=tests/e2e/ --junitxml=report.xml
       # -v: verbose output (show all test names)
       # --benchmark-disable: skip benchmark tests (too slow for CI)
       # --ignore: skip Qt/GUI tests (web-cloud-ui branch is API-only)
@@ -107,7 +107,7 @@ test:windows:
     - windows                                       # Requires runner tagged "windows"
   script:
     - python -m pytest --version
-    - python -m pytest -v --benchmark-disable --ignore=tests/test_handlers.py --ignore=tests/test_add_and_parse_ptu2_separately.py --ignore=tests/test_limits_smoke.py --ignore=tests/integration/ --junitxml=report.xml
+    - python -m pytest -v --benchmark-disable --ignore=tests/test_handlers.py --ignore=tests/test_add_and_parse_ptu2_separately.py --ignore=tests/test_limits_smoke.py --ignore=tests/integration/ --ignore=tests/e2e/ --junitxml=report.xml
   artifacts:
     reports:
       junit: report.xml

@@ -677,9 +677,10 @@ def _batch_turn_off(on_rows):
 # ---------------------------------------------------------------------------
 # Background worker for TurnOnOff
 # ---------------------------------------------------------------------------
-class _TurnOnWorker(qt.QThread):
-    """Computes plot data for all 'Off' rows; runs off the main thread."""
-    batch_ready = qt.Signal(list)
+if qt is not None:
+    class _TurnOnWorker(qt.QThread):
+        """Computes plot data for all 'Off' rows; runs off the main thread."""
+        batch_ready = qt.Signal(list)
 
     def __init__(self, row_params):
         super().__init__()
