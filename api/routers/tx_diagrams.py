@@ -68,16 +68,17 @@ def start(request: Optional[TxStartRequest] = None):
     if request is None:
         request = TxStartRequest()
 
-    # Lazy-load to avoid Qt initialization at module level
-    from tx_diagrams import TxAntDiagrams as tx_ant_diags
+    # Check for parsed data before loading the heavy module
     import shared.load_protocols as lp
-
     parsed_data = getattr(lp, 'txAntDiagParsedDataList', [])
     if not parsed_data:
         raise HTTPException(
             status_code=422,
             detail="No TxAntDiag parsed data. Run /api/protocols/parse with search_txantdiag_files=true first.",
         )
+
+    # Lazy-load to avoid Qt initialization at module level
+    from tx_diagrams import TxAntDiagrams as tx_ant_diags
 
     tx_ant_diags.start_data_evaluation(
         parsed_data,

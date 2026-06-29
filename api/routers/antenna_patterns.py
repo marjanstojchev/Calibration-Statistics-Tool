@@ -75,12 +75,13 @@ def start(request: Optional[AntPatStartRequest] = None):
     if request is None:
         request = AntPatStartRequest()
 
-    from antenna_patterns import antpat_v5_main_v3 as antpat
+    # Check for parsed data before loading the heavy module
     import shared.load_protocols as lp
-
     parsed_data = getattr(lp, 'sysDiagParsedDataList', [])
     if not parsed_data:
         raise HTTPException(status_code=422, detail="No parsed data. Run /api/protocols/parse first.")
+
+    from antenna_patterns import antpat_v5_main_v3 as antpat
 
     # Mirror what ant_pat_handlers.antpat_data_update_and_evaluation() does:
     # set module-level state then call start_data_evaluation.

@@ -128,13 +128,14 @@ def start(request: Optional[SysDiagStartRequest] = None):
     if request is None:
         request = SysDiagStartRequest()
 
-    # Lazy-load modules that require Qt initialization
-    from system_diagrams import AntennaSystemDiagrams as ant_sys_diags
+    # Check for parsed data before loading the heavy Qt-dependent module
     import shared.load_protocols as lp
-
     parseDataList = getattr(lp, 'sysDiagParsedDataList', [])
     if not parseDataList:
         raise HTTPException(status_code=422, detail="No parsed data. Run /api/protocols/parse first.")
+
+    # Lazy-load modules that require Qt initialization
+    from system_diagrams import AntennaSystemDiagrams as ant_sys_diags
 
     ant_sys_diags.start_data_evaluation(
         parseDataList,

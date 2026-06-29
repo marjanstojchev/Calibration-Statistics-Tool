@@ -24,6 +24,7 @@ import yaml
 
 bUseGui = True if qt is not None else False
 
+absPath = None  # default; set below when running as a standalone script
 lenofargs = len(sys.argv)
 if( lenofargs == 1): # ptu file / pfad hier vorgeben ( als erstes argument in sys.argv ist immer die script datei selbst enthalten)
     # absPath =r'C:\Arbeit\ProtokollBsp'
@@ -1867,15 +1868,16 @@ else:
     errorStatus, errorSting = logconfig.mainLoadDataLogger.addFileHandler(logconfig.mainLoadDataLogFilePath, 'w+')
     if errorStatus == 1:
         parseDataLogger.warning(errorSting)
-    # Load Data by absolute path
-    parseDataLogger.info('Loading data.')
-    loadData = ld.LoadData(absPath, plotSetup['useSensorMuster'], plotSetup['sensorMusterList'])
+    # Load Data by absolute path — only when running as a standalone script with a path argument
+    if absPath is not None:
+        parseDataLogger.info('Loading data.')
+        loadData = ld.LoadData(absPath, plotSetup['useSensorMuster'], plotSetup['sensorMusterList'])
 
-    sysDiagLogger=logconfig.antSysDiagLogger
+        sysDiagLogger=logconfig.antSysDiagLogger
 
-    if loadData.invalidPath != 1:
-        parseDataLogger.info('Num. of valid files parsed: ' + str(loadData.validFilesCounter) + '.')
-        parseDataList=loadData.parseDataList
-        start_data_evaluation(parseDataList, plotSetup, chirpConfig, graphConfig, diagramConfig, twoGraphSetupList, fourGraphSetupList, threeGraphSetupList, allOnOneSlideGraphList, diagramConfigList, sysDiagLogger, aux.antSysDiagOutputPath, 'Antenna_diagrams.pptx', os.path.join(aux.assetsDir, 'template.pptx'))
-    else:
-        parseDataLogger.error(loadData.invalidPathString)
+        if loadData.invalidPath != 1:
+            parseDataLogger.info('Num. of valid files parsed: ' + str(loadData.validFilesCounter) + '.')
+            parseDataList=loadData.parseDataList
+            start_data_evaluation(parseDataList, plotSetup, chirpConfig, graphConfig, diagramConfig, twoGraphSetupList, fourGraphSetupList, threeGraphSetupList, allOnOneSlideGraphList, diagramConfigList, sysDiagLogger, aux.antSysDiagOutputPath, 'Antenna_diagrams.pptx', os.path.join(aux.assetsDir, 'template.pptx'))
+        else:
+            parseDataLogger.error(loadData.invalidPathString)
