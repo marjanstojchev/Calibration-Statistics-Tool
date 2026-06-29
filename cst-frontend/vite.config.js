@@ -26,8 +26,12 @@ export default defineConfig({
     sourcemap: false, // Disable sourcemaps in production
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom']
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react')) {
+              return 'vendor';
+            }
+          }
         }
       }
     }
