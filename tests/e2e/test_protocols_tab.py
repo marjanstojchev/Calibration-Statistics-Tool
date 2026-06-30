@@ -1,5 +1,10 @@
+import os
+import pytest
+
 protocol_file_path = 'C:\\Calibration Statistics Tool\\measurement_data\\protocol_files\\2024-01-15_12-30-45_Tuner1_rf12345_dsp67890_Seq1_TxAnt1_Diagram1_Protocol.txt'  # Update with actual test file path
 ptu2_file_path = 'C:\\Calibration Statistics Tool\\measurement_data\\ptu_files\\2024-01-15_08-15-30_Tuner1_rf12345_dsp67890_Seq1_TxAnt0_Diagram0_Az_ptu2.txt'  # Update with actual test file path
+
+@pytest.mark.skipif(not os.path.exists(protocol_file_path), reason="Protocol file not available in this environment")
 def test_protocols_input(page, frontend_url):
     page.goto(frontend_url)
     loadprot_btn = page.locator('#proto-input')
@@ -43,6 +48,7 @@ def test_protocol_type_radio(page, frontend_url):
     page.get_by_role("radio", name="Calibration").click()
     assert page.get_by_role("radio", name="Calibration").is_checked()
 
+@pytest.mark.skipif(not os.path.exists(ptu2_file_path), reason="PTU2 file not available in this environment")
 def test_protocol_add_ptu2_files(page, frontend_url):
 
     page.goto(frontend_url)
