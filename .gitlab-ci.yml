@@ -205,10 +205,9 @@ test:e2e:linux:
     - echo "Backend started on port $BACKEND_PORT with PID $BACKEND_PID"
     
     # Serve React frontend static files in background
-    - cd cst-frontend/dist && python -m http.server $FRONTEND_PORT &
+    - python -m http.server $FRONTEND_PORT --directory cst-frontend/dist &
     - FRONTEND_PID=$!
     - echo "Frontend server started on port $FRONTEND_PORT with PID $FRONTEND_PID"
-    - cd ../..
     
     # Wait for servers to be ready with health checks
     - sleep 5
