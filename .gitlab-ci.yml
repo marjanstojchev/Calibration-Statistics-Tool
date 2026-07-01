@@ -342,7 +342,7 @@ deploy:azure:
       # Environment variables stored in CI/CD Variables:
       # AZURE_RESOURCE_GROUP: Azure resource group name (e.g., cst-rg)
   rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH   # Deploy main branch changes
+    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "web_ui"   # Deploy main branch changes
     - if: $CI_COMMIT_TAG                            # Deploy all version tags
   environment:
     name: azure-production                          # Mark deployment in GitLab UI
