@@ -324,6 +324,9 @@ deploy:azure:
     # AZURE_TENANT_ID: Azure tenant ID
     - az login --service-principal --username $AZURE_CLIENT_ID --password $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
   script:
+    # Grant Azure Container Apps access to GitLab Container Registry
+    # CI_REGISTRY_USER / CI_REGISTRY_PASSWORD are injected automatically by GitLab
+    - az containerapp registry set --name calibration-tool-app --resource-group $AZURE_RESOURCE_GROUP --server $CI_REGISTRY --username $CI_REGISTRY_USER --password $CI_REGISTRY_PASSWORD
     # Update running Container App with new Docker image
     # This triggers Azure to:
     #   1. Pull new image from registry
