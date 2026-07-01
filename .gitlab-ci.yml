@@ -301,8 +301,12 @@ deploy:pypi:
     - python -m pip install --upgrade twine         # Install package publisher
     - python -m twine check dist/*                  # Validate distribution files before upload
     # Upload to PyPI using provided credentials
-    - python -m twine upload -u "$TWINE_USERNAME" -p "$TWINE_PASSWORD" \
-        dist/* --non-interactive
+    - >
+      python -m twine upload
+      -u "$TWINE_USERNAME"
+      -p "$TWINE_PASSWORD"
+      dist/*
+      --non-interactive
       # Credentials stored in GitLab CI/CD Variables (Settings → CI/CD → Variables)
       # TWINE_USERNAME: your PyPI username
       # TWINE_PASSWORD: your PyPI API token (preferred over password)
@@ -323,10 +327,11 @@ deploy:azure:
     # AZURE_CLIENT_ID: Application ID from Azure AD
     # AZURE_CLIENT_SECRET: Service principal password/secret
     # AZURE_TENANT_ID: Azure tenant ID
-    - az login --service-principal \
-        -u $AZURE_CLIENT_ID \
-        -p $AZURE_CLIENT_SECRET \
-        --tenant $AZURE_TENANT_ID
+    - >
+      az login --service-principal
+      -u $AZURE_CLIENT_ID
+      -p $AZURE_CLIENT_SECRET
+      --tenant $AZURE_TENANT_ID
   script:
     # Update running Container App with new Docker image
     # This triggers Azure to:
