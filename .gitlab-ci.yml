@@ -336,7 +336,7 @@ deploy:azure:
     #   4. Perform health checks
     - |
       az containerapp update \
-        --name cst-app \
+        --name calibration-tool-app \
         --resource-group $AZURE_RESOURCE_GROUP \
         --image $DOCKER_IMAGE:$DOCKER_TAG
       # Environment variables stored in CI/CD Variables:
@@ -346,7 +346,7 @@ deploy:azure:
     - if: $CI_COMMIT_TAG                            # Deploy all version tags
   environment:
     name: azure-production                          # Mark deployment in GitLab UI
-    url: https://cst-app.azurecontainerapps.io     # Production app URL
+    url: https://calibration-tool-app.graybush-94365d45.westeurope.azurecontainerapps.io
   dependencies:
     - build:docker                                  # Needs Docker image (implicitly via registry)
   needs:
