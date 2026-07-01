@@ -301,15 +301,10 @@ deploy:pypi:
     - python -m pip install --upgrade twine         # Install package publisher
     - python -m twine check dist/*                  # Validate distribution files before upload
     # Upload to PyPI using provided credentials
-    - >
-      python -m twine upload
-      -u "$TWINE_USERNAME"
-      -p "$TWINE_PASSWORD"
-      dist/*
-      --non-interactive
-      # Credentials stored in GitLab CI/CD Variables (Settings → CI/CD → Variables)
-      # TWINE_USERNAME: your PyPI username
-      # TWINE_PASSWORD: your PyPI API token (preferred over password)
+    # Credentials stored in GitLab CI/CD Variables (Settings → CI/CD → Variables)
+    # TWINE_USERNAME: your PyPI username
+    # TWINE_PASSWORD: your PyPI API token (preferred over password)
+    - python -m twine upload -u "$TWINE_USERNAME" -p "$TWINE_PASSWORD" dist/* --non-interactive
   rules:
     - if: $CI_COMMIT_TAG                            # Only deploy on version tags (e.g., v1.0.0)
   environment:
@@ -335,13 +330,7 @@ deploy:azure:
     #   2. Stop old pods
     #   3. Start new pods with updated image
     #   4. Perform health checks
-    - |
-      az containerapp update \
-        --name calibration-tool-app \
-        --resource-group $AZURE_RESOURCE_GROUP \
-        --image $DOCKER_IMAGE:$DOCKER_TAG
-      # Environment variables stored in CI/CD Variables:
-      # AZURE_RESOURCE_GROUP: Azure resource group name (e.g., cst-rg)
+    - az containerapp update --name calibration-tool-app --resource-group $AZURE_RESOURCE_GROUP --image $DOCKER_IMAGE:$DOCKER_TAG
   rules:
     - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "web-cloud-ui"   # Deploy main and web-cloud-ui branches
     - if: $CI_COMMIT_TAG                            # Deploy all version tags
