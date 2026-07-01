@@ -329,8 +329,8 @@ deploy:azure:
     # AZURE_TENANT_ID: Azure tenant ID
     - >
       az login --service-principal
-      -u $AZURE_CLIENT_ID
-      -p $AZURE_CLIENT_SECRET
+      --username $AZURE_CLIENT_ID
+      --password $AZURE_CLIENT_SECRET
       --tenant $AZURE_TENANT_ID
   script:
     # Update running Container App with new Docker image
