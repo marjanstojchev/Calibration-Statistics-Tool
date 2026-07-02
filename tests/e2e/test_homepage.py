@@ -20,9 +20,19 @@ def test_navigate_to_limits_tab_class_name(page, frontend_url):
 def test_navigate_to_limits_tab_text(page, frontend_url):
     page.goto(frontend_url)
     limits_btn = page.locator('button:has-text("Limits")')
+
     limits_btn.click()
     
     # Wait for Limits tab content (specific h3 that only appears in Limits tab)
-    page.locator('h3:has-text("Limits Configuration")').wait_for(timeout=5000)
+    page.locator('h3:has-text("Limits FAIL")').wait_for(timeout=5000)
+    #page.locator('h3:has-text("Limits Configuration")').wait_for(timeout=5000)
 
 
+def test_navigate_to_limits_tab_text_fail_case(page, frontend_url):
+    page.goto(frontend_url)
+    limits_btn = page.locator('button:has-text("Limits")')
+
+    limits_btn.click()
+    
+    # Wait for Limits tab content (specific h3 that only appears in Limits tab)
+    page.locator('h3:has-text("Limits FAIL")').wait_for(timeout=5000)
