@@ -346,5 +346,5 @@ deploy:azure:
     - build:docker                                  # Needs Docker image (implicitly via registry)
   needs:
     - build:docker                                  # Explicitly declare dependency for optimization
-    - test:e2e                                      # Deploy only after E2E tests pass (test gating)
+    - test:e2e:linux                                # Deploy only after E2E tests pass (test gating)
 
