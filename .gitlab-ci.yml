@@ -234,7 +234,8 @@ test:e2e:linux:
       junit: report-e2e.xml
     expire_in: 30 days
   rules:
-    - if: $CI_COMMIT_BRANCH                         # Run on all branches
+    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "web-cloud-ui"  # Test on main and web-cloud-ui
+    - if: $CI_COMMIT_TAG                            # Test on version tags
   allow_failure: false                              # E2E failures should block pipeline
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -333,7 +334,8 @@ deploy:azure:
     #   2. Stop old pods
     #   3. Start new pods with updated image
     #   4. Perform health checks
-    - az containerapp update --name calibration-tool-app --resource-group $AZURE_RESOURCE_GROUP --image $DOCKER_IMAGE:$DOCKER_TAG
+    # Set DEPLOY_TIMESTAMP env var to force a new revision (Azure caches identical deployments)
+    - az containerapp update --name calibration-tool-app --resource-group $AZURE_RESOURCE_GROUP --image $DOCKER_IMAGE:$DOCKER_TAG --set-env-vars DEPLOY_TIMESTAMP="$(date +%s)"
   rules:
     - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "web-cloud-ui"   # Deploy main and web-cloud-ui branches
     - if: $CI_COMMIT_TAG                            # Deploy all version tags
@@ -344,4 +346,5 @@ deploy:azure:
     - build:docker                                  # Needs Docker image (implicitly via registry)
   needs:
     - build:docker                                  # Explicitly declare dependency for optimization
+    - test:e2e                                      # Deploy only after E2E tests pass (test gating)
 
