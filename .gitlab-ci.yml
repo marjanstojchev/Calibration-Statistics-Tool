@@ -271,6 +271,7 @@ build:docker:
     - docker:27-dind                                # Docker-in-Docker daemon (required for building)
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - echo "ACR_USERNAME is set: $([ -n "$ACR_USERNAME" ] && echo yes || echo no)"
     - echo "$ACR_PASSWORD" | docker login -u "$ACR_USERNAME" --password-stdin csttool.azurecr.io
   script:
     # Build image with commit ref tag (e.g., main, feat-new-ui)
