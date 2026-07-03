@@ -262,30 +262,36 @@ build:package:
 # Build Docker Image
 # Creates multi-stage Docker image:
 #   Stage 1: Node.js alpine → builds React (small layer)
+#   Stage 2: Python 3.13 → FastAPI backend + React static files
+# Final image serves both API and React frontend from single container
 build:docker:
   stage: build
-  image: docker:27
+  image: docker:27                                  # Docker CLI image
   services:
-    - docker:27-dind
+    - docker:27-dind                                # Docker-in-Docker daemon (required for building)
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - if [ -z "$ACR_USERNAME" ]; then echo "ERROR: ACR_USERNAME not set"; exit 1; fi
     - if [ -z "$ACR_PASSWORD" ]; then echo "ERROR: ACR_PASSWORD not set"; exit 1; fi
-    - echo -n "$ACR_PASSWORD" | docker login -u "$ACR_USERNAME" --password-stdin csttool.azurecr.io
+    - printf %s "$ACR_PASSWORD" | docker login -u "$ACR_USERNAME" --password-stdin csttool.azurecr.io
   script:
+    # Build image with commit ref tag (e.g., main, feat-new-ui)
     - docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
+    # Also tag as 'latest' for easy access to most recent build
     - docker tag $DOCKER_IMAGE:$DOCKER_TAG $DOCKER_IMAGE:latest
+    # Push both tags to GitLab Registry
     - docker push $DOCKER_IMAGE:$DOCKER_TAG
     - docker push $DOCKER_IMAGE:latest
+    # Also push to Azure Container Registry (ACR) for production use
     - docker tag $DOCKER_IMAGE:$DOCKER_TAG csttool.azurecr.io/calibration-tool:$DOCKER_TAG
     - docker tag $DOCKER_IMAGE:$DOCKER_TAG csttool.azurecr.io/calibration-tool:latest
     - docker push csttool.azurecr.io/calibration-tool:$DOCKER_TAG
     - docker push csttool.azurecr.io/calibration-tool:latest
   rules:
-    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "web-cloud-ui"
-    - if: $CI_COMMIT_TAG
+    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "web-cloud-ui"  # Build main and web-cloud-ui
+    - if: $CI_COMMIT_TAG                            # Build all version tags
   dependencies:
-    - build:frontend
+    - build:frontend                                # Needs cst-frontend/dist/ from build:frontend
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # DEPLOY STAGE - Release to PyPI & Azure
