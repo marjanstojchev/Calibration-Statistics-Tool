@@ -271,8 +271,10 @@ build:docker:
     - docker:27-dind                                # Docker-in-Docker daemon (required for building)
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - if [ -n "$ACR_USERNAME" ]; then echo "ACR_USERNAME=yes"; else echo "ACR_USERNAME=no"; fi
-    - if [ -n "$ACR_PASSWORD" ]; then echo "ACR_PASSWORD=yes"; else echo "ACR_PASSWORD=no"; fi
+    - echo "Branch=$CI_COMMIT_REF_SLUG, Protected=$CI_COMMIT_REF_PROTECTED"
+    - if [ -n "$ACR_USERNAME" ]; then echo "ACR_USERNAME=yes"; else echo "ACR_USERNAME=no (check GitLab: Settings→CI/CD→Variables, ensure NOT Protected or branch must be protected)"; fi
+    - if [ -n "$ACR_PASSWORD" ]; then echo "ACR_PASSWORD=yes"; else echo "ACR_PASSWORD=no (check GitLab: Settings→CI/CD→Variables, ensure NOT Protected or branch must be protected)"; fi
+    - test -n "$ACR_USERNAME" || exit 1
     - echo "$ACR_PASSWORD" | docker login -u "$ACR_USERNAME" --password-stdin csttool.azurecr.io
   script:
     # Build image with commit ref tag (e.g., main, feat-new-ui)
