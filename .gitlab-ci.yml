@@ -273,7 +273,7 @@ build:docker:
     # Login to GitLab Container Registry
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     # Login to Azure Container Registry (ACR_USERNAME / ACR_PASSWORD in CI/CD Variables)
-    - docker login -u $ACR_USERNAME -p $ACR_PASSWORD csttool.azurecr.io
+    - echo $ACR_PASSWORD | docker login -u $ACR_USERNAME --password-stdin csttool.azurecr.io
   script:
     # Build image with commit ref tag (e.g., main, feat-new-ui)
     - docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
