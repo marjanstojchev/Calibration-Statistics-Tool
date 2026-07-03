@@ -270,9 +270,7 @@ build:docker:
   services:
     - docker:27-dind                                # Docker-in-Docker daemon (required for building)
   before_script:
-    # Login to GitLab Container Registry
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    # Login to Azure Container Registry (ACR_USERNAME / ACR_PASSWORD in CI/CD Variables)
     - if [ -z "$ACR_USERNAME" ]; then echo "ERROR: ACR_USERNAME not set"; exit 1; fi
     - if [ -z "$ACR_PASSWORD" ]; then echo "ERROR: ACR_PASSWORD not set"; exit 1; fi
     - echo -n "$ACR_PASSWORD" | docker login -u "$ACR_USERNAME" --password-stdin csttool.azurecr.io
