@@ -4,7 +4,7 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'shared'))
 
-from parser_base import ParseDataBase
+from calibration_statistics_tool.shared.parser_base import ParseDataBase
 
 
 class ConcreteParser(ParseDataBase):

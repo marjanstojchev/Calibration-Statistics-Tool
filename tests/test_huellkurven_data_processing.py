@@ -29,7 +29,7 @@ for _subdir in ['shared']:
     if _path not in sys.path:
         sys.path.insert(0, _path)
 
-from shared.huellkurven_data_processing import (
+from calibration_statistics_tool.shared.huellkurven_data_processing import (
     calcPatternLimits,
     calcPhaseLimits,
     LimitsData,
@@ -693,13 +693,13 @@ class TestWriteLimitsDataToFile:
         return ld
 
     def test_creates_file(self, tmp_path, monkeypatch):
-        import shared.huellkurven_data_processing as hdp
+        import calibration_statistics_tool.shared.huellkurven_data_processing as hdp
         monkeypatch.setattr(hdp.aux, 'huellKurvenOutputPath', str(tmp_path))
         writeLimitsDataToFile(self._make_limits_data())
         assert (tmp_path / 'test_output.dat').exists()
 
     def test_headers_in_output(self, tmp_path, monkeypatch):
-        import shared.huellkurven_data_processing as hdp
+        import calibration_statistics_tool.shared.huellkurven_data_processing as hdp
         monkeypatch.setattr(hdp.aux, 'huellKurvenOutputPath', str(tmp_path))
         writeLimitsDataToFile(self._make_limits_data())
         content = (tmp_path / 'test_output.dat').read_text()
@@ -709,7 +709,7 @@ class TestWriteLimitsDataToFile:
         assert '#PanType: 0' in content
 
     def test_angle_rows_count(self, tmp_path, monkeypatch):
-        import shared.huellkurven_data_processing as hdp
+        import calibration_statistics_tool.shared.huellkurven_data_processing as hdp
         monkeypatch.setattr(hdp.aux, 'huellKurvenOutputPath', str(tmp_path))
         writeLimitsDataToFile(self._make_limits_data())
         content = (tmp_path / 'test_output.dat').read_text()

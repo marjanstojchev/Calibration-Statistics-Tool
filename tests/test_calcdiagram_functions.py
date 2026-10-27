@@ -18,10 +18,10 @@ for _subdir in ['shared']:
     if _path not in sys.path:
         sys.path.insert(0, _path)
 
-import calcdiagram_functions as calc
+from calibration_statistics_tool.shared import calcdiagram_functions as calc
 
 # Reuse parsePTU2data data classes for manual fixture building if needed
-from shared.parsePTU2data import PTU2ParseData, AntennaInfo, ChirpInfo
+from calibration_statistics_tool.shared.parsePTU2data import PTU2ParseData, AntennaInfo, ChirpInfo
 
 ANGLES = [-10.0, 0.0, 10.0]
 

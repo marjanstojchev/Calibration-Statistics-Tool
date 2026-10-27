@@ -7,7 +7,7 @@ Not enforced as pass/fail — informational only.
 """
 import copy
 import pytest
-from shared.calcdiagram_functions import getAntLevel, getPhaseDiff, getPtuAngVals
+from calibration_statistics_tool.shared.calcdiagram_functions import getAntLevel, getPhaseDiff, getPtuAngVals
 
 
 # ---------------------------------------------------------------------------

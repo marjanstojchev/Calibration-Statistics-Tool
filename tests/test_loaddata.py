@@ -12,7 +12,7 @@ import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'shared'))
 
-from shared.loaddata import LoadData
+from calibration_statistics_tool.shared.loaddata import LoadData
 
 
 # ---------------------------------------------------------------------------

@@ -16,10 +16,8 @@ import pytest
 # Path setup — mirrors conftest.py and main.py path initialisation
 # ---------------------------------------------------------------------------
 _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-for _subdir in ["shared", "ui", "system_diagrams", "tx_diagrams", "antenna_patterns"]:
-    _path = os.path.join(_root, _subdir)
-    if _path not in sys.path:
-        sys.path.insert(0, _path)
+if _root not in sys.path:
+    sys.path.insert(0, _root)
 
 # parse_handlers imports ``from PySide6.QtWidgets import QTableWidgetItem`` at
 # module level.  Mock PySide6 before importing it (no-op if already present).
@@ -31,7 +29,7 @@ sys.modules.setdefault("PySide6.QtCore", _pyside_mock.QtCore)
 # sys_diag_handlers / tx_ant_diag_handlers / ant_pat_handlers do NOT import Qt
 # at module level (they use lazy imports inside functions), so they are safe to
 # import here unconditionally.
-from ui.handlers.sys_diag_handlers import (   # noqa: E402
+from calibration_statistics_tool.ui.handlers.sys_diag_handlers import (   # noqa: E402
     sys_diag_data_update_and_evaluation,
     sysDiagInputSetupAngleGroupClick,
     sysDiagInputSetupChirpClick,
@@ -65,7 +63,7 @@ from ui.handlers.sys_diag_handlers import (   # noqa: E402
     sysDiagPlotWindowAllGraphsComboBox2Click,
     sysDiagPlotWindowAllGraphsComboBox3Click,
 )
-from ui.handlers.tx_ant_diag_handlers import (  # noqa: E402
+from calibration_statistics_tool.ui.handlers.tx_ant_diag_handlers import (  # noqa: E402
     txAntDiagInputSetupAngleGroupClick,
     txAntDiagInputSetupAzClick,
     txAntDiagInputSetupElClick,
@@ -74,7 +72,7 @@ from ui.handlers.tx_ant_diag_handlers import (  # noqa: E402
     txAntDiagPlotSetupScalingNormGraphsClick,
     txAntDiagPlotSetupScalingOrigGraphsClick,
 )
-from ui.handlers.ant_pat_handlers import (  # noqa: E402
+from calibration_statistics_tool.ui.handlers.ant_pat_handlers import (  # noqa: E402
     antPatControl,
     antPatInputConfFileSearchClick,
     antPatInputNameIdentifierSelClick,
@@ -439,7 +437,7 @@ class TestSysDiagEvalOrchestrator:
     def test_calls_start_data_evaluation(self):
         ctx = _eval_ctx()
         mock_asd = MagicMock()
-        with patch.dict(sys.modules, {"AntennaSystemDiagrams": mock_asd}):
+        with patch('calibration_statistics_tool.ui.handlers.sys_diag_handlers._antSysDiag', return_value=mock_asd):
             sys_diag_data_update_and_evaluation(ctx)
         mock_asd.start_data_evaluation.assert_called_once()
 
@@ -453,7 +451,7 @@ class TestSysDiagEvalOrchestrator:
             captured.append(args[9])  # diagramConfigList is 10th arg (index 9)
 
         mock_asd.start_data_evaluation.side_effect = _capture
-        with patch.dict(sys.modules, {"AntennaSystemDiagrams": mock_asd}):
+        with patch('calibration_statistics_tool.ui.handlers.sys_diag_handlers._antSysDiag', return_value=mock_asd):
             sys_diag_data_update_and_evaluation(ctx)
         assert captured[0] == [1, 2, 3]
 
@@ -467,7 +465,7 @@ class TestSysDiagEvalOrchestrator:
             captured.append(args[5])  # twoGraphSetupList is 6th arg (index 5)
 
         mock_asd.start_data_evaluation.side_effect = _capture
-        with patch.dict(sys.modules, {"AntennaSystemDiagrams": mock_asd}):
+        with patch('calibration_statistics_tool.ui.handlers.sys_diag_handlers._antSysDiag', return_value=mock_asd):
             sys_diag_data_update_and_evaluation(ctx)
         assert ctx.plc.twoGraphConf1 in captured[0]
 
@@ -476,7 +474,7 @@ class TestSysDiagEvalOrchestrator:
         ctx.plc.plotSetup["useSensorMuster"] = 1
         ctx.qt.parseProtSensorMusterLEdit.text.return_value = "A B C"
         mock_asd = MagicMock()
-        with patch.dict(sys.modules, {"AntennaSystemDiagrams": mock_asd}):
+        with patch('calibration_statistics_tool.ui.handlers.sys_diag_handlers._antSysDiag', return_value=mock_asd):
             sys_diag_data_update_and_evaluation(ctx)
         assert ctx.plc.plotSetup["sensorMusterList"] == ["A", "B", "C"]
 
@@ -502,7 +500,7 @@ class TestTxAntDiagHandlers:
         ctx = _make_ctx()
         ctx.qt.txAntDiagInputSetupAngleGroup.checkedId.return_value = 0
         mock_tx = _mock_tx()
-        with patch.dict(sys.modules, {"TxAntDiagrams": mock_tx}):
+        with patch('calibration_statistics_tool.ui.handlers.tx_ant_diag_handlers._txAntDiag', return_value=mock_tx):
             txAntDiagInputSetupAngleGroupClick(ctx)
         assert mock_tx.plotSetup["targetAngle"] == 1
 
@@ -510,7 +508,7 @@ class TestTxAntDiagHandlers:
         ctx = _make_ctx()
         ctx.qt.txAntDiagInputSetupAngleGroup.checkedId.return_value = 1
         mock_tx = _mock_tx()
-        with patch.dict(sys.modules, {"TxAntDiagrams": mock_tx}):
+        with patch('calibration_statistics_tool.ui.handlers.tx_ant_diag_handlers._txAntDiag', return_value=mock_tx):
             txAntDiagInputSetupAngleGroupClick(ctx)
         assert mock_tx.plotSetup["targetAngle"] == 0
 
@@ -518,7 +516,7 @@ class TestTxAntDiagHandlers:
         ctx = _make_ctx()
         ctx.qt.txAntDiagInputSetupSensorOrientGroup.checkedId.return_value = 0
         mock_tx = _mock_tx()
-        with patch.dict(sys.modules, {"TxAntDiagrams": mock_tx}):
+        with patch('calibration_statistics_tool.ui.handlers.tx_ant_diag_handlers._txAntDiag', return_value=mock_tx):
             txAntDiagInputSetupSensorOrientGroupClick(ctx)
         assert mock_tx.plotSetup["upsideDown"] == 0
 
@@ -526,7 +524,7 @@ class TestTxAntDiagHandlers:
         ctx = _make_ctx()
         ctx.qt.txAntDiagInputSetupSensorOrientGroup.checkedId.return_value = 1
         mock_tx = _mock_tx()
-        with patch.dict(sys.modules, {"TxAntDiagrams": mock_tx}):
+        with patch('calibration_statistics_tool.ui.handlers.tx_ant_diag_handlers._txAntDiag', return_value=mock_tx):
             txAntDiagInputSetupSensorOrientGroupClick(ctx)
         assert mock_tx.plotSetup["upsideDown"] == 1
 
@@ -534,7 +532,7 @@ class TestTxAntDiagHandlers:
         ctx = _make_ctx()
         ctx.qt.txAntDiagInputSetupAzCheckBox.isChecked.return_value = True
         mock_tx = _mock_tx()
-        with patch.dict(sys.modules, {"TxAntDiagrams": mock_tx}):
+        with patch('calibration_statistics_tool.ui.handlers.tx_ant_diag_handlers._txAntDiag', return_value=mock_tx):
             txAntDiagInputSetupAzClick(ctx)
         assert mock_tx.plotSetup["AzDiag"] == 1
 
@@ -542,7 +540,7 @@ class TestTxAntDiagHandlers:
         ctx = _make_ctx()
         ctx.qt.txAntDiagInputSetupAzCheckBox.isChecked.return_value = False
         mock_tx = _mock_tx()
-        with patch.dict(sys.modules, {"TxAntDiagrams": mock_tx}):
+        with patch('calibration_statistics_tool.ui.handlers.tx_ant_diag_handlers._txAntDiag', return_value=mock_tx):
             txAntDiagInputSetupAzClick(ctx)
         assert mock_tx.plotSetup["AzDiag"] == 0
 
@@ -550,7 +548,7 @@ class TestTxAntDiagHandlers:
         ctx = _make_ctx()
         ctx.qt.txAntDiagInputSetupElCheckBox.isChecked.return_value = True
         mock_tx = _mock_tx()
-        with patch.dict(sys.modules, {"TxAntDiagrams": mock_tx}):
+        with patch('calibration_statistics_tool.ui.handlers.tx_ant_diag_handlers._txAntDiag', return_value=mock_tx):
             txAntDiagInputSetupElClick(ctx)
         assert mock_tx.plotSetup["ElDiag"] == 1
 
@@ -558,7 +556,7 @@ class TestTxAntDiagHandlers:
         ctx = _make_ctx()
         ctx.qt.txAntDiagInputSetupElCheckBox.isChecked.return_value = False
         mock_tx = _mock_tx()
-        with patch.dict(sys.modules, {"TxAntDiagrams": mock_tx}):
+        with patch('calibration_statistics_tool.ui.handlers.tx_ant_diag_handlers._txAntDiag', return_value=mock_tx):
             txAntDiagInputSetupElClick(ctx)
         assert mock_tx.plotSetup["ElDiag"] == 0
 
@@ -566,7 +564,7 @@ class TestTxAntDiagHandlers:
         ctx = _make_ctx()
         ctx.qt.txAntDiagPlotSetupScalingAutoCheckBox.isChecked.return_value = True
         mock_tx = _mock_tx()
-        with patch.dict(sys.modules, {"TxAntDiagrams": mock_tx}):
+        with patch('calibration_statistics_tool.ui.handlers.tx_ant_diag_handlers._txAntDiag', return_value=mock_tx):
             txAntDiagPlotSetupScalingAutoClick(ctx)
         assert mock_tx.plotSetup["xScaleSizeAuto"] == 1
 
@@ -574,7 +572,7 @@ class TestTxAntDiagHandlers:
         ctx = _make_ctx()
         ctx.qt.txAntDiagPlotSetupScalingAutoCheckBox.isChecked.return_value = False
         mock_tx = _mock_tx()
-        with patch.dict(sys.modules, {"TxAntDiagrams": mock_tx}):
+        with patch('calibration_statistics_tool.ui.handlers.tx_ant_diag_handlers._txAntDiag', return_value=mock_tx):
             txAntDiagPlotSetupScalingAutoClick(ctx)
         assert mock_tx.plotSetup["xScaleSizeAuto"] == 0
 
@@ -582,7 +580,7 @@ class TestTxAntDiagHandlers:
         ctx = _make_ctx()
         ctx.qt.txAntDiagPlotSetupScalingOrigGraphsCheckBox.isChecked.return_value = False
         mock_tx = _mock_tx()
-        with patch.dict(sys.modules, {"TxAntDiagrams": mock_tx}):
+        with patch('calibration_statistics_tool.ui.handlers.tx_ant_diag_handlers._txAntDiag', return_value=mock_tx):
             txAntDiagPlotSetupScalingOrigGraphsClick(ctx)
         assert mock_tx.plotSetup["plotOrigGraphs"] == 0
 
@@ -590,7 +588,7 @@ class TestTxAntDiagHandlers:
         ctx = _make_ctx()
         ctx.qt.txAntDiagPlotSetupScalingNormGraphsCheckBox.isChecked.return_value = False
         mock_tx = _mock_tx()
-        with patch.dict(sys.modules, {"TxAntDiagrams": mock_tx}):
+        with patch('calibration_statistics_tool.ui.handlers.tx_ant_diag_handlers._txAntDiag', return_value=mock_tx):
             txAntDiagPlotSetupScalingNormGraphsClick(ctx)
         assert mock_tx.plotSetup["plotNormGraphs"] == 0
 
@@ -638,7 +636,7 @@ class TestAntPatAngleOrient:
         ctx = _make_ctx()
         ctx.qt.antPatInputConfAngleGroup.checkedId.return_value = 0
         mock_ap = _mock_ap()
-        with patch.dict(sys.modules, {"antpat_v5_main_v3": mock_ap}):
+        with patch('calibration_statistics_tool.ui.handlers.ant_pat_handlers._antPat1', return_value=mock_ap):
             antPatInputSetupAngleGroupClick(ctx)
         assert mock_ap.conf0["targetAngle"] == 1
 
@@ -646,7 +644,7 @@ class TestAntPatAngleOrient:
         ctx = _make_ctx()
         ctx.qt.antPatInputConfAngleGroup.checkedId.return_value = 1
         mock_ap = _mock_ap()
-        with patch.dict(sys.modules, {"antpat_v5_main_v3": mock_ap}):
+        with patch('calibration_statistics_tool.ui.handlers.ant_pat_handlers._antPat1', return_value=mock_ap):
             antPatInputSetupAngleGroupClick(ctx)
         assert mock_ap.conf0["targetAngle"] == 0
 
@@ -654,7 +652,7 @@ class TestAntPatAngleOrient:
         ctx = _make_ctx()
         ctx.qt.antPatInputConfSensorOrientGroup.checkedId.return_value = 0
         mock_ap = _mock_ap()
-        with patch.dict(sys.modules, {"antpat_v5_main_v3": mock_ap}):
+        with patch('calibration_statistics_tool.ui.handlers.ant_pat_handlers._antPat1', return_value=mock_ap):
             antPatInputSetupSensorOrientGroupClick(ctx)
         assert mock_ap.conf0["upsideDown"] == 0
 
@@ -662,7 +660,7 @@ class TestAntPatAngleOrient:
         ctx = _make_ctx()
         ctx.qt.antPatInputConfSensorOrientGroup.checkedId.return_value = 1
         mock_ap = _mock_ap()
-        with patch.dict(sys.modules, {"antpat_v5_main_v3": mock_ap}):
+        with patch('calibration_statistics_tool.ui.handlers.ant_pat_handlers._antPat1', return_value=mock_ap):
             antPatInputSetupSensorOrientGroupClick(ctx)
         assert mock_ap.conf0["upsideDown"] == 1
 
@@ -701,7 +699,7 @@ class TestAntPatCheckboxHandlers:
         ctx = _make_ctx()
         ctx.qt.antPatTableDiagTypeInfoCheckBox.isChecked.return_value = True
         mock_ap = _mock_ap()
-        with patch.dict(sys.modules, {"antpat_v5_main_v3": mock_ap}):
+        with patch('calibration_statistics_tool.ui.handlers.ant_pat_handlers._antPat1', return_value=mock_ap):
             antPatTableDiagTypeInfoClick(ctx)
         assert mock_ap.conf0["diagTypeInfo"] == 1
 
@@ -709,7 +707,7 @@ class TestAntPatCheckboxHandlers:
         ctx = _make_ctx()
         ctx.qt.antPatTableDiagTypeInfoCheckBox.isChecked.return_value = False
         mock_ap = _mock_ap()
-        with patch.dict(sys.modules, {"antpat_v5_main_v3": mock_ap}):
+        with patch('calibration_statistics_tool.ui.handlers.ant_pat_handlers._antPat1', return_value=mock_ap):
             antPatTableDiagTypeInfoClick(ctx)
         assert mock_ap.conf0["diagTypeInfo"] == 0
 
@@ -717,7 +715,7 @@ class TestAntPatCheckboxHandlers:
         ctx = _make_ctx()
         ctx.qt.antPatTableUpsideDownInfoCheckBox.isChecked.return_value = True
         mock_ap = _mock_ap()
-        with patch.dict(sys.modules, {"antpat_v5_main_v3": mock_ap}):
+        with patch('calibration_statistics_tool.ui.handlers.ant_pat_handlers._antPat1', return_value=mock_ap):
             antPatTableUpsideDownInfoClick(ctx)
         assert mock_ap.conf0["upsideDownInfo"] == 1
 
@@ -725,7 +723,7 @@ class TestAntPatCheckboxHandlers:
         ctx = _make_ctx()
         ctx.qt.antPatTableUpsideDownInfoCheckBox.isChecked.return_value = False
         mock_ap = _mock_ap()
-        with patch.dict(sys.modules, {"antpat_v5_main_v3": mock_ap}):
+        with patch('calibration_statistics_tool.ui.handlers.ant_pat_handlers._antPat1', return_value=mock_ap):
             antPatTableUpsideDownInfoClick(ctx)
         assert mock_ap.conf0["upsideDownInfo"] == 0
 

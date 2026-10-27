@@ -14,9 +14,8 @@ import pytest
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'shared'))
 
-from shared.parsePTU2data import (
+from calibration_statistics_tool.shared.parsePTU2data import (
     AntennaLevelData, DiffPhaseData, ChirpMeasData, PtuPosMeasData,
     ChirpInfo, AntennaInfo, MeasSetupInfo, PTU2ParseData, FileTitle,
     parseFile, getAntennaData, getChirpData, getMeasData, interpretData,

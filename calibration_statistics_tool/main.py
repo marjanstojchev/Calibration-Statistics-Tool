@@ -1,50 +1,34 @@
 """PST-66: main.py rewritten as a thin wiring file.
 
 Responsibilities:
-  1. sys.path setup
-  2. Qt platform plugin env var + MainView creation
-  3. Logger setup
-  4. ParseController / PlotController instantiation
-  5. antSysDiag dict bindings
-  6. Misc startup tasks (setcurves label, merge output dir)
-  7. AppContext creation + handler init_widgets / wire calls
-  8. run() entry point
+  1. Qt platform plugin env var + MainView creation
+  2. Logger setup
+  3. ParseController / PlotController instantiation
+  4. antSysDiag dict bindings
+  5. Misc startup tasks (setcurves label, merge output dir)
+  6. AppContext creation + handler init_widgets / wire calls
+  7. run() entry point
 
 All handler logic lives in ui/handlers/*.py.
 """
 import os
 import sys
 
-# main.py is now inside calibration_statistics_tool/ package
-# sys.path setup for source/dev layout (when running from repo root)
-_pkg_dir = os.path.dirname(os.path.abspath(__file__))  # calibration_statistics_tool/
-_repo_root = os.path.dirname(_pkg_dir)                  # repo root
+# Fix Windows console encoding issues
+if sys.platform == 'win32':
+    import codecs
+    sys.stdout.reconfigure(encoding='utf-8') if hasattr(sys.stdout, 'reconfigure') else None
 
-# Check if we're in source layout (repo has shared/, ui/, etc. at root alongside calibration_statistics_tool/)
-# vs installed layout (everything is inside site-packages/calibration_statistics_tool/)
-if os.path.isdir(os.path.join(_repo_root, 'shared')):
-    # Source layout: add repo root and subdirs to path
-    if _repo_root not in sys.path:
-        sys.path.insert(0, _repo_root)
-    for _subdir in ['shared', 'ui', 'system_diagrams', 'tx_diagrams', 'antenna_patterns']:
-        _path = os.path.join(_repo_root, _subdir)
-        if os.path.isdir(_path) and _path not in sys.path:
-            sys.path.insert(0, _path)
-else:
-    # Installed layout: add package dir to path for submodules
-    if _pkg_dir not in sys.path:
-        sys.path.insert(0, _pkg_dir)
-
-import logconfig
-from shared.parse_controller import ParseController
-from shared.plot_controller import PlotController
-import auxiliary as aux
-import user_paths as _up
+from calibration_statistics_tool.shared import logconfig
+from calibration_statistics_tool.shared.parse_controller import ParseController
+from calibration_statistics_tool.shared.plot_controller import PlotController
+from calibration_statistics_tool.shared import auxiliary as aux
+from calibration_statistics_tool.shared import user_paths as _up
 
 # ── Startup: config file location + onboarding notice ───────────────────────
-print(f"\n{'─' * 60}")
+print(f"\n{'-' * 60}")
 print(f"  Calibration Statistics Tool")
-print(f"{'─' * 60}")
+print(f"{'-' * 60}")
 print(f"  Config file : {_up.PATHS_FILE}")
 print(f"  Output dir  : {_up.output_base}")
 _unconfigured = {
@@ -61,9 +45,9 @@ if _missing:
     print(f"\n  Edit the config file above to set them.")
 else:
     print(f"\n  All input directories are configured.")
-print(f"{'─' * 60}\n")
+print(f"{'-' * 60}\n")
 del _unconfigured, _missing
-# ────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
 
 import PySide6
 
@@ -73,12 +57,12 @@ plugin_path = os.path.join(dirname, 'plugins', 'platforms')
 print(plugin_path)
 os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = plugin_path
 
-from ui.main_view import MainView as _MainView
-import pyside_qtgui as _pqg
+from calibration_statistics_tool.ui.main_view import MainView as _MainView
+from calibration_statistics_tool.ui import pyside_qtgui as _pqg
 view = _MainView()
 _pqg._register(view)   # PST-67: must happen BEFORE AntennaSystemDiagrams is imported
                        # (AntennaSystemDiagrams.py accesses qt.SysDiaInterTableParam at module level)
-import AntennaSystemDiagrams as antSysDiag
+from calibration_statistics_tool.system_diagrams import AntennaSystemDiagrams as antSysDiag
 qt = view  # backward-compatible alias: all qt.<widget> calls delegate to MainView
 
 # ---------------------------------------------------------------------------
@@ -152,13 +136,13 @@ aux.copyFile(_merge_combine, _merge_combine)
 # Handler wiring
 # ---------------------------------------------------------------------------
 
-from ui.handlers.app_context import AppContext
-import ui.handlers.parse_handlers       as parse_h
-import ui.handlers.sys_diag_handlers    as sys_diag_h
-import ui.handlers.tx_ant_diag_handlers as tx_h
-import ui.handlers.ant_pat_handlers     as ant_h
-import ui.handlers.stats_handlers       as stats_h
-import ui.handlers.hullkurven_handlers  as hull_h
+from calibration_statistics_tool.ui.handlers.app_context import AppContext
+import calibration_statistics_tool.ui.handlers.parse_handlers       as parse_h
+import calibration_statistics_tool.ui.handlers.sys_diag_handlers    as sys_diag_h
+import calibration_statistics_tool.ui.handlers.tx_ant_diag_handlers as tx_h
+import calibration_statistics_tool.ui.handlers.ant_pat_handlers     as ant_h
+import calibration_statistics_tool.ui.handlers.stats_handlers       as stats_h
+import calibration_statistics_tool.ui.handlers.hullkurven_handlers  as hull_h
 
 ctx = AppContext(qt=qt, mv=view, plc=plc, pc=pc)
 

@@ -21,13 +21,9 @@ import sys
 _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _root not in sys.path:
     sys.path.insert(0, _root)
-for _sub in ['shared']:
-    _p = os.path.join(_root, _sub)
-    if _p not in sys.path:
-        sys.path.insert(0, _p)
 
 import pytest
-from shared.protocolsTest import ProtocolInfoClass
+from calibration_statistics_tool.shared.protocolsTest import ProtocolInfoClass
 
 # ---------------------------------------------------------------------------
 # Absolute paths to fixture files
@@ -619,7 +615,7 @@ class TestProtocolFilterFlowEndToEnd:
         include_burn_in_start=False because the file contains both
         Gen26_UseBurnInMeas[1];3 and the '(12a) BurnIn Start Check results:;ok'
         line (with ';ok' suffix — real-world format)."""
-        from parse_controller import ParseController
+        from calibration_statistics_tool.shared.parse_controller import ParseController
         pc = ParseController()
         result = pc.build_prot_path_type_list([_BI_START], 0, include_burn_in_start=False)
         assert result == [], (
@@ -629,7 +625,7 @@ class TestProtocolFilterFlowEndToEnd:
 
     def test_burnin_start_included_when_flag_true(self):
         """Same protocol is kept when include_burn_in_start=True."""
-        from parse_controller import ParseController
+        from calibration_statistics_tool.shared.parse_controller import ParseController
         pc = ParseController()
         result = pc.build_prot_path_type_list([_BI_START], 0, include_burn_in_start=True)
         assert len(result) == 1

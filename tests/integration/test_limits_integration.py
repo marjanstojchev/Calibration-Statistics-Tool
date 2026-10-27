@@ -22,14 +22,10 @@ import os
 import sys
 
 _root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-for _sub in ['shared']:
-    _p = os.path.join(_root, _sub)
-    if _p not in sys.path:
-        sys.path.insert(0, _p)
 
 import pytest
 
-from shared.parse_controller import ParseController
+from calibration_statistics_tool.shared.parse_controller import ParseController
 
 # ---------------------------------------------------------------------------
 # Paths

@@ -15,7 +15,7 @@ for _subdir in ['shared']:
     if _path not in sys.path:
         sys.path.insert(0, _path)
 
-from shared.data_processing import (
+from calibration_statistics_tool.shared.data_processing import (
     ImportedProtcolsData,
     ProtocolData,
     PTU2Data,

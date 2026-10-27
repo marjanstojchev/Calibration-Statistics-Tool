@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "calibration-statistics-tool"
-version = "1.0.20"
+version = "1.0.21"
 description = "Statistics and antenna pattern analysis tool for radar systems"
 readme = "README.md"
 license = {text = "MIT"}
@@ -63,27 +63,11 @@ test-writer-mcp = "calibration_statistics_tool.agents.zephyr.mcp_server:run_serv
 
 [tool.setuptools]
 include-package-data = true
-packages = [
-    "calibration_statistics_tool",
-    "calibration_statistics_tool.ui",
-    "calibration_statistics_tool.ui.handlers",
-    "calibration_statistics_tool.ui.tabs",
-    "calibration_statistics_tool.shared",
-    "calibration_statistics_tool.system_diagrams",
-    "calibration_statistics_tool.tx_diagrams",
-    "calibration_statistics_tool.antenna_patterns",
-    "calibration_statistics_tool.agents",
-    "calibration_statistics_tool.agents.zephyr",
-]
 
-[tool.setuptools.package-dir]
-"calibration_statistics_tool" = "calibration_statistics_tool"
-"calibration_statistics_tool.ui" = "ui"
-"calibration_statistics_tool.shared" = "shared"
-"calibration_statistics_tool.system_diagrams" = "system_diagrams"
-"calibration_statistics_tool.tx_diagrams" = "tx_diagrams"
-"calibration_statistics_tool.antenna_patterns" = "antenna_patterns"
-"calibration_statistics_tool.agents" = "agents"
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["calibration_statistics_tool*"]
+exclude = ["tests*", "docs*"]
 
 [tool.setuptools.package-data]
 "calibration_statistics_tool.shared" = ["config/*.yaml", "config/*.json", "assets/*.pptx"]

@@ -41,21 +41,18 @@ def shared_main_view(_qapp_session):
     The _qapp_session parameter guarantees a real QApplication exists first.
     """
     _root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    _ui_path = os.path.join(_root_dir, 'ui')
-    if _ui_path not in sys.path:
-        sys.path.insert(0, _ui_path)
-    from ui.main_view import MainView
+    if _root_dir not in sys.path:
+        sys.path.insert(0, _root_dir)
+    from calibration_statistics_tool.ui.main_view import MainView
     v = MainView()
     yield v
 
-# Add project root and shared to path
+# Add project root to path
 _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-for _subdir in ['shared', 'system_diagrams', 'tx_diagrams', 'antenna_patterns']:
-    _path = os.path.join(_root, _subdir)
-    if _path not in sys.path:
-        sys.path.insert(0, _path)
+if _root not in sys.path:
+    sys.path.insert(0, _root)
 
-from shared.parsePTU2data import (
+from calibration_statistics_tool.shared.parsePTU2data import (
     PTU2ParseData, AntennaInfo, ChirpInfo,
     PtuPosMeasData, ChirpMeasData, AntennaLevelData, DiffPhaseData,
     MeasSetupInfo, FileTitle

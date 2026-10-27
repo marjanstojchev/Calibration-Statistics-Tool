@@ -13,7 +13,7 @@ for _subdir in ['shared', 'system_diagrams', 'tx_diagrams', 'antenna_patterns']:
     if _path not in sys.path:
         sys.path.insert(0, _path)
 
-from shared.parsePTU2data import PTU2ParseData
+from calibration_statistics_tool.shared.parsePTU2data import PTU2ParseData
 
 
 # ---------------------------------------------------------------------------
@@ -175,7 +175,7 @@ class TestSingleActiveChirpArrays:
 class TestParseFileBuildsArrays:
     def test_arrays_not_none_after_parse(self):
         data = PTU2ParseData()
-        from shared.parsePTU2data import parseFile
+        from calibration_statistics_tool.shared.parsePTU2data import parseFile
         parseFile(PTU2_TEST_FILE, data)
         assert data.bDataValid
         assert data.angles_array is not None
@@ -184,13 +184,13 @@ class TestParseFileBuildsArrays:
 
     def test_angles_array_length_matches_ptuPosDataList(self):
         data = PTU2ParseData()
-        from shared.parsePTU2data import parseFile
+        from calibration_statistics_tool.shared.parsePTU2data import parseFile
         parseFile(PTU2_TEST_FILE, data)
         assert data.angles_array.shape[0] == len(data.ptuPosDataList)
 
     def test_levels_array_shape(self):
         data = PTU2ParseData()
-        from shared.parsePTU2data import parseFile
+        from calibration_statistics_tool.shared.parsePTU2data import parseFile
         parseFile(PTU2_TEST_FILE, data)
         nof_angles   = len(data.ptuPosDataList)
         nof_antennas = data.antennaInfo.nofAntennas
@@ -198,7 +198,7 @@ class TestParseFileBuildsArrays:
 
     def test_phases_array_shape(self):
         data = PTU2ParseData()
-        from shared.parsePTU2data import parseFile
+        from calibration_statistics_tool.shared.parsePTU2data import parseFile
         parseFile(PTU2_TEST_FILE, data)
         nof_angles = len(data.ptuPosDataList)
         nof_diff   = data.antennaInfo.getNofAntennaDiffValues()
@@ -206,7 +206,7 @@ class TestParseFileBuildsArrays:
 
     def test_angles_values_match_ptuPosDataList(self):
         data = PTU2ParseData()
-        from shared.parsePTU2data import parseFile
+        from calibration_statistics_tool.shared.parsePTU2data import parseFile
         parseFile(PTU2_TEST_FILE, data)
         manual = np.array([p.d_PTU_Angle for p in data.ptuPosDataList])
         np.testing.assert_array_equal(data.angles_array, manual)
@@ -220,12 +220,12 @@ class TestCalcdiagramFastPath:
     """Verify that calcdiagram_functions use pre-built arrays when available."""
 
     def test_getPtuAngVals_uses_array(self, simple_ptu2_data):
-        from shared.calcdiagram_functions import getPtuAngVals
+        from calibration_statistics_tool.shared.calcdiagram_functions import getPtuAngVals
         result = getPtuAngVals(simple_ptu2_data)
         assert result is simple_ptu2_data.angles_array  # same object — no copy made
 
     def test_getAntLevel_uses_array_copy(self, simple_ptu2_data):
-        from shared.calcdiagram_functions import getAntLevel
+        from calibration_statistics_tool.shared.calcdiagram_functions import getAntLevel
         result = getAntLevel(0, 0, simple_ptu2_data)
         # Should be a copy of the slice, not the original array
         assert result is not simple_ptu2_data.levels_array
@@ -233,7 +233,7 @@ class TestCalcdiagramFastPath:
         np.testing.assert_array_equal(result, expected)
 
     def test_getPhaseDiff_uses_array_copy(self, simple_ptu2_data):
-        from shared.calcdiagram_functions import getPhaseDiff
+        from calibration_statistics_tool.shared.calcdiagram_functions import getPhaseDiff
         result = getPhaseDiff(0, 0, simple_ptu2_data)
         assert result is not simple_ptu2_data.phases_array
         expected = simple_ptu2_data.phases_array[:, 0, 0]
@@ -241,14 +241,14 @@ class TestCalcdiagramFastPath:
 
     def test_getPtuAngVals_fallback_when_none(self, simple_ptu2_data):
         """When angles_array is None, function falls back to list comprehension."""
-        from shared.calcdiagram_functions import getPtuAngVals
+        from calibration_statistics_tool.shared.calcdiagram_functions import getPtuAngVals
         simple_ptu2_data.angles_array = None
         result = getPtuAngVals(simple_ptu2_data)
         expected = np.array([-10.0, 0.0, 10.0])
         np.testing.assert_array_equal(result, expected)
 
     def test_getAntLevel_fallback_when_none(self, simple_ptu2_data):
-        from shared.calcdiagram_functions import getAntLevel
+        from calibration_statistics_tool.shared.calcdiagram_functions import getAntLevel
         simple_ptu2_data.levels_array = None
         result = getAntLevel(0, 0, simple_ptu2_data)
         expected = np.array([-20.0, -10.0, -20.0])
