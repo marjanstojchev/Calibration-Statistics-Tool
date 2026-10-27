@@ -20,4 +20,4 @@ RUN python -m pip install --upgrade pip; python -m pip install -r requirements.t
 COPY . .
 
 # Set default command
-CMD ["python", "main.py"]
+CMD ["python", "-m", "calibration_statistics_tool.main"]
