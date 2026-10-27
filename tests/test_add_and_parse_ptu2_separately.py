@@ -16,7 +16,6 @@ from calibration_statistics_tool.ui.handlers.parse_handlers import addAndParsePt
 
 
 def _get_pc():
-def _get_pc():
     """Return the ParseController instance owned by main."""
     from calibration_statistics_tool import main
     return main.pc
