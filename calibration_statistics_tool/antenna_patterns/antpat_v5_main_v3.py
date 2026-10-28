@@ -349,6 +349,8 @@ def start_data_evaluation(parseDataList,antpatLogger):
                                 else:
                                     # Data table doesnt contain data for the certain input parameters.
                                     myLogger.error("No available data for the scheduled Table found.\n")
+                                    # Close the empty figure, otherwise it opens as a blank window on the next plt.show().
+                                    plt.close(fig)
 
                             # Append the the YAML_Table to the YAML tables list in the Setup object.
                             confList[confIdx].yamlTablesList.append(yamlTable)

@@ -7,6 +7,7 @@ from matplotlib.lines import Line2D
 from matplotlib.widgets import Button
 from matplotlib.ticker import (MaxNLocator, AutoMinorLocator)
 import gc
+import warnings
 from calibration_statistics_tool.shared import calcdiagram_functions as calc
 from calibration_statistics_tool.shared import calculation_strategy as strat
 from calibration_statistics_tool.shared import logconfig as log
@@ -32,25 +33,92 @@ _DIAGRAM_WINDOW_X = 600
 _WINDOW_Y = 40
 _CASCADE_STEP = 32
 _CASCADE_LENGTH = 10
+# Window sizes in pixels; the 20 pt axis fonts need more room than matplotlib's 640x480 default.
+_DIAGRAM_WINDOW_SIZE = (900, 640)
+_ALL_GRAPHS_WINDOW_SIZE = (1200, 760)
+_MAX_SCREEN_FRACTION = 0.9
 _windowCascade = {'count': 0}
+# Figures opened by the plot-window mode, closed again at the start of the next evaluation.
+_plotWindowFigures: set = set()
+_legendKeys: set = set()
 
 
-def _moveFigureWindow(fig, dx: int, dy: int) -> None:
-    """Move a Qt figure window to an offset from its screen's top-left corner (no-op on other backends)."""
+def closePlotWindows() -> None:
+    """Close the plot-mode figures of the previous evaluation so windows (and legends) do not pile up."""
+    for number in list(_plotWindowFigures):
+        try:
+            plt.close(number)
+        except Exception:
+            pass
+    _plotWindowFigures.clear()
+    _legendKeys.clear()
+    _windowCascade['count'] = 0
+
+
+def _placeFigureWindow(fig, x: int, y: int, size: tuple | None = None) -> None:
+    """Size a Qt figure window to fit its screen and move it to (x, y) from the screen's top-left corner.
+
+    No-op on non-Qt backends.
+    """
     try:
         window = fig.canvas.manager.window
         geometry = window.screen().availableGeometry()
-        window.move(geometry.x() + dx, geometry.y() + dy)
+        if size is not None:
+            width = min(size[0], int(geometry.width() * _MAX_SCREEN_FRACTION))
+            height = min(size[1], int(geometry.height() * _MAX_SCREEN_FRACTION))
+            dpi = fig.dpi / getattr(fig.canvas, 'device_pixel_ratio', 1)
+            fig.set_size_inches(width / dpi, height / dpi, forward=True)
+        else:
+            width, height = window.width(), window.height()
+        x = max(0, min(x, geometry.width() - width))
+        y = max(0, min(y, geometry.height() - height))
+        window.move(geometry.x() + x, geometry.y() + y)
     except Exception:
         pass
 
 
-def showPlotWindow(fig) -> None:
+def _fitFigureLayout(fig) -> None:
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            fig.tight_layout()
+    except Exception:
+        pass
+
+
+def showPlotWindow(fig, size: tuple | None = None) -> None:
     """Show all open figures, placing the newest diagram window in a cascade."""
+    if hasattr(fig, 'number'):
+        _plotWindowFigures.add(fig.number)
     step = _windowCascade['count'] % _CASCADE_LENGTH
     _windowCascade['count'] += 1
-    _moveFigureWindow(fig, _DIAGRAM_WINDOW_X + step * _CASCADE_STEP, _WINDOW_Y + step * _CASCADE_STEP)
+    _placeFigureWindow(fig, _DIAGRAM_WINDOW_X + step * _CASCADE_STEP, _WINDOW_Y + step * _CASCADE_STEP,
+                       size or _DIAGRAM_WINDOW_SIZE)
+    _fitFigureLayout(fig)
     plt.show()
+
+
+def withPlotWindowGraphs(graphConfig: dict, plotWindowConfig: dict, parsedPlotWindowString, allOnOneSlideGraphList: list) -> dict:
+    """Return graphConfig with the graph types that the plot window asks for switched on.
+
+    The Graph Type selection of the plot window is independent of the graph checkboxes; without
+    this, a selected graph that is not ticked in the Graph Configuration produced no plot at all.
+    """
+    config = dict(graphConfig)
+    if plotWindowConfig['showPlotAllMode'] == 1:
+        wanted = [conf['graphType'] for conf in allOnOneSlideGraphList]
+    elif plotWindowConfig['inputMode'] == 1:
+        wanted = [plotWindowConfig['graph']]
+    elif isinstance(parsedPlotWindowString, dict):
+        wanted = [parsedPlotWindowString.get('graph')]
+    else:
+        wanted = []
+    for graph in wanted:
+        if graph in config:
+            config[graph] = 1
+        else:
+            myLogger.error('Unknown graph type for the plot window: ' + str(graph))
+    return config
 
 
 # Save the plotted graph figure with a given title.
@@ -656,7 +724,7 @@ def plotAll(plotSetup: dict, chirpConfig: dict, allOnOneSlideGraphList: list, de
         # plt.close('all')
     else:
 
-        showPlotWindow(fig)
+        showPlotWindow(fig, _ALL_GRAPHS_WINDOW_SIZE)
 
 
 
@@ -1216,11 +1284,18 @@ def plotDiagramRxCh(plotSetup: dict, chirpConfig: dict, graph: str, diagramNum: 
 # Generate legend figure for all sensors
 def generateLegend(plotSetup: dict, dateTimeSensorCombList: list) -> None:
 
+    if plotSetup['ShowCertainPlotWindow'] == 1:
+        # One legend window per distinct sensor list, not one per antenna type.
+        legendKey = (plotSetup['idealPhaseDiff'], tuple((comb['dateAndTime'], comb['sensor']) for comb in dateTimeSensorCombList))
+        if legendKey in _legendKeys:
+            return
+        _legendKeys.add(legendKey)
+
     # Use a wider legend canvas to prevent tiny/shrunk rendering in PPT placeholders.
     legFig = plt.figure(figsize=(5.5, 6))
     if plotSetup['ShowCertainPlotWindow'] == 1:
-        _windowCascade['count'] = 0
-        _moveFigureWindow(legFig, _LEGEND_WINDOW_X, _WINDOW_Y)
+        _plotWindowFigures.add(legFig.number)
+        _placeFigureWindow(legFig, _LEGEND_WINDOW_X, _WINDOW_Y)
 
     # plt.figure()
 

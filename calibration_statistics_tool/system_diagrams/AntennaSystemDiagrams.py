@@ -972,6 +972,7 @@ def start_data_evaluation(parseDataList, plotSetup, chirpConfig, graphConfig, di
 
     if plotSetup['ShowCertainPlotWindow'] == 1:
         picker = 1
+        plt.closePlotWindows()
         if plotWindowConfig['inputMode'] == 0:
             parsedPlotWindowStringDict = dp.parsePlotWindowString(plotWindowConfig['string'])
         if plotWindowConfig['showPlotAllMode'] == 1:
@@ -1004,6 +1005,8 @@ def start_data_evaluation(parseDataList, plotSetup, chirpConfig, graphConfig, di
     
 
     # List of all configured graph types
+    if plotSetup['ShowCertainPlotWindow'] == 1:
+        graphConfig = plt.withPlotWindowGraphs(graphConfig, plotWindowConfig, parsedPlotWindowStringDict, allOnOneSlideGraphList)
     graphList = plt.getGraphList(graphConfig)
     if len(graphList) == 0:
         

@@ -114,10 +114,11 @@ class MainView:
         # Statistics Tab
         # ------------------------------------------------------------------ #
         self.statsTab = QWidget()
-        self.statsTab.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        # Expanding (shrinkable): the page must fit the visible tab area instead of
+        # demanding the plot canvas' large size hint, which cut the plot off at the bottom.
+        self.statsTab.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         statsLayout = QGridLayout()
         statsLayout.setHorizontalSpacing(H_LAYOUT_SPACING)
-        statsLayout.setAlignment(Qt.AlignTop)
         self.statsTab.setLayout(statsLayout)
 
         self.statsTableColMapping = {
@@ -127,13 +128,14 @@ class MainView:
         }
 
         self.statsTable = QTableWidget(0, 13)
-        self.statsTable.setFixedHeight(220)
+        self.statsTable.setMinimumHeight(90)
+        self.statsTable.setMaximumHeight(220)
         self.statsTable.setHorizontalHeaderLabels([
             'Graph', 'Axis', 'Error', 'Protocol Type', 'Limit Name',
             'Standard Deviation', 'Mean', 'Min.', 'Max.', 'Max. Deviation',
             'Upper Limit', 'Lower Limit', 'Cg',
         ])
-        self.statsTable.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        self.statsTable.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         statsLayout.addWidget(self.statsTable, 0, 0, 1, 2)
         statsTableHeader = self.statsTable.horizontalHeader()
         statsTableHeader.setSectionResizeMode(QHeaderView.Stretch)
@@ -141,7 +143,7 @@ class MainView:
         self.statsTable.setSortingEnabled(False)
 
         statsButtonFrame = QFrame()
-        statsButtonFrame.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Maximum)
+        statsButtonFrame.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         statsButtonFrameLayout = QHBoxLayout()
         statsButtonFrameLayout.setSpacing(H_LAYOUT_SPACING)
         statsButtonFrame.setLayout(statsButtonFrameLayout)
@@ -182,7 +184,8 @@ class MainView:
 
         self.statsGroupNameString = ''
         self.statsGroupNameLabel = QLabel(self.statsGroupNameString)
-        self.statsGroupNameLabel.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
+        self.statsGroupNameLabel.setMinimumWidth(60)
+        self.statsGroupNameLabel.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         statsButtonFrameLayout.addWidget(self.statsGroupNameLabel, alignment=Qt.AlignLeft)
 
         statsGroupPptxFrame = QFrame()
@@ -198,7 +201,7 @@ class MainView:
         statsGroupPptxFrameLayout.addWidget(self.statsGroupPptxBtn, stretch=1, alignment=Qt.AlignRight)
 
         statsInputConfFrame = QFrame()
-        statsInputConfFrame.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Maximum)
+        statsInputConfFrame.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         statsInputConfFrameLayout = QHBoxLayout()
         statsInputConfFrameLayout.setSpacing(H_LAYOUT_SPACING)
         statsInputConfFrameLayout.setAlignment(Qt.AlignRight)
@@ -212,7 +215,9 @@ class MainView:
 
         self.statsInputConfPathLabel = QLabel('Import input config ')
         self.statsInputConfPathLabel.setToolTip('Import input config ')
-        self.statsInputConfPathLabel.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        # The full path is in the tooltip; the label may shrink so a long path cannot widen the tab.
+        self.statsInputConfPathLabel.setMinimumWidth(60)
+        self.statsInputConfPathLabel.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         statsInputConfFrameLayout.addWidget(self.statsInputConfPathLabel, alignment=Qt.AlignRight)
 
         self.statsInputConfFDialog = QFileDialog()
@@ -226,6 +231,8 @@ class MainView:
         self.statsPlotFrame.setObjectName('PlotFrame')
         self.statsPlotFrame.setStyleSheet(plotFrameStyle)
         statsLayout.addWidget(self.statsPlotFrame, 2, 0, 1, 2)
+        statsLayout.setRowStretch(0, 1)
+        statsLayout.setRowStretch(2, 4)
 
         self.mainTabWidget.insertTab(6, self.statsTab, 'Statistics')
 

@@ -254,7 +254,7 @@ class PlotFrame(QFrame):
         self.figure = Figure(tight_layout=True)
         self.canvas = FigureCanvas(self.figure)
         self.canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.canvas.setMinimumSize(300, 200)
+        self.canvas.setMinimumSize(300, 160)
         self.layout.addWidget(self.canvas, 0, 0, 1, 1)
 
         self.ax1 = self.figure.add_subplot(111)
