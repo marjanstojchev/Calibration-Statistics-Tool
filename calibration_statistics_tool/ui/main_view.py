@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
     QHeaderView, QFileDialog, QComboBox, QRadioButton, QLineEdit,
     QDialog, QDialogButtonBox, QGraphicsDropShadowEffect, QButtonGroup,
     QStyledItemDelegate, QCompleter, QVBoxLayout, QHBoxLayout, QGridLayout,
-    QSizePolicy,
+    QSizePolicy, QScrollArea,
 )
 from PySide6.QtGui import *
 from PySide6.QtCore import *
@@ -316,7 +316,38 @@ class MainView:
         self.mainLogTable.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         mainLogTableFrameLayout.addWidget(self.mainLogTable, stretch=3)
 
+        self._wrap_tabs_in_scroll_areas()
+        self.mainTabWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        mainWidgetLayout.setStretchFactor(self.mainTabWidget, 4)
+        mainWidgetLayout.setStretchFactor(mainLogTableFrame, 1)
+        self._fit_window_to_screen()
+
         self.mainWidget.show()
+
+    # ------------------------------------------------------------------ #
+    # Window sizing
+    # ------------------------------------------------------------------ #
+
+    def _wrap_tabs_in_scroll_areas(self) -> None:
+        """Scroll each tab page so oversized pages cannot force the window past the screen."""
+        for i in range(self.mainTabWidget.count()):
+            page = self.mainTabWidget.widget(i)
+            title = self.mainTabWidget.tabText(i)
+            self.mainTabWidget.removeTab(i)
+            scroll = QScrollArea()
+            scroll.setWidgetResizable(True)
+            scroll.setFrameShape(QFrame.NoFrame)
+            scroll.setWidget(page)
+            self.mainTabWidget.insertTab(i, scroll, title)
+        self.mainTabWidget.setCurrentIndex(0)
+
+    def _fit_window_to_screen(self) -> None:
+        """Open at 90 % of the primary screen's usable area, centred."""
+        screen = QGuiApplication.primaryScreen().availableGeometry()
+        self.mainWidget.resize(int(screen.width() * 0.9), int(screen.height() * 0.9))
+        frame = self.mainWidget.frameGeometry()
+        frame.moveCenter(screen.center())
+        self.mainWidget.move(frame.topLeft())
 
     # ------------------------------------------------------------------ #
     # Namespace absorb helper

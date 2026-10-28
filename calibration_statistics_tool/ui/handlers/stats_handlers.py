@@ -785,7 +785,7 @@ def write_statistic(ctx: "AppContext") -> None:
     _fill_stats_protocol_tables(ctx)
 
     # Select the Statistics tab directly instead of relying on a fixed tab index.
-    ctx.qt.mainTabWidget.setCurrentWidget(ctx.qt.statsTab)
+    ctx.qt.mainTabWidget.setCurrentIndex(ctx.qt.tab_index_of('Statistics'))
     _log.info('write_statistic: complete.')
 
 
