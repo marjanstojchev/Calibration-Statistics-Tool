@@ -26,7 +26,7 @@ from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as Navigation
 
 from calibration_statistics_tool.shared import plotdata
 
-from ui_constants import (
+from calibration_statistics_tool.ui.ui_constants import (
     V_LAYOUT_SPACING, H_LAYOUT_SPACING, LIM_GROUPS_TABLE_ROWS,
     PUSH_BTN_H_SIZE, PUSH_BTN_V_SIZE, LEDIT_BTN_PATH_H_SIZE, LEDIT_BTN_V_SIZE,
     plotFrameStyle, color_list, color_list_rev,

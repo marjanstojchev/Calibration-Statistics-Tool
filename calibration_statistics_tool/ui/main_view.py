@@ -30,7 +30,7 @@ import enum
 import numpy as np
 from calibration_statistics_tool.shared import plotdata
 
-from ui_constants import *
+from calibration_statistics_tool.ui.ui_constants import *
 from calibration_statistics_tool.ui.widgets import (
     getGraphColor, show_datapoints, Match,
     dialogLEditErrorStyle, dialogLEditCorrectStyle,
@@ -86,27 +86,27 @@ class MainView:
         # ------------------------------------------------------------------ #
         # Tab modules — absorb all public names as instance attributes
         # ------------------------------------------------------------------ #
-        import tabs.parse_prot_tab as _ppt
+        import calibration_statistics_tool.ui.tabs.parse_prot_tab as _ppt
         self._absorb(vars(_ppt))
         self.mainTabWidget.insertTab(0, self.parseProtTab, 'Parse Protocols')
 
-        import tabs.sys_diag_tab as _sdt
+        import calibration_statistics_tool.ui.tabs.sys_diag_tab as _sdt
         self._absorb(vars(_sdt))
         self.mainTabWidget.insertTab(1, self.sysDiagTab, 'System Diagrams')
 
-        import tabs.tx_ant_diag_tab as _tat
+        import calibration_statistics_tool.ui.tabs.tx_ant_diag_tab as _tat
         self._absorb(vars(_tat))
         self.mainTabWidget.insertTab(2, self.txAntDiagTab, 'Tx-Antenna Diagrams')
 
-        import tabs.hullkurven_tab as _hkt
+        import calibration_statistics_tool.ui.tabs.hullkurven_tab as _hkt
         self._absorb(vars(_hkt))
         self.mainTabWidget.insertTab(3, self.hullkurvenTab, 'Hullkurven')
 
-        import tabs.ant_pat_tab as _apt
+        import calibration_statistics_tool.ui.tabs.ant_pat_tab as _apt
         self._absorb(vars(_apt))
         self.mainTabWidget.insertTab(4, self.antPatTab, 'Antenna Patterns')
 
-        import tabs.hullkurven_tab as _hkt
+        import calibration_statistics_tool.ui.tabs.hullkurven_tab as _hkt
         self._absorb(vars(_hkt))
         self.mainTabWidget.insertTab(3, self.hullkurvenTab, 'Hullkurven')
 

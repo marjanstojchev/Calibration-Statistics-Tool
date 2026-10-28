@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import *
 from PySide6.QtCore import *
 
-from ui_constants import *
+from calibration_statistics_tool.ui.ui_constants import *
 
 # ---------------------------------------------------------------------------
 # Shadow effects (must be created after QApplication, i.e. during import)
