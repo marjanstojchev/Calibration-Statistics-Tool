@@ -21,9 +21,9 @@ class OutputFolderNames(enum.Enum):
 # Get logger
 myLogger=logconfig.mainLoadDataLogger.logger
 
-# Output base comes from %APPDATA%\calibration-statistics-tool\paths.json.
-# On first run the file is created automatically with a default pointing to
-# ~/Documents/calibration-tool.  Edit it (or use the GUI settings) to change.
+# Output base comes from <home>/paths.json (default home: ~/Documents/calibration-tool,
+# see user_paths).  On first run the file is created automatically.
+# Edit it to change the output location.
 _outputBase = _up.output_base
 basicDir = _outputBase  # backward-compat alias
 
@@ -57,8 +57,9 @@ setcurvescustinputconffilename = 'SetCurvesCustomerInputConf.json'
 setcurvescustinputconffilepath = os.path.join(_outputBase, setcurvescustinputconffilename)
 
 # Config files (limits YAML + stats JSON) and asset templates (PPTX) are
-# seeded to AppData on first run by user_paths._copy_defaults_if_missing().
-# Reading from AppData means users can edit them and upgrades won't overwrite.
+# seeded to <home>/config and <home>/templates on first run by
+# user_paths._copy_defaults_if_missing().  Users can edit them and upgrades
+# won't overwrite.
 configDir = _up.config_dir
 
 assetsDir = _up.templates_dir

@@ -182,7 +182,7 @@ _LIGHT_GRAPH_COLORS = {'cyan', 'yellow', 'springgreen', 'white'}
 
 
 def _apply_graph_cell_color(item: QTableWidgetItem, graph_index: int) -> None:
-    from widgets import getGraphColor
+    from calibration_statistics_tool.ui.widgets import getGraphColor
     color = getGraphColor(graph_index)
     item.setBackground(QBrush(QColor(color)))
     text_color = 'black' if color in _LIGHT_GRAPH_COLORS else 'white'

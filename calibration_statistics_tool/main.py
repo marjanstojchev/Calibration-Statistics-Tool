@@ -29,6 +29,7 @@ from calibration_statistics_tool.shared import user_paths as _up
 print(f"\n{'-' * 60}")
 print(f"  Calibration Statistics Tool")
 print(f"{'-' * 60}")
+print(f"  Data folder : {_up.APP_DIR}")
 print(f"  Config file : {_up.PATHS_FILE}")
 print(f"  Output dir  : {_up.output_base}")
 _unconfigured = {
@@ -74,6 +75,16 @@ logconfig.mainLoadDataLogger.addTableHandler(qt.mainLogTableHandler)
 errorStatus, errorSting = logconfig.mainLoadDataLogger.addFileHandler(logconfig.mainLoadDataLogFilePath, 'w+')
 if errorStatus == 1:
     parseDataLog.warning(errorSting)
+
+
+def _log_uncaught_exception(exc_type, exc_value, exc_tb) -> None:
+    """Exceptions in Qt slots would otherwise vanish when running without a console."""
+    import traceback
+    parseDataLog.error("Unhandled error:\n" + "".join(traceback.format_exception(exc_type, exc_value, exc_tb)))
+    sys.__excepthook__(exc_type, exc_value, exc_tb)
+
+
+sys.excepthook = _log_uncaught_exception
 
 sysDiagLog = logconfig.antSysDiagLogger.logger
 errorStatus, errorSting = logconfig.antSysDiagLogger.addFileHandler(logconfig.antSysDiagLogFilePath, 'w+')

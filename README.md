@@ -50,16 +50,30 @@ pip install -e .
 
 ## Configuration
 
-On first launch the tool automatically creates a configuration file and an output directory. No manual setup is required to start — but configuring the input directories makes file dialogs open directly in the right folder.
+On first launch the tool creates one visible data folder and fills it with everything it needs. No manual setup is required to start — but configuring the input directories makes file dialogs open directly in the right folder.
+
+### Data folder
+
+| Platform | Default location |
+|----------|------------------|
+| Windows  | `C:\Users\<you>\Documents\calibration-tool\` |
+| Linux / macOS | `~/Documents/calibration-tool/` |
+
+Set the `CST_HOME` environment variable to use a different folder. The data folder contains:
+
+| Item | Contents |
+|------|----------|
+| `paths.json` | Settings: output folder and default input folders (see below) |
+| `config/` | Editable measurement limits and diagram configs (seeded on first run, never overwritten on upgrade) |
+| `templates/` | PowerPoint report templates (seeded on first run, never overwritten on upgrade) |
+| `logs/` | Log files |
+| `output*/` | Generated reports and diagrams (see [Output directories](#output-directories)) |
+
+> **Upgrading from 1.0.23 or earlier:** these files used to live in `%APPDATA%\calibration-statistics-tool` (Linux: `~/.config/calibration-statistics-tool`). On first start the settings and any edited config/templates are copied to the new data folder. The old folder is left untouched and can be deleted.
 
 ### Configuration file (`paths.json`)
 
-| Platform | Location |
-|----------|----------|
-| Windows  | `%APPDATA%\calibration-statistics-tool\paths.json` |
-| Linux    | `~/.config/calibration-statistics-tool/paths.json` |
-
-The file is created with defaults on first run. Edit it with any text editor:
+`paths.json` is created with defaults on first run. Edit it with any text editor:
 
 ```json
 {
@@ -72,7 +86,7 @@ The file is created with defaults on first run. Edit it with any text editor:
 
 | Key | Description |
 |-----|-------------|
-| `output_base` | Root folder for all generated reports and diagrams. Created automatically if it does not exist. |
+| `output_base` | Root folder for all generated reports and diagrams. Defaults to the data folder. Created automatically if it does not exist. |
 | `input_protocol_dir` | Folder containing protocol measurement files (`.csv` / text format). File dialogs open here. Leave empty to start at the home folder. |
 | `input_ptu_dir` | Folder containing PTU-2 antenna measurement files (`.ptu` binary format). |
 | `input_tx_ant_dir` | Folder containing Tx-antenna diagram input files. |
@@ -100,9 +114,9 @@ All output is written under `output_base`. The tool creates these subdirectories
 | `ptu_files/` | PTU-2 binary files (`*.ptu`) | Parse Protocols / System Diagrams |
 | `tx_antenna_files/` | Tx-antenna measurement files | Tx-Ant. Diagrams |
 
-### Bundled configuration files
+### Configuration files
 
-The following files are included in the installed package (`shared/config/`) and are loaded automatically. They define measurement limits and plot layouts:
+The package ships default files (`shared/config/`). On first run they are copied to `<data folder>\config\`, and the tool reads them from there. They define measurement limits and plot layouts:
 
 | File | Purpose |
 |------|---------|
@@ -114,11 +128,11 @@ The following files are included in the installed package (`shared/config/`) and
 | `AntennaSystemDiagramsConf.yaml` | System diagram computation config (plot/graph/chirp/diagram layouts) |
 | `TxAntDiagramsConf.yaml` | Tx-antenna diagram computation config |
 
-> **Note:** These files live inside the installed package. To customise limits without modifying the package, copy the relevant YAML to `output_base` and adjust `auxiliary.py` to load from there (see [docs/mvc_architecture.md](docs/mvc_architecture.md)).
+> **Note:** Edit the copies in `<data folder>\config\` to customise limits. Upgrades never overwrite them; to get a newer default, delete the file and restart the tool.
 
 ### Log files
 
-Logs are written to `%APPDATA%\calibration-statistics-tool\logs\` (Windows) or `~/.config/calibration-statistics-tool/logs/` (Linux).
+Logs are written to `<data folder>\logs\`. Unexpected errors in the GUI are also written to `0_main_loaddata.log`.
 
 ## Usage
 

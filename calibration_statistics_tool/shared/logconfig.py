@@ -112,7 +112,7 @@ class Logger():
         self.tableHandler = handler
 
 
-# Log files go to AppData/calibration-statistics-tool/logs/ regardless of CWD.
+# Log files go to <home>/logs/ (see user_paths) regardless of CWD.
 basicDir = _up.log_dir
 createDirectory(basicDir)
 

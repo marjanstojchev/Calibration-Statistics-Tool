@@ -1,12 +1,18 @@
 """
 User-level paths configuration for calibration-statistics-tool.
 
-On first run this module creates:
-    Windows : %APPDATA%\\calibration-statistics-tool\\paths.json
-    Linux   : ~/.config/calibration-statistics-tool/paths.json
+Everything the tool creates lives in one visible folder (the "home" folder):
 
-Edit that file once to tell the tool where to write output.
-The GUI (future: Settings dialog) can also update it at runtime.
+    ~/Documents/calibration-tool/          (override with the CST_HOME env var)
+        paths.json      settings: output base + default input directories
+        config/         editable limits / diagram configs (seeded on first run)
+        templates/      PPTX templates (seeded on first run)
+        logs/           log files
+        output*/        generated reports and diagrams
+
+Versions up to 1.0.23 kept paths.json, config/, templates/ and logs/ in
+%APPDATA%\\calibration-statistics-tool (Linux: ~/.config/...).  On first run
+those files are copied to the new location; the old folder is left untouched.
 """
 from __future__ import annotations
 import json
@@ -17,6 +23,13 @@ _APP_NAME = 'calibration-statistics-tool'
 
 
 def _get_app_dir() -> str:
+    override = os.environ.get('CST_HOME')
+    if override:
+        return os.path.abspath(os.path.expanduser(override))
+    return os.path.join(os.path.expanduser('~'), 'Documents', 'calibration-tool')
+
+
+def _get_legacy_app_dir() -> str:
     if os.name == 'nt':
         base = os.environ.get('APPDATA', os.path.expanduser('~'))
     else:
@@ -26,9 +39,10 @@ def _get_app_dir() -> str:
 
 
 APP_DIR: str = _get_app_dir()
+LEGACY_APP_DIR: str = _get_legacy_app_dir()
 PATHS_FILE: str = os.path.join(APP_DIR, 'paths.json')
 
-_DEFAULT_OUTPUT_BASE = os.path.join(os.path.expanduser('~'), 'Documents', 'calibration-tool')
+_DEFAULT_OUTPUT_BASE = APP_DIR
 _DEFAULTS: dict = {
     'output_base': _DEFAULT_OUTPUT_BASE,
     # Input directories: leave empty to use the OS default (home dir).
@@ -37,6 +51,36 @@ _DEFAULTS: dict = {
     'input_ptu_dir': '',
     'input_tx_ant_dir': '',
 }
+
+
+def _copy_missing(src_dir: str, dst_dir: str) -> None:
+    """Copy files from src_dir that do not exist in dst_dir yet (never overwrites)."""
+    if not os.path.isdir(src_dir):
+        return
+    os.makedirs(dst_dir, exist_ok=True)
+    for fname in os.listdir(src_dir):
+        src = os.path.join(src_dir, fname)
+        dst = os.path.join(dst_dir, fname)
+        if os.path.isfile(src) and not os.path.exists(dst):
+            shutil.copy2(src, dst)
+
+
+def _migrate_legacy_settings() -> None:
+    """One-time copy of settings and user-edited config from the old AppData folder."""
+    if os.path.normcase(LEGACY_APP_DIR) == os.path.normcase(APP_DIR):
+        return
+    if not os.path.isdir(LEGACY_APP_DIR):
+        return
+    try:
+        if not os.path.isfile(PATHS_FILE):
+            legacy_paths = os.path.join(LEGACY_APP_DIR, 'paths.json')
+            if os.path.isfile(legacy_paths):
+                os.makedirs(APP_DIR, exist_ok=True)
+                shutil.copy2(legacy_paths, PATHS_FILE)
+        _copy_missing(os.path.join(LEGACY_APP_DIR, 'config'), os.path.join(APP_DIR, 'config'))
+        _copy_missing(os.path.join(LEGACY_APP_DIR, 'templates'), os.path.join(APP_DIR, 'templates'))
+    except OSError:
+        pass  # migration is best-effort; defaults are seeded afterwards
 
 
 def _load() -> dict:
@@ -62,9 +106,10 @@ def _load() -> dict:
     return data
 
 
+_migrate_legacy_settings()
 _config = _load()
 
-# ── Derived AppData paths ────────────────────────────────────────────────────
+# ── Derived paths ────────────────────────────────────────────────────────────
 config_dir: str = os.path.join(APP_DIR, 'config')
 """Editable config files (YAML limits, JSON stats config) — seeded on first run."""
 
@@ -73,28 +118,15 @@ templates_dir: str = os.path.join(APP_DIR, 'templates')
 
 
 def _copy_defaults_if_missing() -> None:
-    """Copy bundled config/assets to AppData the first time the tool runs.
+    """Copy bundled config/assets to the home folder the first time the tool runs.
 
-    Files that already exist in AppData are never overwritten, so user
-    edits survive upgrades.
+    Files that already exist are never overwritten, so user edits survive upgrades.
     """
     _here = os.path.dirname(os.path.abspath(__file__))
-    _bundled_config = os.path.join(_here, 'config')
-    _bundled_assets = os.path.join(_here, 'assets')
-
+    _copy_missing(os.path.join(_here, 'config'), config_dir)
+    _copy_missing(os.path.join(_here, 'assets'), templates_dir)
     os.makedirs(config_dir, exist_ok=True)
-    if os.path.isdir(_bundled_config):
-        for fname in os.listdir(_bundled_config):
-            dst = os.path.join(config_dir, fname)
-            if not os.path.exists(dst):
-                shutil.copy2(os.path.join(_bundled_config, fname), dst)
-
     os.makedirs(templates_dir, exist_ok=True)
-    if os.path.isdir(_bundled_assets):
-        for fname in os.listdir(_bundled_assets):
-            dst = os.path.join(templates_dir, fname)
-            if not os.path.exists(dst):
-                shutil.copy2(os.path.join(_bundled_assets, fname), dst)
 
 
 _copy_defaults_if_missing()
@@ -104,7 +136,7 @@ output_base: str = _config['output_base']
 """Root directory for all generated output sub-folders."""
 
 log_dir: str = os.path.join(APP_DIR, 'logs')
-"""Log files always go to AppData/calibration-statistics-tool/logs/."""
+"""Log files always go to <home folder>/logs/."""
 
 input_protocol_dir: str = _config['input_protocol_dir']
 """Default directory for the Protocol Files / Protocol Directory dialogs."""

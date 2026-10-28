@@ -394,7 +394,7 @@ def _load_protocol_data(
 ) -> tuple[list, list, list, list]:
     from calibration_statistics_tool.shared import loaddata as ld
     from calibration_statistics_tool.tx_diagrams import load_TxAntData as ld_txantdiag
-    import TxAntDiagrams as txAntDiag
+    from calibration_statistics_tool.tx_diagrams import TxAntDiagrams as txAntDiag
 
     sysDiagDataList:         list = []
     txAntDiagDataList:       list = []
