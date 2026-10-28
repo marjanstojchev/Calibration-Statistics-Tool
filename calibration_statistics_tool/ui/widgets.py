@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtGui import QBrush, QColor
 from PySide6.QtCore import Qt
-import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 import mplcursors
 import numpy as np
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
@@ -241,19 +241,24 @@ class PlotFrame(QFrame):
     def __init__(self, on_cursor_select=None):
         super().__init__()
         self._on_cursor_select = on_cursor_select or (lambda name: print(name))
-        self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        # Expanding (not MinimumExpanding): the canvas size hint comes from the figure
+        # size and must not become the minimum size of the tab page.
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         self.layout = QGridLayout(self)
         self.layout.setVerticalSpacing(V_LAYOUT_SPACING)
-        self.layout.setAlignment(Qt.AlignRight)
         self.setLayout(self.layout)
 
-        self.figure = plt.figure(tight_layout=True)
+        # Plain Figure, not plt.figure: pyplot-managed figures would pop up as extra
+        # empty windows whenever a diagram window is shown with plt.show().
+        self.figure = Figure(tight_layout=True)
         self.canvas = FigureCanvas(self.figure)
+        self.canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.canvas.setMinimumSize(300, 200)
         self.layout.addWidget(self.canvas, 0, 0, 1, 1)
 
         self.ax1 = self.figure.add_subplot(111)
-        self.figure.set_size_inches(10.5, 20.5)
+        self.figure.set_size_inches(10.5, 6.5)
         self.ax1.grid(visible=True, which='major', axis='both')
         self.ax1.set_xlabel('Protocol index')
         self.ax2 = self.ax1.twinx()
@@ -262,6 +267,7 @@ class PlotFrame(QFrame):
         self.toolbar = NavigationToolbar(self.canvas, self)
         self.layout.addWidget(self.toolbar, 1, 0, 1, 1)
         self.layout.setColumnStretch(0, 1)
+        self.layout.setRowStretch(0, 1)
         self.patchList = []
 
     def plot(self, protIndexList, plot_dat, graphIndex, limitName, protocol, ax):
@@ -342,16 +348,17 @@ class PlotFrameSysDia(QFrame):
     def __init__(self, on_cursor_select=None):
         super().__init__()
         self._on_cursor_select = on_cursor_select or (lambda name: print(name))
-        self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         self.layout = QGridLayout(self)
         self.layout.setVerticalSpacing(V_LAYOUT_SPACING)
-        self.layout.setAlignment(Qt.AlignCenter)
         self.setLayout(self.layout)
 
-        self.figure = plt.figure(tight_layout=True)
-        self.figure.set_size_inches(18.5, 16.5)
+        self.figure = Figure(tight_layout=True)
+        self.figure.set_size_inches(10.5, 6.5)
         self.canvas = FigureCanvas(self.figure)
+        self.canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.canvas.setMinimumSize(300, 200)
         self.layout.addWidget(self.canvas, 0, 0, 1, 1)
 
         self.ax1 = self.figure.add_subplot(111)
@@ -361,8 +368,8 @@ class PlotFrameSysDia(QFrame):
 
         self.toolbar = NavigationToolbar(self.canvas, self)
         self.layout.addWidget(self.toolbar, 1, 0, 1, 1)
-        self.layout.setColumnStretch(1, 1)
-        self.layout.setRowStretch(1, 1)
+        self.layout.setColumnStretch(0, 1)
+        self.layout.setRowStretch(0, 1)
 
     def plot(self, angleData, plot_dat, Prot_param, graphType, idx, ax, draw=True):
         ylimits0 = []

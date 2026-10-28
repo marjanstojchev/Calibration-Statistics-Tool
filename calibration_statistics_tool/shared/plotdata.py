@@ -25,6 +25,33 @@ outputDir = os.path.join(basicDir,'output')
 # legend name
 legFigTitle = 'legend.png'
 
+# Plot-window mode: the legend window sits at the left of the screen, diagram
+# windows cascade to its right so that none of them hides another.
+_LEGEND_WINDOW_X = 20
+_DIAGRAM_WINDOW_X = 600
+_WINDOW_Y = 40
+_CASCADE_STEP = 32
+_CASCADE_LENGTH = 10
+_windowCascade = {'count': 0}
+
+
+def _moveFigureWindow(fig, dx: int, dy: int) -> None:
+    """Move a Qt figure window to an offset from its screen's top-left corner (no-op on other backends)."""
+    try:
+        window = fig.canvas.manager.window
+        geometry = window.screen().availableGeometry()
+        window.move(geometry.x() + dx, geometry.y() + dy)
+    except Exception:
+        pass
+
+
+def showPlotWindow(fig) -> None:
+    """Show all open figures, placing the newest diagram window in a cascade."""
+    step = _windowCascade['count'] % _CASCADE_LENGTH
+    _windowCascade['count'] += 1
+    _moveFigureWindow(fig, _DIAGRAM_WINDOW_X + step * _CASCADE_STEP, _WINDOW_Y + step * _CASCADE_STEP)
+    plt.show()
+
 
 # Save the plotted graph figure with a given title.
 def saveFig(fig, figureTitle: str, dpi: int) -> None:
@@ -629,7 +656,7 @@ def plotAll(plotSetup: dict, chirpConfig: dict, allOnOneSlideGraphList: list, de
         # plt.close('all')
     else:
 
-        plt.show()
+        showPlotWindow(fig)
 
 
 
@@ -910,7 +937,7 @@ def plotDiagram(plotSetup: dict, chirpConfig: dict, graph: str, diagramNum: int,
         # Close all plots
         # plt.close('all')
     else:
-        plt.show()
+        showPlotWindow(fig)
 
     #  Return graph data pbject
     return graphData
@@ -1179,7 +1206,7 @@ def plotDiagramRxCh(plotSetup: dict, chirpConfig: dict, graph: str, diagramNum: 
 
     else:
         if len(ax1.lines) > 0 or len(ax1.collections) > 0:
-            plt.show()
+            showPlotWindow(fig)
         else:
             plt.close(fig)
 
@@ -1191,6 +1218,9 @@ def generateLegend(plotSetup: dict, dateTimeSensorCombList: list) -> None:
 
     # Use a wider legend canvas to prevent tiny/shrunk rendering in PPT placeholders.
     legFig = plt.figure(figsize=(5.5, 6))
+    if plotSetup['ShowCertainPlotWindow'] == 1:
+        _windowCascade['count'] = 0
+        _moveFigureWindow(legFig, _LEGEND_WINDOW_X, _WINDOW_Y)
 
     # plt.figure()
 

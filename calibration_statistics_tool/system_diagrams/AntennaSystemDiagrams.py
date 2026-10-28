@@ -261,7 +261,7 @@ def fillInPTU(parseDataList, sysDiagLogger):
                 tableItem.setFlags(qt.Qt.ItemIsEnabled)
                 tableItem.setBackground(qt.QBrush(qt.QColor('green')))
                 tableItem.setForeground(qt.QBrush(qt.QColor('white')))
-                qt.SysDiaInterTableProtocol.setItem(rowIdx, qt.SysDiaInterTableProtColMapping['graph'], qt.QTableWidgetItem(tableItem))
+                qt.SysDiaInterTableProtocol.setItem(rowIdx, qt.SysDiaInterTableProtColMapping['graph'], tableItem)
 
                 # protocol
                 tableItem = qt.QTableWidgetItem()
@@ -286,14 +286,14 @@ def fillInPTU(parseDataList, sysDiagLogger):
                             tableItem.setData(qt.Qt.DisplayRole, 'Off')
                             tableItem.setData(qt.Qt.UserRole, -1)
                             tableItem.setFlags(qt.Qt.ItemIsEnabled)
-                            qt.SysDiaInterTableParam.setItem(tablerow, qt.SysDiaInterTableParamColMapping['graph'], qt.QTableWidgetItem(tableItem))
+                            qt.SysDiaInterTableParam.setItem(tablerow, qt.SysDiaInterTableParamColMapping['graph'], tableItem)
 
                             # Axes
                             tableItem = qt.QTableWidgetItem()
                             tableItem.setData(qt.Qt.DisplayRole, 'ax1')
                             tableItem.setData(qt.Qt.UserRole, 1)
                             tableItem.setFlags(qt.Qt.ItemIsEnabled)
-                            qt.SysDiaInterTableParam.setItem(tablerow, qt.SysDiaInterTableParamColMapping['axis'], qt.QTableWidgetItem(tableItem))
+                            qt.SysDiaInterTableParam.setItem(tablerow, qt.SysDiaInterTableParamColMapping['axis'], tableItem)
 
                             # Measurement Name
                             tableItem = qt.QTableWidgetItem()
@@ -311,14 +311,14 @@ def fillInPTU(parseDataList, sysDiagLogger):
                             tableItem.setData(qt.Qt.DisplayRole, 'Off')
                             tableItem.setData(qt.Qt.UserRole, -1)
                             tableItem.setFlags(qt.Qt.ItemIsEnabled)
-                            qt.SysDiaInterTableParam.setItem(tablerow, qt.SysDiaInterTableParamColMapping['graph'], qt.QTableWidgetItem(tableItem))
+                            qt.SysDiaInterTableParam.setItem(tablerow, qt.SysDiaInterTableParamColMapping['graph'], tableItem)
 
                             # Axes
                             tableItem = qt.QTableWidgetItem()
                             tableItem.setData(qt.Qt.DisplayRole, 'ax1')
                             tableItem.setData(qt.Qt.UserRole, 1)
                             tableItem.setFlags(qt.Qt.ItemIsEnabled)
-                            qt.SysDiaInterTableParam.setItem(tablerow, qt.SysDiaInterTableParamColMapping['axis'], qt.QTableWidgetItem(tableItem))
+                            qt.SysDiaInterTableParam.setItem(tablerow, qt.SysDiaInterTableParamColMapping['axis'], tableItem)
 
                             # Measurement Name
                             tableItem = qt.QTableWidgetItem()
