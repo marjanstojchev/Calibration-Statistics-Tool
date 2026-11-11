@@ -1,11 +1,13 @@
 import { useState } from 'react';
-
-const API = 'http://localhost:8000';
+import { apiFetch, sidUrl, errorMessage } from '../api';
+import { useOutputFiles } from '../useOutputFiles';
+import { useSessionSummary } from '../useSessionSummary';
 
 export default function TxDiagramsTab() {
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState(null);
-    const [outputFiles, setOutputFiles] = useState([]);
+    const [outputFiles, setOutputFiles, refreshFiles] = useOutputFiles('tx_diagrams');
+    const [summary] = useSessionSummary();
     const [pptxTitle, setPptxTitle] = useState('TxAntenna_diagrams.pptx');
 
     // Plot setup
@@ -30,7 +32,7 @@ export default function TxDiagramsTab() {
         setLoading(true);
         setResult(null);
         try {
-            const res = await fetch(`${API}/api/tx_diagrams/start`, {
+            const res = await apiFetch('/api/tx_diagrams/start', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -52,18 +54,22 @@ export default function TxDiagramsTab() {
                     },
                 }),
             });
-            const data = await res.json();
-            setResult(data);
-
-            if (data.status === 'success') {
-                const filesRes = await fetch(`${API}/api/downloads/list/tx_diagrams`);
-                const filesData = await filesRes.json();
-                setOutputFiles(filesData.files ?? []);
+            if (!res.ok) {
+                setResult({ error: await errorMessage(res) });
+            } else {
+                const data = await res.json();
+                setResult(data);
+                if (data.status === 'success') await refreshFiles();
             }
         } catch (err) {
             setResult({ error: err.message });
         }
         setLoading(false);
+    };
+
+    const handleClearOutput = async () => {
+        const res = await apiFetch('/api/downloads/clear/tx_diagrams', { method: 'DELETE' });
+        if (res.ok) setOutputFiles([]); else setResult({ error: await errorMessage(res) });
     };
 
     const DownloadIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>;
@@ -73,6 +79,10 @@ export default function TxDiagramsTab() {
         <div className="card">
             <div className="card-header"><h3>TX Antenna Diagrams</h3></div>
             <div className="card-body" style={{display:'flex',flexDirection:'column',gap:'var(--space-5)'}}>
+
+            {summary && (summary.tx_diagram_files > 0
+                ? <div className="alert alert-warning">{summary.tx_diagram_files} TxAnt diagram files loaded on the server.</div>
+                : <div className="alert alert-error">No TxAnt diagram files are loaded. Load them in the Protocols tab first.</div>)}
 
             <div className="section">
                 <div className="section-label">Output</div>
@@ -117,20 +127,19 @@ export default function TxDiagramsTab() {
                 <button className="btn btn-primary" onClick={handleStart} disabled={loading}>
                     {loading ? <><span className="spinner" /> Generating...</> : 'Generate PPTX'}
                 </button>
-                {outputFiles.length > 0 && <button className="btn btn-danger" onClick={async () => { await fetch(`${API}/api/downloads/clear/tx_diagrams`,{method:'DELETE'}); setOutputFiles([]); }}>Clear Output</button>}
+                {outputFiles.length > 0 && <button className="btn btn-danger" onClick={handleClearOutput} disabled={loading}>Clear Output</button>}
             </div>
         </div>{/* card */}
 
             {result?.error && <div className="alert alert-error">{result.error}</div>}
-            {result?.detail && <div className="alert alert-error">{result.detail}</div>}
-            {result?.status === 'success' && <div className="alert alert-success">Done: {result.output_path}</div>}
+            {result?.status === 'success' && <div className="alert alert-success">Done: {result.pptx_file}</div>}
 
             {outputFiles.length > 0 && (
                 <div className="card">
                     <div className="card-header"><h3>Output Files</h3></div>
                     <div className="card-body">
                         <ul className="output-file-list">
-                            {outputFiles.map(f => (<li key={f}><a href={`${API}/api/downloads/download/tx_diagrams/${f}`} download><DownloadIcon />{f}</a></li>))}
+                            {outputFiles.map(f => (<li key={f}><a href={sidUrl(`/api/downloads/download/tx_diagrams/${f}`)} download><DownloadIcon />{f}</a></li>))}
                         </ul>
                     </div>
                 </div>

@@ -173,6 +173,16 @@ fetch('/api/protocols')
 - Should not happen with this setup (same origin)
 - If testing separately, add CORS middleware to FastAPI
 
+## Sessions and data handling
+
+Every browser gets a random session id (stored in `localStorage`, sent as `X-Session-Id`, or `?sid=` for
+download links and log streaming). The server keeps that session's uploads, outputs, logs and limits
+config in `CST_DATA_DIR/sessions/<id>/` and deletes it after `CST_SESSION_TTL_HOURS` of inactivity.
+
+- Operations of one session are serialized: clearing or re-uploading waits for a running generation.
+- An upload is all-or-nothing; a failed upload keeps the previous data.
+- Run a single uvicorn worker (see `AZURE_DEPLOYMENT.md` for the environment variables).
+
 ## Next Steps
 
 1. ✅ Infrastructure set up

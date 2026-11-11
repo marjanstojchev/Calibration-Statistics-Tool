@@ -63,7 +63,8 @@ export default function App() {
 
             {/* ── Content ──────────────────────────────────── */}
             <main className="app-content">
-                {activeTab === 'protocols'        && <ProtocolsTab />}
+                {/* Kept mounted so a selection that was not uploaded yet survives tab switches */}
+                <div style={{ display: activeTab === 'protocols' ? 'block' : 'none' }}><ProtocolsTab /></div>
                 {activeTab === 'limits'           && <LimitsTab />}
                 {activeTab === 'system_diagrams'  && <SystemDiagramsTab />}
                 {activeTab === 'tx_diagrams'      && <TxDiagramsTab />}

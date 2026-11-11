@@ -1,13 +1,15 @@
 import { useState } from 'react';
+import { apiFetch, sidUrl, errorMessage } from '../api';
+import { useOutputFiles } from '../useOutputFiles';
+import { useSessionSummary } from '../useSessionSummary';
 
-const API = 'http://localhost:8000';
-
-const GRAPH_TYPES = ['level','avgLevel','normLevel','avgNormLevel','phaseDiff','avgPhaseDiff','diffPhaseDiff','avgDiffPhaseDiff','corrPhaseDiff','diffPhDiffIdealCurve'];
+const GRAPH_TYPES = ['level','avgLevel','normLevel','avgNormLevel','phaseDiff','avgPhaseDiff','diffPhaseDiff','avgDiffPhaseDiff','corrPhaseDiff'];
 
 export default function SystemDiagramsTab() {
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState(null);
-    const [outputFiles, setOutputFiles] = useState([]);
+    const [outputFiles, setOutputFiles, refreshFiles] = useOutputFiles('system_diagrams');
+    const [summary] = useSessionSummary();
 
     const [pptxTitle, setPptxTitle] = useState('Antenna_diagrams.pptx');
 
@@ -45,7 +47,7 @@ export default function SystemDiagramsTab() {
     const [graphConfig, setGraphConfig] = useState({
         level: 1, avgLevel: 0, normLevel: 1, avgNormLevel: 0,
         phaseDiff: 1, avgPhaseDiff: 0, diffPhaseDiff: 0, avgDiffPhaseDiff: 0,
-        corrPhaseDiff: 1, diffPhDiffIdealCurve: 1,
+        corrPhaseDiff: 1,
     });
     const toggleGraph = (key) => setGraphConfig(prev => ({ ...prev, [key]: prev[key] ? 0 : 1 }));
 
@@ -85,7 +87,7 @@ export default function SystemDiagramsTab() {
                 ? desiredList.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n))
                 : [];
             
-            const res = await fetch(`${API}/api/system_diagrams/start`, {
+            const res = await apiFetch('/api/system_diagrams/start', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -115,18 +117,22 @@ export default function SystemDiagramsTab() {
                     all_on_one_slide_graph_list: allOnOneEnabled ? allOnOneGraphs.filter(g => g.enabled).map(g => ({ graphType: g.graphType })) : [],
                 }),
             });
-            const data = await res.json();
-            setResult(data);
-
-            if (data.status === 'success') {
-                const filesRes = await fetch(`${API}/api/downloads/list/system_diagrams`);
-                const filesData = await filesRes.json();
-                setOutputFiles(filesData.files ?? []);
+            if (!res.ok) {
+                setResult({ error: await errorMessage(res) });
+            } else {
+                const data = await res.json();
+                setResult(data);
+                if (data.status === 'success') await refreshFiles();
             }
         } catch (err) {
             setResult({ error: err.message });
         }
         setLoading(false);
+    };
+
+    const handleClearOutput = async () => {
+        const res = await apiFetch('/api/downloads/clear/system_diagrams', { method: 'DELETE' });
+        if (res.ok) setOutputFiles([]); else setResult({ error: await errorMessage(res) });
     };
 
     const updateTwoGraphConfig = (idx, field, val) =>
@@ -151,6 +157,10 @@ export default function SystemDiagramsTab() {
             <div className="card">
             <div className="card-header"><h3>System Diagrams</h3></div>
             <div className="card-body" style={{display:'flex',flexDirection:'column',gap:'var(--space-5)'}}>
+
+            {summary && (summary.system_diagram_files > 0
+                ? <div className="alert alert-warning">{summary.system_diagram_files} PTU2 files loaded on the server.</div>
+                : <div className="alert alert-error">No PTU2 files are loaded. Load them in the Protocols tab first.</div>)}
 
             <div className="section">
                 <div className="section-label">Output</div>
@@ -372,13 +382,12 @@ export default function SystemDiagramsTab() {
                 <button className="btn btn-primary" onClick={handleStart} disabled={loading}>
                     {loading ? <><span className="spinner" /> Generating...</> : 'Generate PPTX'}
                 </button>
-                {outputFiles.length > 0 && <button className="btn btn-danger" onClick={async () => { await fetch(`${API}/api/downloads/clear/system_diagrams`,{method:'DELETE'}); setOutputFiles([]); }}>Clear Output</button>}
+                {outputFiles.length > 0 && <button className="btn btn-danger" onClick={handleClearOutput} disabled={loading}>Clear Output</button>}
             </div>
             </div>{/* card */}
 
             {result?.error && <div className="alert alert-error">{result.error}</div>}
-            {result?.detail && <div className="alert alert-error">{result.detail}</div>}
-            {result?.status === 'success' && <div className="alert alert-success">Done: {result.output_path}</div>}
+            {result?.status === 'success' && <div className="alert alert-success">Done: {result.pptx_file}</div>}
 
             {outputFiles.length > 0 && (
                 <div className="card">
@@ -386,7 +395,7 @@ export default function SystemDiagramsTab() {
                     <div className="card-body">
                         <ul className="output-file-list">
                             {outputFiles.map(f => (
-                                <li key={f}><a href={`${API}/api/downloads/download/system_diagrams/${f}`} download><DownloadIcon /> {f}</a></li>
+                                <li key={f}><a href={sidUrl(`/api/downloads/download/system_diagrams/${f}`)} download><DownloadIcon /> {f}</a></li>
                             ))}
                         </ul>
                     </div>

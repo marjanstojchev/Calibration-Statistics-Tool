@@ -1,6 +1,9 @@
 import os
 import sys
 
+# The API renders images only; a GUI backend inside worker threads is unreliable.
+os.environ.setdefault("MPLBACKEND", "Agg")
+
 # Setup sys.path for shared module imports (same as _cst_stub/main.py)
 _root = os.path.dirname(os.path.abspath(__file__))
 _parent = os.path.dirname(_root)
@@ -12,11 +15,17 @@ for _subdir in ['shared', 'ui', 'system_diagrams', 'tx_diagrams', 'antenna_patte
     if os.path.isdir(_path) and _path not in sys.path:
         sys.path.insert(0, _path)
 
+from api import settings  # noqa: E402,F401  (must come before anything from shared/: sets CST_APP_DIR)
+
+import asyncio
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 
+from api.session import store, warm_up
 from api.routers import (
     protocols,
     system_diagrams,
@@ -28,14 +37,34 @@ from api.routers import (
     protocol_stats,
     logs,
     downloads,
+    session_info,
 )
 
-app = FastAPI(title="Calibration Statistics Tool API", version="1.0.0")
 
-# Enable CORS for development (allow frontend on different ports)
+async def _purge_loop():
+    while True:
+        await asyncio.sleep(600)
+        await asyncio.to_thread(store.purge)
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    os.makedirs(settings.SESSIONS_DIR, exist_ok=True)
+    await asyncio.to_thread(warm_up)
+    await asyncio.to_thread(store.purge)
+    task = asyncio.create_task(_purge_loop())
+    try:
+        yield
+    finally:
+        task.cancel()
+
+
+app = FastAPI(title="Calibration Statistics Tool API", version="1.0.0", lifespan=lifespan)
+
+# Browsers on another origin (e.g. the Vite dev server) may call the API; add more via CST_CORS_ORIGINS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:5174", "http://127.0.0.1:5173", "http://127.0.0.1:5174"],
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -45,6 +74,7 @@ app.add_middleware(
 def health():
     return {"status": "ok"}
 
+app.include_router(session_info.router,     prefix="/api/session",               tags=["session"])
 app.include_router(protocols.router,        prefix="/api/protocols",             tags=["protocols"])
 app.include_router(system_diagrams.router,  prefix="/api/system_diagrams",       tags=["system_diagrams"])
 app.include_router(tx_diagrams.router,      prefix="/api/tx_diagrams",           tags=["tx_diagrams"])

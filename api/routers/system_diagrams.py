@@ -1,10 +1,11 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
 import os
 
 from shared import auxiliary as aux
 import logconfig
+from api.session import NO_DATA_MESSAGE, Session, engine, get_session, safe_filename
 
 router = APIRouter()
 
@@ -30,7 +31,6 @@ class GraphConfig(BaseModel):
     diffPhaseDiff: int = 0
     avgDiffPhaseDiff: int = 0
     corrPhaseDiff: int = 1
-    diffPhDiffIdealCurve: int = 1
 
 
 class PlotSetup(BaseModel):
@@ -47,6 +47,7 @@ class PlotSetup(BaseModel):
     yLimitsAntTypeSeparately: int = 1
     imageDpi: int = 220
     nofSensorMeasToShow: int = 32
+    ShowCertainPlotWindow: int = 0    # desktop-only plot window mode; the generator reads it, the web UI never sets it
     sortByMeasAngle: int = 0
     useSensorMuster: int = 0
     sensorMusterList: List[str] = Field(default_factory=lambda: ["rf", "dsp", "PT", "MA"])
@@ -116,45 +117,45 @@ def get_defaults():
 
 
 @router.post("/start")
-def start(request: Optional[SysDiagStartRequest] = None):
-    """Generate system diagrams PPTX from already-parsed PTU2 data.
+def start(request: Optional[SysDiagStartRequest] = None, session: Session = Depends(get_session)):
+    """Generate system diagrams PPTX from the PTU2 data loaded in this session.
 
     All configuration fields are optional and default to the same values
     shown in the desktop UI on startup.  Pass only the fields you want to
     override.
-
-    Requires /api/protocols/parse to have been called first.
     """
     if request is None:
         request = SysDiagStartRequest()
 
-    # Check for parsed data before loading the heavy Qt-dependent module
-    import shared.load_protocols as lp
-    parseDataList = getattr(lp, 'sysDiagParsedDataList', [])
-    if not parseDataList:
-        raise HTTPException(status_code=422, detail="No parsed data. Run /api/protocols/parse first.")
+    pptx_title = safe_filename(request.pptx_title, "Antenna_diagrams.pptx", ".pptx")
+    out_dir = session.output_dir("system_diagrams")
 
-    # Lazy-load modules that require Qt initialization
-    from system_diagrams import AntennaSystemDiagrams as ant_sys_diags
+    with engine(session, "system_diagrams"):
+        if not session.sys_diag_list:
+            raise HTTPException(status_code=422, detail=NO_DATA_MESSAGE)
 
-    ant_sys_diags.start_data_evaluation(
-        parseDataList,
-        request.plot_setup.model_dump(),
-        request.chirp_config.model_dump(),
-        request.graph_config.model_dump(),
-        request.diagram_config.model_dump(),
-        [t.model_dump() for t in request.two_graph_setup_list],
-        [t.model_dump() for t in request.four_graph_setup_list],
-        [t.model_dump() for t in request.three_graph_setup_list],
-        [t.model_dump() for t in request.all_on_one_slide_graph_list],
-        request.diagram_config_list,
-        logconfig.antSysDiagLogger,
-        aux.antSysDiagOutputPath,
-        request.pptx_title,
-        os.path.join(aux.assetsDir, "template.pptx"),
-    )
+        # Lazy-load modules that require Qt initialization
+        from system_diagrams import AntennaSystemDiagrams as ant_sys_diags
+
+        ant_sys_diags.start_data_evaluation(
+            session.sys_diag_list,
+            request.plot_setup.model_dump(),
+            request.chirp_config.model_dump(),
+            request.graph_config.model_dump(),
+            request.diagram_config.model_dump(),
+            [t.model_dump() for t in request.two_graph_setup_list],
+            [t.model_dump() for t in request.four_graph_setup_list],
+            [t.model_dump() for t in request.three_graph_setup_list],
+            [t.model_dump() for t in request.all_on_one_slide_graph_list],
+            request.diagram_config_list,
+            logconfig.antSysDiagLogger,
+            out_dir,
+            pptx_title,
+            os.path.join(aux.assetsDir, "template.pptx"),
+        )
 
     return {
         "status": "success",
-        "output_path": os.path.join(aux.antSysDiagOutputPath, request.pptx_title),
+        "pptx_file": pptx_title,
+        "output_type": "system_diagrams",
     }

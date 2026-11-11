@@ -69,9 +69,11 @@ See `kubernetes/` directory for manifests (create separately if needed)
 
 ## Storage Configuration (Important!)
 
-The app needs persistent storage for:
-- `measurement_data/` (input files)
-- `output*/` (generated results)
+The app keeps one workspace folder per browser session (uploads, generated output, logs, config copies)
+under `CST_DATA_DIR`. Uploads come from the user's browser, so no input data needs to be mounted.
+
+- Mount one volume at `/data` (the image default for `CST_DATA_DIR`).
+- Sessions are removed after `CST_SESSION_TTL_HOURS` of inactivity.
 
 ### Azure Files Mount
 ```bash
@@ -87,19 +89,33 @@ az storage share create \
   --account-name cststorage
 
 # Mount in Container Apps (configure via Portal or CLI)
-# Mount path: /app/measurement_data
-# Mount path: /app/output
+# Mount path: /data
 ```
+
+### Environment variables
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `CST_DATA_DIR` | `<tmp>/cst-web` | Root for all session workspaces |
+| `CST_SESSION_TTL_HOURS` | `24` | Idle time before a session workspace is deleted |
+| `CST_MAX_SESSIONS` | `200` | Maximum number of live sessions |
+| `CST_MAX_UPLOAD_MB` | `500` | Size limit of one upload |
+| `CST_LOCK_TIMEOUT_SECONDS` | `900` | How long a request waits for the previous operation / the engine |
+| `CST_CORS_ORIGINS` | – | Extra comma separated origins (only needed if the UI is served from another host) |
 
 ---
 
 ## Scaling Configuration
 
-### Horizontal Scaling Rules (Container Apps)
-- CPU: Scale out at >70% usage
-- Memory: Scale out at >80% usage
+Sessions are held in memory and the processing engine uses process-wide state, so run **one replica
+with one worker** until sessions move to shared storage (or sticky routing is set up). Only one
+heavy operation (diagram generation, parsing) runs at a time per instance; other requests wait for
+it. Long operations can exceed proxy timeouts (about 230 s on Azure): raise the ingress timeout or
+move generation to a background job queue.
+
+### Container Apps
 - Min replicas: 1
-- Max replicas: 5
+- Max replicas: 1
 
 ### Vertical Scaling
 - Development: 0.5 CPU, 1 GB RAM

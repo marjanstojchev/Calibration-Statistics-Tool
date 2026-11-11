@@ -1,304 +1,204 @@
-from fastapi import FastAPI, UploadFile, File, APIRouter, Depends, HTTPException
-from enum import Enum
-from pydantic import BaseModel
-from typing import TYPE_CHECKING
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi.concurrency import run_in_threadpool
+from typing import List, Optional, Tuple
 import os
-import tempfile
-from pathlib import Path
+import shutil
+import uuid
 import yaml
 
-if TYPE_CHECKING:
-    from shared.parse_controller import ParseController
+from api import settings
+from api.session import Session, engine, exclusive, fresh_load_log, get_session
 
 router = APIRouter()
 
+# Same meaning as burn_in_cal_mode of ParseController.build_prot_path_type_list
+PROTOCOL_TYPE_MODES = {"auto": 0, "burn_in": 1, "calibration": 2}
 
-class ParseRequest(BaseModel):
-    protocol_paths: list[str]
-    search_ptu2_files: bool = True
-    search_txantdiag_files: bool = False
-    use_error: bool = False
-    use_abort: bool = True
-    use_limits_exceeded: bool = True
-    latest_protocol: bool = False
+async def _save_uploads(uploads, dest_dir: str, budget: List[int]) -> Tuple[List[str], int]:
+    """Save uploaded files under their ORIGINAL base names.
 
-
-@router.post("/parse")
-def parse_protocols(req: ParseRequest):
-    """Full parse pipeline: pre-parse → filter → find PTU2 files → load data → store.
-
-    Accepts server-side file paths (protocol .txt files already on disk).
-    Only searches for PTU2/TxAnt files if search flags are enabled (no redundant searches).
-    Stores loaded data in shared.load_protocols.sysDiagParsedDataList so that
-    /api/system_diagrams/start can use it immediately afterwards.
-    
-    Pipeline:
-    1. Validate protocol file paths
-    2. Pre-parse protocol metadata
-    3. Filter protocols based on error/abort/limits flags
-    4. IF search flags enabled → search for PTU2/TxAnt files
-    5. Load measurement data
-    6. Store in shared module for downstream endpoints
+    The loaders derive their meaning from the file name (``*_ptu2.txt``,
+    ``*_Protocol.txt``, ``_TxAnt<n>_Diagram<n>``), so random temp names would
+    make every file look invalid. ``budget`` is the remaining byte allowance of
+    the request. Returns the saved paths and how many names were duplicates.
     """
+    paths: List[str] = []
+    duplicates = 0
+    for upload in uploads or []:
+        name = os.path.basename((upload.filename or "").replace("\\", "/"))
+        if not name:
+            continue
+        path = os.path.join(dest_dir, name)
+        if os.path.exists(path):
+            duplicates += 1
+        with open(path, "wb") as out:
+            while chunk := await upload.read(1024 * 1024):
+                budget[0] -= len(chunk)
+                if budget[0] < 0:
+                    raise HTTPException(status_code=413, detail="Upload is too large.")
+                out.write(chunk)
+        if path not in paths:
+            paths.append(path)
+    return paths, duplicates
+
+
+def _process_upload(
+    session: Session,
+    stage_dir: str,
+    protocol_paths: List[str],
+    ptu2_paths: List[str],
+    txantdiag_paths: List[str],
+    use_error: bool,
+    use_abort: bool,
+    use_limits_exceeded: bool,
+    latest_protocol: bool,
+    burn_in_start: bool,
+    protocol_type: str,
+    duplicates: int,
+) -> dict:
+    """Parse the staged files and replace the session data. Runs under the session and engine locks."""
     import protocolsTest as protocolFilter
     import loaddata as ld
-    import shared.load_protocols as lp
-    from shared.parse_helpers import walk_protocol_files
 
-    # Validate paths
-    for p in req.protocol_paths:
-        if not os.path.isfile(p):
-            raise HTTPException(status_code=400, detail=f"File not found: {p}")
+    with engine(session, "upload"):
+        fresh_load_log(session)
+        with open(os.path.join(session.config_dir, "AntennaSystemDiagramsConf.yaml"), "r", encoding="utf8") as f:
+            plot_setup = yaml.safe_load(f)["plotSetup"]
+        use_sensor_muster = plot_setup["useSensorMuster"]
+        sensor_muster_list = plot_setup["sensorMusterList"]
 
-    # Load plotSetup from YAML config (needed by LoadData)
-    config_path = Path(__file__).parent.parent.parent / "shared" / "config" / "AntennaSystemDiagramsConf.yaml"
-    with open(config_path, "r", encoding="utf8") as f:
-        config = yaml.safe_load(f)
-    use_sensor_muster = config["plotSetup"]["useSensorMuster"]
-    sensor_muster_list = config["plotSetup"]["sensorMusterList"]
-
-    # Step 1: Pre-parse protocol files
-    pre_parsed, *_ = protocolFilter.ProtocolInfoClass.PreParseProtcols(req.protocol_paths)
-
-    # Step 2: Filter protocols
-    accepted, _ = protocolFilter.ProtocolInfoClass.FilterProtocols(
-        pre_parsed, req.use_error, req.use_abort, req.use_limits_exceeded
-    )
-
-    if req.latest_protocol:
-        accepted = protocolFilter.ProtocolInfoClass.FilterNewProtocols(accepted)
-
-    # Step 3: Find PTU2 and TxAntDiag files ONLY if search flags are enabled
-    # Skip filesystem search if both flags are False (no redundant searches)
-    sys_diag_parsed_data_list = []
-    tx_ant_diag_parsed_data_list = []
-    
-    if req.search_ptu2_files or req.search_txantdiag_files:
-        ptu2_files_list, txantdiag_files_list, *_ = walk_protocol_files(
-            accepted,
-            req.search_ptu2_files,
-            req.search_txantdiag_files,
-            req.use_error,
-            req.use_abort,
-            req.use_limits_exceeded,
-            protocolFilter.ProtocolInfoClass.getfiltered_ptu2filelist,
-            protocolFilter.ProtocolInfoClass.getfiltered_txantdiagramfilelist,
+        # Pre-parse reads error flags / abort criteria, then the filter options are applied
+        pre_parsed, *_ = protocolFilter.ProtocolInfoClass.PreParseProtcols(protocol_paths)
+        accepted, _ = protocolFilter.ProtocolInfoClass.FilterProtocols(
+            pre_parsed, use_error, use_abort, use_limits_exceeded
         )
+        if latest_protocol:
+            accepted = protocolFilter.ProtocolInfoClass.FilterNewProtocols(accepted)
 
-        # Step 4a: Load PTU2 data (system diagrams + antenna patterns)
-        if req.search_ptu2_files:
-            for entry in ptu2_files_list:
-                ptu2_files = entry.get("ptu2FilesList", [])
-                if not ptu2_files:
-                    continue
-                loaded = ld.LoadData(ptu2_files, use_sensor_muster, sensor_muster_list)
-                if loaded.invalidPath != 1:
-                    sys_diag_parsed_data_list += loaded.parseDataList
+        # A single unusable file must not discard the files that parsed fine, so the
+        # parsed list is kept regardless of LoadData.invalidPath.
+        warnings = []
+        if duplicates:
+            warnings.append(
+                f"{duplicates} uploaded file(s) had the same name as another one and replaced it."
+            )
+        sys_diag_list = []
+        if ptu2_paths:
+            loaded = ld.LoadData(ptu2_paths, use_sensor_muster, sensor_muster_list)
+            sys_diag_list = loaded.parseDataList
+            if len(sys_diag_list) < len(ptu2_paths):
+                warnings.append(
+                    f"{len(ptu2_paths) - len(sys_diag_list)} of {len(ptu2_paths)} PTU2 files "
+                    "could not be loaded. File names must end with '_ptu2.txt' and must not contain "
+                    "'Diff' or 'NotOk'; parse errors are in the Load Data log."
+                )
 
-        # Step 4b: Load TxAntDiag data
-        if req.search_txantdiag_files:
+        tx_diag_list = []
+        if txantdiag_paths:
             import load_TxAntData as ld_tx
-            for entry in txantdiag_files_list:
-                tx_files = entry.get("txAntDiagList", [])
-                if not tx_files:
-                    continue
-                loaded_tx = ld_tx.LoadData(tx_files, use_sensor_muster, sensor_muster_list)
-                if loaded_tx.invalidPath != 1:
-                    tx_ant_diag_parsed_data_list += loaded_tx.parseDataList
+            loaded_tx = ld_tx.LoadData(txantdiag_paths, use_sensor_muster, sensor_muster_list)
+            tx_diag_list = loaded_tx.parseDataList
+            if len(tx_diag_list) < len(txantdiag_paths):
+                warnings.append(
+                    f"{len(txantdiag_paths) - len(tx_diag_list)} of {len(txantdiag_paths)} "
+                    "TxAnt diagram files could not be loaded. File names need the '_TxAnt<n>_Diagram<n>' "
+                    "label and the sensor info (rf/dsp numbers); parse errors are in the Load Data log."
+                )
 
-    # Step 5: Store in shared module for downstream endpoints
-    lp.sysDiagParsedDataList = sys_diag_parsed_data_list
-    lp.txAntDiagParsedDataList = tx_ant_diag_parsed_data_list
+        if not (ptu2_paths or txantdiag_paths):
+            warnings.append(
+                "No PTU2 or TxAnt diagram files were uploaded, so only protocol metadata was read."
+            )
 
+        # Everything parsed: replace the previous data in one step
+        session.reset_data()
+        session.upload_dir = stage_dir
+        session.sys_diag_list = sys_diag_list
+        session.tx_diag_list = tx_diag_list
+        session.protocol_paths = [p.PathName for p in accepted]
+        # Used as the defaults of the limits computation
+        session.state["protocol_options"] = {
+            "burn_in_cal_mode": PROTOCOL_TYPE_MODES[protocol_type],
+            "include_burn_in_start": burn_in_start,
+        }
     return {
         "status": "ok",
+        "protocols_received": len(protocol_paths),
         "protocols_accepted": len(accepted),
-        "ptu2_files_loaded": len(sys_diag_parsed_data_list),
-        "tx_ant_diag_loaded": len(tx_ant_diag_parsed_data_list),
-    }
-
-def get_controller():
-    # Lazy-load to avoid Qt initialization at module level
-    from shared.parse_controller import ParseController
-    return ParseController()
-
-@router.post("/upload")
-async def upload_protocols(
-    files: list[UploadFile] = File(...),
-    ptu2_files: list[UploadFile] = File(None),
-    txantdiag_files: list[UploadFile] = File(None),
-    search_ptu2_files: bool = True,
-    search_txantdiag_files: bool = False,
-    use_error: bool = False,
-    use_abort: bool = True,
-    use_limits_exceeded: bool = True,
-    latest_protocol: bool = False,
-    controller: "ParseController" = Depends(get_controller)
-):
-    """Upload protocol files from browser and apply filtering options.
-    
-    Browser workflow (recommended for web/cloud):
-    - Frontend discovers and provides protocol + PTU2/TxAnt files
-    - Search flags are IGNORED (no filesystem search)
-    - Backend processes only the provided files
-    
-    Server-side workflow (fallback for backward compatibility):
-    - No files provided from browser
-    - Search flags enable filesystem search for PTU2/TxAnt
-    
-    Pipeline:
-    1. Save uploaded protocol files to temp directory
-    2. Pre-parse protocol metadata (error flags, abort criteria)
-    3. Filter protocols based on error/abort/limits flags
-    4. IF files provided → use them directly (NO filesystem search)
-    5. IF files NOT provided AND search flags enabled → search filesystem
-    6. Load measurement data from used files
-    7. Store in shared module for downstream endpoints
-    
-    Returns filter results and file counts.
-    """
-    import protocolsTest as protocolFilter
-    import loaddata as ld
-    import shared.load_protocols as lp
-    from shared.parse_helpers import walk_protocol_files
-    
-    # Step 0: Save uploaded protocol files to temp
-    protocol_paths = []
-    for f in files:
-        filename = f.filename or ""
-        suffix = os.path.splitext(filename)[1]
-        tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
-        tmp.write(await f.read())
-        tmp.close()
-        protocol_paths.append(tmp.name)
-
-    # Load plotSetup from YAML config (needed by LoadData)
-    config_path = Path(__file__).parent.parent.parent / "shared" / "config" / "AntennaSystemDiagramsConf.yaml"
-    with open(config_path, "r", encoding="utf8") as f:
-        config = yaml.safe_load(f)
-    use_sensor_muster = config["plotSetup"]["useSensorMuster"]
-    sensor_muster_list = config["plotSetup"]["sensorMusterList"]
-
-    # Step 1: Pre-parse protocol files (reads metadata: error flags, abort criteria, etc.)
-    pre_parsed, *_ = protocolFilter.ProtocolInfoClass.PreParseProtcols(protocol_paths)
-
-    # Step 2: Filter protocols based on error/abort/limits flags
-    # ⚠️ Filtering happens HERE - BEFORE full parsing and PTU2 discovery
-    accepted, _ = protocolFilter.ProtocolInfoClass.FilterProtocols(
-        pre_parsed, use_error, use_abort, use_limits_exceeded
-    )
-
-    if latest_protocol:
-        accepted = protocolFilter.ProtocolInfoClass.FilterNewProtocols(accepted)
-
-    # Step 3: Handle PTU2 and TxAntDiag files
-    # Option A: Use provided files from frontend (cloud/web/browser workflow) - NO filesystem search
-    # Option B: Search filesystem if no files provided (server-side workflow only)
-    
-    ptu2_paths = []
-    txantdiag_paths = []
-    
-    # Browser workflow: use provided files directly, never search filesystem
-    if ptu2_files:
-        # Use provided PTU2 files from frontend
-        for f in ptu2_files:
-            filename = f.filename or ""
-            suffix = os.path.splitext(filename)[1]
-            tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
-            tmp.write(await f.read())
-            tmp.close()
-            ptu2_paths.append(tmp.name)
-    
-    if txantdiag_files:
-        # Use provided TxAnt files from frontend
-        for f in txantdiag_files:
-            filename = f.filename or ""
-            suffix = os.path.splitext(filename)[1]
-            tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
-            tmp.write(await f.read())
-            tmp.close()
-            txantdiag_paths.append(tmp.name)
-    
-    # Server-side workflow: only search filesystem if NO files provided from browser
-    # AND if search flags are enabled
-    if not ptu2_files and not txantdiag_files and (search_ptu2_files or search_txantdiag_files):
-        # Modular search: can be enabled for server-side deployments
-        ptu2_files_list, txantdiag_files_list, *_ = walk_protocol_files(
-            accepted,
-            search_ptu2_files,
-            search_txantdiag_files,
-            use_error,
-            use_abort,
-            use_limits_exceeded,
-            protocolFilter.ProtocolInfoClass.getfiltered_ptu2filelist,
-            protocolFilter.ProtocolInfoClass.getfiltered_txantdiagramfilelist,
-        )
-        # Extract paths from search results
-        for entry in ptu2_files_list:
-            ptu2_paths.extend(entry.get("ptu2FilesList", []))
-        for entry in txantdiag_files_list:
-            txantdiag_paths.extend(entry.get("txAntDiagList", []))
-
-    # Step 4a: Load PTU2 data (system diagrams + antenna patterns)
-    sys_diag_parsed_data_list = []
-    if ptu2_paths:
-        loaded = ld.LoadData(ptu2_paths, use_sensor_muster, sensor_muster_list)
-        if loaded.invalidPath != 1:
-            sys_diag_parsed_data_list = loaded.parseDataList
-
-    # Step 4b: Load TxAntDiag data
-    tx_ant_diag_parsed_data_list = []
-    if txantdiag_paths:
-        import load_TxAntData as ld_tx
-        loaded_tx = ld_tx.LoadData(txantdiag_paths, use_sensor_muster, sensor_muster_list)
-        if loaded_tx.invalidPath != 1:
-            tx_ant_diag_parsed_data_list = loaded_tx.parseDataList
-
-    # Step 5: Store in shared module for downstream endpoints
-    lp.sysDiagParsedDataList = sys_diag_parsed_data_list
-    lp.txAntDiagParsedDataList = tx_ant_diag_parsed_data_list
-
-    return {
-        "status": "ok",
-        "protocols_accepted": len(accepted),
-        "ptu2_files_loaded": len(sys_diag_parsed_data_list),
-        "tx_ant_diag_loaded": len(tx_ant_diag_parsed_data_list),
+        "ptu2_files_received": len(ptu2_paths),
+        "ptu2_files_loaded": len(sys_diag_list),
+        "tx_ant_diag_received": len(txantdiag_paths),
+        "tx_ant_diag_loaded": len(tx_diag_list),
+        "warnings": warnings,
         "filters_applied": {
             "use_error": use_error,
             "use_abort": use_abort,
             "use_limits_exceeded": use_limits_exceeded,
             "latest_protocol": latest_protocol,
-            "search_ptu2_files": search_ptu2_files,
-            "search_txantdiag_files": search_txantdiag_files
-        }
+            "burn_in_start": burn_in_start,
+            "protocol_type": protocol_type,
+        },
     }
 
 
-@router.post("/count")         # ← another endpoint on same router
-def protocol_count():
-    return {"count": 42}
+@router.post("/upload")
+async def upload_protocols(
+    files: List[UploadFile] = File(...),
+    ptu2_files: Optional[List[UploadFile]] = File(None),
+    txantdiag_files: Optional[List[UploadFile]] = File(None),
+    use_error: bool = False,
+    use_abort: bool = True,
+    use_limits_exceeded: bool = True,
+    latest_protocol: bool = False,
+    burn_in_start: bool = False,
+    protocol_type: str = "auto",
+    session: Session = Depends(get_session),
+):
+    """Upload protocol, PTU2 and TxAnt diagram files from the browser and load them.
+
+    The browser sends every file; nothing is read from server folders. The upload
+    is all-or-nothing: the files are staged in their own folder first, and the
+    session data is only replaced once everything was parsed. A failed upload
+    leaves the previous data untouched.
+    """
+    stage_dir = os.path.join(session.upload_root, uuid.uuid4().hex)
+    if protocol_type not in PROTOCOL_TYPE_MODES:
+        raise HTTPException(status_code=400, detail="protocol_type must be 'auto', 'burn_in' or 'calibration'.")
+    os.makedirs(stage_dir)
+    committed = False
+    try:
+        budget = [settings.MAX_UPLOAD_BYTES]
+        protocol_paths, dup1 = await _save_uploads(files, stage_dir, budget)
+        ptu2_paths, dup2 = await _save_uploads(ptu2_files, stage_dir, budget)
+        txantdiag_paths, dup3 = await _save_uploads(txantdiag_files, stage_dir, budget)
+        if not protocol_paths:
+            raise HTTPException(status_code=400, detail="No protocol files were uploaded.")
+
+        result = await run_in_threadpool(
+            _process_upload, session, stage_dir, protocol_paths, ptu2_paths, txantdiag_paths,
+            use_error, use_abort, use_limits_exceeded, latest_protocol, burn_in_start, protocol_type,
+            dup1 + dup2 + dup3,
+        )
+        committed = True
+        return result
+    finally:
+        if not committed:
+            shutil.rmtree(stage_dir, ignore_errors=True)
+
+
+def _clear(session: Session) -> None:
+    with exclusive(session, "clear"):
+        session.reset_data()
 
 
 @router.delete("/clear")
-def clear_protocols():
-    """Clear all parsed protocol data from memory.
+def clear_protocols(session: Session = Depends(get_session)):
+    """Clear the loaded protocol data and uploaded files of this session ('Clear Data' button).
 
-    This resets the module-level sysDiagParsedDataList and txAntDiagParsedDataList
-    back to empty lists, equivalent to the 'Clear Data' button in the Parse Protocols tab.
-    
-    Also clears the limits module state since limits depend on parsed data.
+    Waits for a running operation of the same session to finish first, so a
+    clear can never pull data away from a generation in progress.
     """
-    import shared.load_protocols as lp
-    from api.routers import limits
-
-    # Clear module-level parsed data lists
-    lp.sysDiagParsedDataList = []
-    lp.txAntDiagParsedDataList = []
-
-    # Also clear limits state since it depends on parsed data
-    limits._last_controller = None
-    limits._last_limits_type = "burn_in"
-
+    _clear(session)
     return {
         "status": "cleared",
         "sys_diag_ptu2_loaded": 0,

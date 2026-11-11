@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-const API = 'http://localhost:8000';
+import { sidUrl } from '../api';
 const CHANNELS = [['system_diagrams','System Diagrams','system-diagrams'],['tx_diagrams','TX Diagrams','tx-diagrams'],['antenna_patterns','Ant. Patterns','antenna-patterns'],['main_load_data','Load Data','main-load-data']];
 const PlayIcon = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>;
 const StopIcon = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18"/></svg>;
@@ -13,9 +13,11 @@ export default function LogsPanel() {
     const startStream = (ch) => {
         if (esRef.current) esRef.current.close();
         const slug = CHANNELS.find(c=>c[0]===ch)?.[2] ?? ch.replace('_','-');
-        const es = new EventSource(`${API}/api/logs/stream/${slug}`);
+        // The server replays its buffered lines on connect, so start from an empty view
+        setLogs(prev => ({ ...prev, [ch]: [] }));
+        const es = new EventSource(sidUrl(`/logs/stream/${slug}`));
         es.onmessage = (e) => setLogs(prev => ({ ...prev, [ch]: [...prev[ch], e.data] }));
-        es.onerror = () => es.close();
+        es.onerror = () => { es.close(); if (esRef.current === es) { esRef.current = null; setStreaming(false); } };
         esRef.current = es; setStreaming(true);
     };
     const stopStream = () => { esRef.current?.close(); esRef.current = null; setStreaming(false); };

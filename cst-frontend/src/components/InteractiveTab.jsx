@@ -1,33 +1,47 @@
-import { useState } from 'react';
-
-const API = 'http://localhost:8000';
+import { useEffect, useState } from 'react';
+import { apiFetch, errorMessage } from '../api';
 
 export default function InteractiveTab() {
     const [loading, setLoading] = useState(false);
     const [state, setState] = useState(null);
 
-    const handleFill = async () => {
+    const call = async (path, options) => {
         setLoading(true);
         try {
-            const res = await fetch(`${API}/api/interactive/fill`, { method: 'POST' });
-            const data = await res.json();
-            setState(data);
+            const res = await apiFetch(path, options);
+            if (!res.ok) { setState({ error: await errorMessage(res) }); return null; }
+            return await res.json();
         } catch (err) {
             setState({ error: err.message });
+            return null;
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
+    };
+
+    const handleFill = async () => {
+        const data = await call('/api/interactive/fill', { method: 'POST' });
+        if (data) setState(data);
     };
 
     const handleClear = async () => {
-        await fetch(`${API}/api/interactive/clear`, { method: 'DELETE' });
-        setState(null);
+        if (await call('/api/interactive/clear', { method: 'DELETE' })) setState(null);
     };
 
     const handleGetState = async () => {
-        const res = await fetch(`${API}/api/interactive/state`);
-        const data = await res.json();
-        setState(data);
+        const data = await call('/api/interactive/state');
+        if (data) setState(data);
     };
+
+    // The server keeps this session's fill result, so show it again after a reload
+    useEffect(() => {
+        let alive = true;
+        apiFetch('/api/interactive/state')
+            .then(res => (res.ok ? res.json() : null))
+            .then(data => { if (alive && data) setState(data); })
+            .catch(() => {});
+        return () => { alive = false; };
+    }, []);
 
     return (
         <div>
@@ -35,11 +49,10 @@ export default function InteractiveTab() {
             <p>Loads available protocols and parameter combinations from parsed data. Actual chart rendering happens in the browser.</p>
 
             <button onClick={handleFill} disabled={loading}>{loading ? 'Loading...' : 'Fill / Refresh'}</button>
-            <button onClick={handleGetState}>Get State</button>
-            <button onClick={handleClear}>Clear</button>
+            <button onClick={handleGetState} disabled={loading}>Get State</button>
+            <button onClick={handleClear} disabled={loading}>Clear</button>
 
             {state?.error && <p>Error: {state.error}</p>}
-            {state?.detail && <p>Error: {state.detail}</p>}
 
             {state?.filled && (
                 <div>

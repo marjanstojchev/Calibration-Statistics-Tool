@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-const API = 'http://localhost:8000';
+import { apiFetch, errorMessage } from '../api';
 const RefreshIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>;
 const TrashIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>;
 export default function StatisticsTab() {
@@ -7,11 +7,21 @@ export default function StatisticsTab() {
     const [loading, setLoading] = useState(false);
     const fetchStats = async () => {
         setLoading(true);
-        try { const res = await fetch(`${API}/api/protocol_stats/`); setStats(await res.json()); }
+        try {
+            const res = await apiFetch('/api/stats/');
+            setStats(res.ok ? await res.json() : { error: await errorMessage(res) });
+        }
         catch (err) { setStats({ error: err.message }); }
         setLoading(false);
     };
-    const handleClear = async () => { await fetch(`${API}/api/protocol_stats/clear`, { method: 'DELETE' }); await fetchStats(); };
+    const handleClear = async () => {
+        setLoading(true);
+        try {
+            const res = await apiFetch('/api/stats/clear', { method: 'DELETE' });
+            if (!res.ok) { setStats({ error: await errorMessage(res) }); setLoading(false); return; }
+        } catch (err) { setStats({ error: err.message }); setLoading(false); return; }
+        await fetchStats();
+    };
     useEffect(() => { fetchStats(); }, []);
     return (
         <div style={{ display:'flex', flexDirection:'column', gap:'var(--space-4)' }}>
@@ -20,7 +30,7 @@ export default function StatisticsTab() {
                     <h3>Statistics</h3>
                     <div className="btn-group">
                         <button className="btn btn-secondary" onClick={fetchStats} disabled={loading}><RefreshIcon /> Refresh</button>
-                        <button className="btn btn-danger" onClick={handleClear}><TrashIcon /> Clear Data</button>
+                        <button className="btn btn-danger" onClick={handleClear} disabled={loading}><TrashIcon /> Clear Data</button>
                     </div>
                 </div>
                 <div className="card-body">

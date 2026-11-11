@@ -1,11 +1,11 @@
 import { useState } from 'react';
-
-const API = 'http://localhost:8000';
+import { apiFetch, sidUrl, errorMessage } from '../api';
+import { useOutputFiles } from '../useOutputFiles';
 
 export default function HuellkurvenTab() {
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState(null);
-    const [outputFiles, setOutputFiles] = useState([]);
+    const [outputFiles, setOutputFiles, refreshFiles] = useOutputFiles('huellkurven', true);
 
     // Data conf
     const [azDiag, setAzDiag] = useState(1);
@@ -13,6 +13,7 @@ export default function HuellkurvenTab() {
     const [minSigma, setMinSigma] = useState(-10);
     const [maxSigma, setMaxSigma] = useState(10);
     const [patternLimitsMethod, setPatternLimitsMethod] = useState(0);
+    const [reserveDb, setReserveDb] = useState(2);
 
     // Plot setup
     const [xScaleAuto, setXScaleAuto] = useState(0);
@@ -29,27 +30,31 @@ export default function HuellkurvenTab() {
         setLoading(true);
         setResult(null);
         try {
-            const res = await fetch(`${API}/api/huellkurven/start`, {
+            const res = await apiFetch('/api/huellkurven/start', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    data_conf: { azDiag: azDiag, elDiag: elDiag, minSigma, maxSigma, patternLimitsMethod },
+                    data_conf: { AzDiag: azDiag, ElDiag: elDiag, minSigma, maxSigma, patternLimitsMethod, reserveDb },
                     plot_setup: { xScaleSizeAuto: xScaleAuto, xScaleSizeAz: xScaleAz, xScaleSizeEl: xScaleEl },
                     chirp_config: { chirp0, chirp1, chirp2, chirp3 },
                 }),
             });
-            const data = await res.json();
-            setResult(data);
-
-            if (data.status === 'success') {
-                const filesRes = await fetch(`${API}/api/downloads/list/huellkurven`);
-                const filesData = await filesRes.json();
-                setOutputFiles(filesData.files ?? []);
+            if (!res.ok) {
+                setResult({ error: await errorMessage(res) });
+            } else {
+                const data = await res.json();
+                setResult(data);
+                if (data.status === 'success') await refreshFiles();
             }
         } catch (err) {
             setResult({ error: err.message });
         }
         setLoading(false);
+    };
+
+    const handleClearOutput = async () => {
+        const res = await apiFetch('/api/downloads/clear/huellkurven', { method: 'DELETE' });
+        if (res.ok) setOutputFiles([]); else setResult({ error: await errorMessage(res) });
     };
 
     const DownloadIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>;
@@ -78,6 +83,7 @@ export default function HuellkurvenTab() {
                     <div className="check-group" style={{marginTop:'var(--space-2)'}}>
                         <label className="check-item">Min Sigma: <input className="input input-sm" type="number" value={minSigma} onChange={e => setMinSigma(parseInt(e.target.value))} style={{ width: 60 }} /></label>
                         <label className="check-item">Max Sigma: <input className="input input-sm" type="number" value={maxSigma} onChange={e => setMaxSigma(parseInt(e.target.value))} style={{ width: 60 }} /></label>
+                        <label className="check-item">Reserve [dB]: <input className="input input-sm" type="number" step="0.5" value={reserveDb} onChange={e => setReserveDb(parseFloat(e.target.value))} style={{ width: 60 }} /></label>
                     </div>
                 )}
             </div>
@@ -115,12 +121,11 @@ export default function HuellkurvenTab() {
                 <button className="btn btn-primary" onClick={handleStart} disabled={loading}>
                     {loading ? <><span className="spinner" /> Computing...</> : 'Compute Hüllkurven'}
                 </button>
-                {outputFiles.length > 0 && <button className="btn btn-danger" onClick={async () => { await fetch(`${API}/api/downloads/clear/huellkurven`,{method:'DELETE'}); setOutputFiles([]); }}>Clear Output</button>}
+                {outputFiles.length > 0 && <button className="btn btn-danger" onClick={handleClearOutput} disabled={loading}>Clear Output</button>}
             </div>
         </div>{/* card */}
 
             {result?.error && <div className="alert alert-error">{result.error}</div>}
-            {result?.detail && <div className="alert alert-error">{result.detail}</div>}
             {result?.status === 'success' && <div className="alert alert-success">Hüllkurven computed successfully</div>}
 
             {outputFiles.length > 0 && (
@@ -128,7 +133,7 @@ export default function HuellkurvenTab() {
                     <div className="card-header"><h3>Output Files</h3></div>
                     <div className="card-body">
                         <ul className="output-file-list">
-                            {outputFiles.map(f => (<li key={f.path}><a href={`${API}/api/downloads/download/huellkurven/${f.path}`} download><DownloadIcon />{f.path}</a><span style={{fontSize:'var(--text-xs)',color:'var(--color-text-muted)',marginLeft:'var(--space-2)'}}>{Math.round(f.size/1024)} KB</span></li>))}
+                            {outputFiles.map(f => (<li key={f.path}><a href={sidUrl(`/api/downloads/download/huellkurven/${f.path}`)} download><DownloadIcon />{f.path}</a><span style={{fontSize:'var(--text-xs)',color:'var(--color-text-muted)',marginLeft:'var(--space-2)'}}>{Math.round(f.size/1024)} KB</span></li>))}
                         </ul>
                     </div>
                 </div>

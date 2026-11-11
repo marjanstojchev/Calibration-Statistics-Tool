@@ -1,167 +1,129 @@
-"""File downloads router — serve generated output files to the web UI.
+"""File downloads router — serve the files a session generated to the web UI.
 
-After generating PPTX, YAML, or DAT files via /start endpoints, the web UI
-needs to download them. This router lists and serves files from the output
-directories defined in shared.auxiliary.
+After generating PPTX, YAML, or DAT files via the /start endpoints, the web UI
+lists and downloads them from the session's own output folders. A browser never
+sees the files of another session, and no server path is exposed.
 """
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
-from typing import List, Dict
+from typing import Any, Dict
 import os
-import glob
+import shutil
 
-from shared import auxiliary as aux
+from api.session import OUTPUT_KINDS, Session, exclusive, get_session, safe_join
 
 router = APIRouter()
 
-
-# Map user-friendly names to the actual output paths
-_OUTPUT_DIRS = {
-    "system_diagrams": aux.antSysDiagOutputPath,
-    "tx_diagrams": aux.txAntDiagOutputPath,
-    "antenna_patterns": aux.antPatOutputPath,
-    "huellkurven": aux.huellKurvenOutputPath,
-    "statistic": aux.statisticOutputPath,
-    "certificates": aux.certificatesOutputPath,
-    "merge": aux.mergeOutputPath,
+_MEDIA_TYPES = {
+    ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    ".yaml": "application/x-yaml",
+    ".yml": "application/x-yaml",
+    ".json": "application/json",
+    ".dat": "text/plain",
+    ".txt": "text/plain",
+    ".log": "text/plain",
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".csv": "text/csv",
 }
 
 
+def _output_dir(session: Session, output_type: str) -> str:
+    if output_type not in OUTPUT_KINDS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid output_type. Must be one of: {', '.join(OUTPUT_KINDS)}",
+        )
+    return session.output_dir(output_type)
+
+
 @router.get("/list/{output_type}")
-def list_output_files(output_type: str) -> Dict[str, List[str]]:
-    """List all files in the specified output directory.
+def list_output_files(output_type: str, session: Session = Depends(get_session)) -> Dict[str, Any]:
+    """List the files in the top level of one of the session's output folders.
 
     Args:
         output_type: One of system_diagrams, tx_diagrams, antenna_patterns,
-                     huellkurven, statistic, certificates, merge.
+                     huellkurven, statistic, certificates, merge, set_curves.
 
     Returns:
-        {"files": ["Antenna_diagrams.pptx", ...], "directory": "C:\\...\\output"}
+        {"files": ["Antenna_diagrams.pptx", ...], "output_type": "system_diagrams"}
     """
-    if output_type not in _OUTPUT_DIRS:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid output_type. Must be one of: {', '.join(_OUTPUT_DIRS.keys())}",
-        )
-
-    output_dir = _OUTPUT_DIRS[output_type]
-    if not os.path.isdir(output_dir):
-        return {"files": [], "directory": output_dir}
-
-    # List all files (non-recursive for top-level; adjust if needed)
+    output_dir = _output_dir(session, output_type)
     files = []
-    for entry in os.listdir(output_dir):
-        path = os.path.join(output_dir, entry)
-        if os.path.isfile(path):
-            files.append(entry)
-
-    return {"files": sorted(files), "directory": output_dir}
+    if os.path.isdir(output_dir):
+        files = sorted(e for e in os.listdir(output_dir) if os.path.isfile(os.path.join(output_dir, e)))
+    return {"files": files, "output_type": output_type}
 
 
 @router.get("/list/{output_type}/recursive")
-def list_output_files_recursive(output_type: str) -> Dict[str, List[Dict[str, str]]]:
-    """Recursively list all files in the output directory tree.
+def list_output_files_recursive(output_type: str, session: Session = Depends(get_session)) -> Dict[str, Any]:
+    """Recursively list all files in an output folder.
 
     Useful for huellkurven output (has AntTypeN subdirectories) and
     antenna_patterns (may have subdirectories per configuration).
 
     Returns:
-        {"files": [{"path": "AntType1/Az_...", "size": 12345, "modified": "..."}], ...}
+        {"files": [{"path": "AntType1/Az_...", "size": 12345, "modified": 1.7e9}], ...}
     """
-    if output_type not in _OUTPUT_DIRS:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid output_type. Must be one of: {', '.join(_OUTPUT_DIRS.keys())}",
-        )
-
-    output_dir = _OUTPUT_DIRS[output_type]
-    if not os.path.isdir(output_dir):
-        return {"files": [], "directory": output_dir}
-
+    output_dir = _output_dir(session, output_type)
     file_list = []
     for root, _, filenames in os.walk(output_dir):
         for filename in filenames:
             full_path = os.path.join(root, filename)
-            rel_path = os.path.relpath(full_path, output_dir)
-            stat = os.stat(full_path)
+            try:
+                stat = os.stat(full_path)
+            except OSError:
+                continue  # removed by a clear while listing
             file_list.append({
-                "path": rel_path.replace("\\", "/"),  # Normalize for web
+                "path": os.path.relpath(full_path, output_dir).replace("\\", "/"),
                 "size": stat.st_size,
                 "modified": stat.st_mtime,
             })
 
-    return {"files": sorted(file_list, key=lambda x: x["path"]), "directory": output_dir}
+    return {"files": sorted(file_list, key=lambda x: x["path"]), "output_type": output_type}
 
 
 @router.get("/download/{output_type}/{filename:path}")
-def download_file(output_type: str, filename: str):
-    """Download a specific file from the output directory.
+def download_file(output_type: str, filename: str, session: Session = Depends(get_session)):
+    """Download a specific file from one of the session's output folders.
 
     Args:
-        output_type: Output directory type (system_diagrams, tx_diagrams, etc.)
+        output_type: Output folder type (system_diagrams, tx_diagrams, etc.)
         filename: Relative path to the file (e.g., "Antenna_diagrams.pptx"
                   or "AntType1/Az_TxAnt0_Diagram0_Chirp0.dat")
-
-    Returns:
-        File download response with appropriate Content-Type.
     """
-    if output_type not in _OUTPUT_DIRS:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid output_type. Must be one of: {', '.join(_OUTPUT_DIRS.keys())}",
-        )
-
-    output_dir = _OUTPUT_DIRS[output_type]
-    file_path = os.path.normpath(os.path.join(output_dir, filename))
-
-    # Security check: prevent directory traversal
-    if not file_path.startswith(os.path.normpath(output_dir)):
+    output_dir = _output_dir(session, output_type)
+    file_path = safe_join(output_dir, filename)
+    if file_path is None:
         raise HTTPException(status_code=400, detail="Invalid file path.")
-
     if not os.path.isfile(file_path):
         raise HTTPException(status_code=404, detail="File not found.")
 
-    # Determine media type based on extension
     ext = os.path.splitext(file_path)[1].lower()
-    media_type_map = {
-        ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-        ".yaml": "application/x-yaml",
-        ".yml": "application/x-yaml",
-        ".json": "application/json",
-        ".dat": "text/plain",
-        ".txt": "text/plain",
-        ".png": "image/png",
-        ".jpg": "image/jpeg",
-        ".jpeg": "image/jpeg",
-        ".csv": "text/csv",
-    }
-    media_type = media_type_map.get(ext, "application/octet-stream")
-
     return FileResponse(
         path=file_path,
-        media_type=media_type,
+        media_type=_MEDIA_TYPES.get(ext, "application/octet-stream"),
         filename=os.path.basename(file_path),
     )
 
 
 @router.delete("/clear/{output_type}")
-def clear_output_directory(output_type: str):
-    """Delete all files in the specified output directory.
+def clear_output_directory(output_type: str, session: Session = Depends(get_session)):
+    """Delete all files in one of the session's output folders.
 
-    Equivalent to clicking 'Clear' before generating new output.
+    Waits for a running operation of the session, so files are never deleted
+    while a generator is still writing them.
     """
-    if output_type not in _OUTPUT_DIRS:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid output_type. Must be one of: {', '.join(_OUTPUT_DIRS.keys())}",
-        )
-
-    output_dir = _OUTPUT_DIRS[output_type]
-    if not os.path.isdir(output_dir):
-        return {"status": "directory_not_found", "path": output_dir}
-
-    status, msg = aux.clearAll(output_dir)
-    if not status:
-        raise HTTPException(status_code=500, detail=f"Failed to clear directory: {msg}")
-
-    return {"status": "cleared", "path": output_dir}
+    output_dir = _output_dir(session, output_type)
+    with exclusive(session, "clear_output"):
+        for entry in os.listdir(output_dir):
+            path = os.path.join(output_dir, entry)
+            if os.path.isdir(path) and not os.path.islink(path):
+                shutil.rmtree(path, ignore_errors=True)
+            else:
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass
+    return {"status": "cleared", "output_type": output_type}

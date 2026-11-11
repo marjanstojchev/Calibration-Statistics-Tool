@@ -1,10 +1,11 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from typing import List, Optional
 import os
 
 import logconfig
 from shared import auxiliary as aux
+from api.session import Session, engine, get_session, safe_filename
 
 router = APIRouter()
 
@@ -56,41 +57,42 @@ def get_defaults():
 
 
 @router.post("/start")
-def start(request: Optional[TxStartRequest] = None):
-    """Generate TX antenna diagrams PPTX from already-parsed TxAntDiag data.
+def start(request: Optional[TxStartRequest] = None, session: Session = Depends(get_session)):
+    """Generate TX antenna diagrams PPTX from the TxAntDiag data loaded in this session.
 
     All configuration fields are optional and default to the same values
     shown in the desktop UI on startup.
-
-    Requires /api/protocols/parse (with search_txantdiag_files=true) to have
-    been called first.
     """
     if request is None:
         request = TxStartRequest()
 
-    # Check for parsed data before loading the heavy module
-    import shared.load_protocols as lp
-    parsed_data = getattr(lp, 'txAntDiagParsedDataList', [])
-    if not parsed_data:
-        raise HTTPException(
-            status_code=422,
-            detail="No TxAntDiag parsed data. Run /api/protocols/parse with search_txantdiag_files=true first.",
+    pptx_title = safe_filename(request.pptx_title, "TxAntenna_diagrams.pptx", ".pptx")
+
+    with engine(session, "tx_diagrams"):
+        if not session.tx_diag_list:
+            raise HTTPException(
+                status_code=422,
+                detail="No TxAnt diagram data loaded. Upload TxAnt diagram files in the Protocols tab first.",
+            )
+
+        # Lazy-load to avoid Qt initialization at module level
+        from tx_diagrams import TxAntDiagrams as tx_ant_diags
+
+        # The generator reads this log back for its warning/error summary slide but never creates it
+        logconfig.txAntDiagLogger.addFileHandler(session.log_file("txAntDiagLogFilePath"), "w+")
+
+        tx_ant_diags.start_data_evaluation(
+            session.tx_diag_list,
+            request.plot_setup.model_dump(),
+            request.graph_config.model_dump(),
+            logconfig.txAntDiagLogger,
+            session.output_dir("tx_diagrams"),
+            pptx_title,
+            os.path.join(aux.assetsDir, "template.pptx"),
         )
-
-    # Lazy-load to avoid Qt initialization at module level
-    from tx_diagrams import TxAntDiagrams as tx_ant_diags
-
-    tx_ant_diags.start_data_evaluation(
-        parsed_data,
-        request.plot_setup.model_dump(),
-        request.graph_config.model_dump(),
-        logconfig.txAntDiagLogger,
-        aux.txAntDiagOutputPath,
-        request.pptx_title,
-        os.path.join(aux.assetsDir, "template.pptx"),
-    )
 
     return {
         "status": "success",
-        "output_path": os.path.join(aux.txAntDiagOutputPath, request.pptx_title),
+        "pptx_file": pptx_title,
+        "output_type": "tx_diagrams",
     }

@@ -18,6 +18,9 @@ _APP_NAME = 'calibration-statistics-tool'
 
 
 def _get_app_dir() -> str:
+    override = os.environ.get('CST_APP_DIR')
+    if override:
+        return override
     if os.name == 'nt':
         base = os.environ.get('APPDATA', os.path.expanduser('~'))
     else:
@@ -115,7 +118,7 @@ def _copy_defaults_if_missing() -> None:
 _copy_defaults_if_missing()
 
 # ── Public values ────────────────────────────────────────────────────────────
-output_base: str = _config['output_base']
+output_base: str = os.environ.get('CST_OUTPUT_BASE') or _config['output_base']
 """Root directory for all generated output sub-folders."""
 
 log_dir: str = os.path.join(APP_DIR, 'logs')
@@ -135,7 +138,7 @@ def reload() -> None:
     """Re-read paths.json from disk (call after the user edits it via the GUI)."""
     global _config, output_base, input_protocol_dir, input_ptu_dir, input_tx_ant_dir
     _config = _load()
-    output_base = _config['output_base']
+    output_base = os.environ.get('CST_OUTPUT_BASE') or _config['output_base']
     input_protocol_dir = _config['input_protocol_dir']
     input_ptu_dir = _config['input_ptu_dir']
     input_tx_ant_dir = _config['input_tx_ant_dir']

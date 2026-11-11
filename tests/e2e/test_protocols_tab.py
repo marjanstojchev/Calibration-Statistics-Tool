@@ -21,8 +21,6 @@ def test_multiple_checkboxes(page, frontend_url):
     page.goto(frontend_url)
     
     expected = {
-        "Search PTU2 Files": True,    # should be checked
-        "Search TxAnt. Diag. Files": False,    # should be checked
         "Latest Protocol": False,    # should be checked
         'Burnin Start': False,    # should be checked
         'EOL Error(s)': False,    # should be checked

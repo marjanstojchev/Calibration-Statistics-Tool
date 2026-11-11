@@ -1,10 +1,11 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
 import os
 
 import logconfig
 from shared import auxiliary as aux
+from api.session import NO_DATA_MESSAGE, Session, engine, get_session
 
 router = APIRouter()
 
@@ -19,6 +20,7 @@ class HuellkurvenDataConf(BaseModel):
     minSigma: int = -10           # Min sigma for pattern-sigma method
     maxSigma: int = 10            # Max sigma for pattern-sigma method
     patternLimitsMethod: int = 0  # 0=sigma-based, 1=min/max-based
+    reserveDb: float = 2.0        # dB reserve added around the sigma limits (desktop default)
     minPhaseFactor: int = 5
     maxPhaseFactor: int = 5
 
@@ -73,23 +75,24 @@ def get_defaults():
 
 
 @router.post("/start")
-def start(request: Optional[HuellkurvenStartRequest] = None):
-    """Compute envelope curve (Hüllkurven) limits from already-parsed PTU2 data.
+def start(request: Optional[HuellkurvenStartRequest] = None, session: Session = Depends(get_session)):
+    """Compute envelope curve (Hüllkurven) limits from the PTU2 data loaded in this session.
 
     Generates per-antenna-type, per-angle-setup DAT limit files and PNG plots
-    under the configured huellkurven output directory.
-
-    Requires /api/protocols/parse to have been called first.
+    in the session's huellkurven output folder.
     """
     if request is None:
         request = HuellkurvenStartRequest()
 
-    from shared import huellkurven_data_processing as hdp
-    import shared.load_protocols as lp
+    with engine(session, "huellkurven"):
+        if not session.sys_diag_list:
+            raise HTTPException(status_code=422, detail=NO_DATA_MESSAGE)
+        return _generate(request, session.sys_diag_list)
 
-    parsed_data = getattr(lp, 'sysDiagParsedDataList', [])
-    if not parsed_data:
-        raise HTTPException(status_code=422, detail="No parsed data. Run /api/protocols/parse first.")
+
+def _generate(request: HuellkurvenStartRequest, parsed_data: list) -> dict:
+    """Engine body; must run inside engine() so aux.huellKurvenOutputPath points at the session."""
+    from shared import huellkurven_data_processing as hdp
 
     data_conf = request.data_conf.model_dump()
     chirp_config = request.chirp_config.model_dump()
@@ -198,4 +201,4 @@ def start(request: Optional[HuellkurvenStartRequest] = None):
                             if limits_data is not None:
                                 hdp.savePlotImage(limits_data, aux.huellKurvenOutputPath)
 
-    return {"status": "success", "output_path": aux.huellKurvenOutputPath}
+    return {"status": "success", "output_type": "huellkurven"}

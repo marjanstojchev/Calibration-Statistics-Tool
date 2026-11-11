@@ -1,8 +1,10 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
+import os
 
 import logconfig
+from api.session import NO_DATA_MESSAGE, Session, engine, get_session
 
 router = APIRouter()
 
@@ -62,48 +64,66 @@ def get_defaults():
 
 
 @router.post("/start")
-def start(request: Optional[AntPatStartRequest] = None):
-    """Generate antenna pattern YAML/JSON files from already-parsed PTU2 data.
+def start(request: Optional[AntPatStartRequest] = None, session: Session = Depends(get_session)):
+    """Generate antenna pattern YAML/JSON files from the PTU2 data loaded in this session.
 
     All configuration fields are optional and default to the same values
     shown in the desktop UI on startup.  The 8-table layout in the UI maps
     to the ``ptu2_input_conf.tables`` list — only enabled tables need to be
     included.
-
-    Requires /api/protocols/parse to have been called first.
     """
     if request is None:
         request = AntPatStartRequest()
 
-    # Check for parsed data before loading the heavy module
-    import shared.load_protocols as lp
-    parsed_data = getattr(lp, 'sysDiagParsedDataList', [])
-    if not parsed_data:
-        raise HTTPException(status_code=422, detail="No parsed data. Run /api/protocols/parse first.")
+    with engine(session, "antenna_patterns"):
+        if not session.sys_diag_list:
+            raise HTTPException(status_code=422, detail=NO_DATA_MESSAGE)
 
-    from antenna_patterns import antpat_v5_main_v3 as antpat
+        logged_before = session.log_totals["antenna_patterns"]
+        from antenna_patterns import antpat_v5_main_v3 as antpat
 
-    # Mirror what ant_pat_handlers.antpat_data_update_and_evaluation() does:
-    # set module-level state then call start_data_evaluation.
-    antpat.setup["useSensorMuster"] = request.use_sensor_muster
-    antpat.setup["sensorMusterList"][:] = list(request.sensor_muster_list)
+        # Mirror what ant_pat_handlers.antpat_data_update_and_evaluation() does:
+        # set module-level state then call start_data_evaluation.
+        antpat.setup["useSensorMuster"] = request.use_sensor_muster
+        antpat.setup["sensorMusterList"][:] = list(request.sensor_muster_list)
 
-    antpat.chirpConfig.update(request.chirp_config)
+        antpat.chirpConfig.update(request.chirp_config)
 
-    conf = request.ptu2_input_conf.model_dump()
-    antpat.conf0.update({k: v for k, v in conf.items() if k != "tables"})
-    antpat.conf0["tables"][:] = [t for t in conf["tables"]]
+        conf = request.ptu2_input_conf.model_dump()
+        antpat.conf0.update({k: v for k, v in conf.items() if k != "tables"})
+        antpat.conf0["tables"][:] = [t for t in conf["tables"]]
 
-    antpat.portData["nofDataTables"] = len(antpat.conf0["tables"])
-    antpat.portData["version"] = request.output_version
+        antpat.portData["nofDataTables"] = len(antpat.conf0["tables"])
+        antpat.portData["version"] = request.output_version
 
-    antpat.ptu2InputConfList[:] = [antpat.conf0]
+        antpat.ptu2InputConfList[:] = [antpat.conf0]
 
-    antpat.antPatHeader.update({
-        "type": request.header_type,
-        "name": request.header_name,
-    })
+        antpat.antPatHeader.update({
+            "type": request.header_type,
+            "name": request.header_name,
+        })
 
-    antpat.start_data_evaluation(parsed_data, logconfig.antPatLogger)
+        antpat.start_data_evaluation(session.sys_diag_list, logconfig.antPatLogger)
 
-    return {"status": "success"}
+    out_dir = session.output_dir("antenna_patterns")
+    produced = [
+        name for name in os.listdir(out_dir)
+        if os.path.isfile(os.path.join(out_dir, name)) and not name.lower().endswith(".log")
+    ]
+    if not produced:
+        errors = []
+        new_lines = session.log_totals["antenna_patterns"] - logged_before
+        if new_lines > 0:
+            for line in list(session.log_buffers["antenna_patterns"])[-new_lines:]:
+                if "[ERROR]" in line:
+                    errors.append(line.split("[ERROR]", 1)[-1].strip())
+        return {
+            "status": "no_output",
+            "message": (
+                "No antenna pattern files were produced. Check that the Rx/Tx antenna "
+                "selection and the rotation axis match your PTU2 data (see the Antenna Patterns log)."
+            ),
+            "errors": list(dict.fromkeys(errors))[-3:],
+            "output_type": "antenna_patterns",
+        }
+    return {"status": "success", "output_type": "antenna_patterns"}
