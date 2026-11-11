@@ -88,11 +88,10 @@ test:linux:
     - !reference [.pip-installs, before_script]    # Use shared pip installation
   script:
     - python -m pytest --version                    # Display pytest version
-    - xvfb-run python -m pytest -v --benchmark-disable --ignore=tests/test_handlers.py --ignore=tests/test_add_and_parse_ptu2_separately.py --ignore=tests/test_limits_smoke.py --ignore=tests/integration/ --ignore=tests/e2e/ --junitxml=report.xml
+    - python -m pytest -v --benchmark-disable --ignore=tests/test_handlers.py --ignore=tests/test_add_and_parse_ptu2_separately.py --ignore=tests/test_limits_smoke.py --ignore=tests/integration/ --ignore=tests/e2e/ --junitxml=report.xml
       # -v: verbose output (show all test names)
       # --benchmark-disable: skip benchmark tests (too slow for CI)
       # --ignore: skip Qt/GUI tests, integration tests, and E2E tests (run separately)
-      # xvfb-run: run with virtual frame buffer for headless testing
       # --junitxml=report.xml: generate JUnit XML for GitLab integration
   artifacts:
     reports:
