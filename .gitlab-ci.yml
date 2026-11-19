@@ -440,6 +440,7 @@ terraform:plan:
     TF_VAR_subscription_id: $AZURE_SUBSCRIPTION_ID
     TF_VAR_acr_name: $ACR_NAME
     TF_VAR_acr_resource_group: $ACR_RESOURCE_GROUP
+  needs: []
   script:
     - cd infra/terraform
     - terraform init
