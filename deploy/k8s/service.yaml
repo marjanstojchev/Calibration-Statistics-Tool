@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: calibration-tool
+  labels:
+    app: calibration-tool
+spec:
+  # LoadBalancer gets a public IP on AKS. Locally on kind use: kubectl port-forward svc/calibration-tool 8000:80
+  type: LoadBalancer
+  selector:
+    app: calibration-tool
+  ports:
+    - port: 80
+      targetPort: 8000

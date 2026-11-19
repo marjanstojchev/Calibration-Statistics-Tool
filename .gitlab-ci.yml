@@ -121,6 +121,30 @@ test:windows:
   allow_failure: true                               # Don't block pipeline if Windows runner not available
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# ROBOT STAGE - Robot Framework API smoke tests (tests/robot/api)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Starts the FastAPI backend, then runs the suite against it
+# Starts the FastAPI backend, then runs the suite against it
+test:robot:
+  extends: .linux-python
+  stage: test
+  script:
+    - uvicorn api.main:app --host 127.0.0.1 --port 8000 &
+    - sleep 5
+    - python -m robot --outputdir robot-results --xunit xunit.xml --variable BASE_URL:http://127.0.0.1:8000 tests/robot/api
+  artifacts:
+    when: always
+    paths:
+      - robot-results/                              # log.html, report.html, output.xml
+    reports:
+      junit: robot-results/xunit.xml
+    expire_in: 30 days
+  rules:
+    - if: $CI_COMMIT_BRANCH
+  allow_failure: true                               # Start non-blocking; make blocking once stable
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # BUILD-FRONTEND STAGE - Compile React app with Vite
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -238,6 +262,31 @@ test:e2e:linux:
 # BUILD STAGE - Create Python package + Docker image
 # ═══════════════════════════════════════════════════════════════════════════════
 
+# Robot Framework acceptance smoke test (tests/robot/acceptance)
+# Serves the built React app and the API, then opens the app in headless Chromium
+test:robot-acceptance:
+  extends: .linux-python
+  stage: test-e2e
+  dependencies:
+    - build:frontend                                # Get cst-frontend/dist/ artifacts
+  script:
+    - uvicorn api.main:app --host 127.0.0.1 --port 8000 &
+    - python -m http.server 5173 --directory cst-frontend/dist &
+    - sleep 5
+    - rfbrowser init chromium                       # Install Browser library's Chromium
+    - python -m robot --outputdir robot-results --xunit xunit.xml --variable FRONTEND_URL:http://127.0.0.1:5173 tests/robot/acceptance
+  artifacts:
+    when: always
+    paths:
+      - robot-results/
+    reports:
+      junit: robot-results/xunit.xml
+    expire_in: 30 days
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "web-cloud-ui"
+    - if: $CI_COMMIT_TAG
+  allow_failure: true                               # Start non-blocking; make blocking once stable
+
 # Build Python Package (wheel + sdist)
 # Creates distribution files for PyPI release
 build:package:
@@ -267,7 +316,8 @@ build:docker:
     - docker:27-dind                                # Docker-in-Docker daemon (required for building)
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - echo "$ACR_PASSWORD" | docker login -u "$ACR_USERNAME" --password-stdin csttool.azurecr.io
+    # ACR login uses the gitlab-deployer service principal (ACR_USERNAME = client ID, ACR_PASSWORD = its secret)
+    - echo "$ACR_PASSWORD" | docker login -u "$ACR_USERNAME" --password-stdin $ACR_LOGIN_SERVER
   script:
     # Build image with commit ref tag (e.g., main, feat-new-ui)
     - docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
@@ -277,10 +327,10 @@ build:docker:
     - docker push $DOCKER_IMAGE:$DOCKER_TAG
     - docker push $DOCKER_IMAGE:latest
     # Also push to Azure Container Registry (ACR) for production use
-    - docker tag $DOCKER_IMAGE:$DOCKER_TAG csttool.azurecr.io/calibration-tool:$DOCKER_TAG
-    - docker tag $DOCKER_IMAGE:$DOCKER_TAG csttool.azurecr.io/calibration-tool:latest
-    - docker push csttool.azurecr.io/calibration-tool:$DOCKER_TAG
-    - docker push csttool.azurecr.io/calibration-tool:latest
+    - docker tag $DOCKER_IMAGE:$DOCKER_TAG $ACR_LOGIN_SERVER/calibration-tool:$DOCKER_TAG
+    - docker tag $DOCKER_IMAGE:$DOCKER_TAG $ACR_LOGIN_SERVER/calibration-tool:latest
+    - docker push $ACR_LOGIN_SERVER/calibration-tool:$DOCKER_TAG
+    - docker push $ACR_LOGIN_SERVER/calibration-tool:latest
   rules:
     - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "web-cloud-ui"  # Build main and web-cloud-ui
     - if: $CI_COMMIT_TAG                            # Build all version tags
@@ -313,35 +363,150 @@ deploy:pypi:
     name: production                                # Mark deployment in GitLab UI
     url: https://pypi.org/project/calibration-statistics-tool/
 
-# Deploy to Azure Container Apps
-# Deploys Docker image to Azure cloud infrastructure
-# Requires Azure service principal credentials stored in CI/CD Variables
-deploy:azure:
-  stage: deploy
+# Shared Azure CLI job template: logs in with the gitlab-deployer service principal
+# CI/CD Variables: AZURE_CLIENT_ID, AZURE_CLIENT_SECRET (masked), AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID
+.azure-cli:
   image: mcr.microsoft.com/azure-cli:latest        # Official Azure CLI image
   before_script:
-    # Login to Azure using service principal (credentials in CI/CD Variables)
-    # AZURE_CLIENT_ID: Application ID from Azure AD
-    # AZURE_CLIENT_SECRET: Service principal password/secret
-    # AZURE_TENANT_ID: Azure tenant ID
+    - az config set extension.use_dynamic_install=yes_without_prompt
     - az login --service-principal --username $AZURE_CLIENT_ID --password $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+    - az account set --subscription $AZURE_SUBSCRIPTION_ID
+
+# Deploy to Azure Container Apps
+# Deploys the ACR image to the Container App created by Terraform (infra/terraform)
+# The app pulls from ACR with its managed identity (AcrPull), so no registry password is needed
+deploy:azure:
+  extends: .azure-cli
+  stage: deploy
   script:
-    # Grant Azure Container Apps access to GitLab Container Registry
-    # CI_REGISTRY_USER / CI_REGISTRY_PASSWORD are injected automatically by GitLab
-    - az containerapp registry set --name calibration-tool-app --resource-group $AZURE_RESOURCE_GROUP --server $CI_REGISTRY --username $CI_REGISTRY_USER --password $CI_REGISTRY_PASSWORD
-    # Update running Container App with new Docker image from Azure Container Registry (ACR)
-    # Using ACR for production: faster pulls, Azure-native, no external dependency
+    # Switch the app's registry to its system identity on the ACR (ACR admin user is disabled)
+    - az containerapp registry set --name calibration-tool-app --resource-group $AZURE_RESOURCE_GROUP --server $ACR_LOGIN_SERVER --identity system
+    # Update running Container App with new Docker image from ACR
     # Set DEPLOY_TIMESTAMP env var to force a new revision (Azure caches identical deployments)
-    - az containerapp update --name calibration-tool-app --resource-group $AZURE_RESOURCE_GROUP --image csttool.azurecr.io/calibration-tool:$DOCKER_TAG --set-env-vars DEPLOY_TIMESTAMP="$(date +%s)"
+    - az containerapp update --name calibration-tool-app --resource-group $AZURE_RESOURCE_GROUP --image $ACR_LOGIN_SERVER/calibration-tool:$DOCKER_TAG --set-env-vars DEPLOY_TIMESTAMP="$(date +%s)"
   rules:
     - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "web-cloud-ui"   # Deploy main and web-cloud-ui branches
     - if: $CI_COMMIT_TAG                            # Deploy all version tags
   environment:
     name: azure-production                          # Mark deployment in GitLab UI
-    url: https://calibration-tool-app.graybush-94365d45.westeurope.azurecontainerapps.io
   dependencies:
     - build:docker                                  # Needs Docker image (implicitly via registry)
   needs:
     - build:docker                                  # Explicitly declare dependency for optimization
     - test:e2e:linux                                # Deploy only after E2E tests pass (test gating)
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# AKS (Kubernetes) + TERRAFORM - runs next to Container Apps, manual and non-blocking
+# CI/CD Variables needed: AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_TENANT_ID,
+#   AZURE_SUBSCRIPTION_ID, AZURE_RESOURCE_GROUP (cst-rg), ACR_NAME (CSTContainerReg),
+#   ACR_RESOURCE_GROUP (cst-rg), ACR_LOGIN_SERVER, ACR_USERNAME, ACR_PASSWORD,
+#   AKS_RESOURCE_GROUP (cst-rg), AKS_CLUSTER_NAME (aks-cst)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Terraform validation (no Azure access needed): syntax and formatting only
+terraform:validate:
+  stage: test
+  image:
+    name: hashicorp/terraform:1.9
+    entrypoint: [""]
+  script:
+    - cd infra/terraform
+    - terraform fmt -check
+    - terraform init -backend=false
+    - terraform validate
+  rules:
+    - changes:
+        - infra/terraform/**/*
+
+# Terraform plan against Azure: shows what would change, creates nothing
+terraform:plan:
+  stage: deploy
+  image:
+    name: hashicorp/terraform:1.9
+    entrypoint: [""]
+  variables:
+    ARM_CLIENT_ID: $AZURE_CLIENT_ID
+    ARM_CLIENT_SECRET: $AZURE_CLIENT_SECRET
+    ARM_TENANT_ID: $AZURE_TENANT_ID
+    ARM_SUBSCRIPTION_ID: $AZURE_SUBSCRIPTION_ID
+    TF_VAR_subscription_id: $AZURE_SUBSCRIPTION_ID
+    TF_VAR_acr_name: $ACR_NAME
+    TF_VAR_acr_resource_group: $ACR_RESOURCE_GROUP
+  script:
+    - cd infra/terraform
+    - terraform init
+    - terraform plan -out=tfplan
+  artifacts:
+    paths:
+      - infra/terraform/tfplan
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_BRANCH == "web-cloud-ui" || $CI_COMMIT_BRANCH == "main"
+      when: manual
+  allow_failure: true
+
+# Apply the exact plan produced by terraform:plan (manual, after reviewing that plan's output)
+terraform:apply:
+  stage: deploy
+  image:
+    name: hashicorp/terraform:1.9
+    entrypoint: [""]
+  variables:
+    ARM_CLIENT_ID: $AZURE_CLIENT_ID
+    ARM_CLIENT_SECRET: $AZURE_CLIENT_SECRET
+    ARM_TENANT_ID: $AZURE_TENANT_ID
+    ARM_SUBSCRIPTION_ID: $AZURE_SUBSCRIPTION_ID
+  script:
+    - cd infra/terraform
+    - terraform init
+    - terraform apply tfplan
+  needs:
+    - job: terraform:plan
+      optional: true
+  rules:
+    - if: $CI_COMMIT_BRANCH == "web-cloud-ui" || $CI_COMMIT_BRANCH == "main"
+      when: manual
+  allow_failure: false
+
+# Start/stop AKS manually to pay only while it is used (stopped cluster = no node compute cost)
+aks:start:
+  stage: deploy
+  extends: .azure-cli
+  script:
+    - az aks start --resource-group $AKS_RESOURCE_GROUP --name $AKS_CLUSTER_NAME
+  rules:
+    - if: $CI_COMMIT_BRANCH == "web-cloud-ui" || $CI_COMMIT_BRANCH == "main"
+      when: manual
+  allow_failure: true
+
+aks:stop:
+  stage: deploy
+  extends: .azure-cli
+  script:
+    - az aks stop --resource-group $AKS_RESOURCE_GROUP --name $AKS_CLUSTER_NAME
+  rules:
+    - if: $CI_COMMIT_BRANCH == "web-cloud-ui" || $CI_COMMIT_BRANCH == "main"
+      when: manual
+  allow_failure: true
+
+# Deploy the ACR image to AKS with kubectl (starts the cluster first if it was stopped)
+deploy:aks:
+  stage: deploy
+  extends: .azure-cli
+  script:
+    - az aks start --resource-group $AKS_RESOURCE_GROUP --name $AKS_CLUSTER_NAME || true
+    - az aks install-cli
+    - az aks get-credentials --resource-group $AKS_RESOURCE_GROUP --name $AKS_CLUSTER_NAME --overwrite-existing
+    - kubectl apply -f deploy/k8s/
+    - kubectl set image deployment/calibration-tool calibration-tool=$ACR_LOGIN_SERVER/calibration-tool:$DOCKER_TAG
+    - kubectl rollout status deployment/calibration-tool --timeout=180s
+    - kubectl get service calibration-tool
+  rules:
+    - if: $CI_COMMIT_BRANCH == "web-cloud-ui" || $CI_COMMIT_BRANCH == "main"
+      when: manual
+  allow_failure: true
+  environment:
+    name: aks-production
+  needs:
+    - build:docker
 

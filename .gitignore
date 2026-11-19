@@ -175,3 +175,9 @@ Thumbs.db
 # Ignore PTU measurement files
 measurement_data/ptu_files/
 measurement_data/ptu_files_backup_shapes/
+# Terraform
+infra/terraform/.terraform/
+infra/terraform/*.tfstate*
+infra/terraform/terraform.tfvars
+infra/terraform/tfplan
+robot-results/

@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: calibration-tool
+  labels:
+    app: calibration-tool
+spec:
+  # Sessions live in memory: exactly one replica and one uvicorn worker
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: calibration-tool
+  template:
+    metadata:
+      labels:
+        app: calibration-tool
+    spec:
+      containers:
+        - name: calibration-tool
+          # Replaced at deploy time with kubectl set image
+          image: cstcontainerreg.azurecr.io/calibration-tool:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          env:
+            - name: CST_DATA_DIR
+              value: /data
+            - name: CST_SESSION_TTL_HOURS
+              value: "24"
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 8000
+            initialDelaySeconds: 20
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 2Gi
+      volumes:
+        - name: data
+          emptyDir: {}

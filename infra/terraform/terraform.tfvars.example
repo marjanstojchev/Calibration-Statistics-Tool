@@ -1,0 +1,6 @@
+# Copy to terraform.tfvars (git-ignored) and adjust
+subscription_id    = "37e1f076-b00f-4a0c-9bde-439f99d878db"
+acr_name           = "CSTContainerReg"
+acr_resource_group = "cst-rg"
+resource_group_name = "cst-rg"
+container_app_min_replicas = 0
