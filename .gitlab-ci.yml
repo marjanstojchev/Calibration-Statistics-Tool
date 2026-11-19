@@ -27,6 +27,7 @@ stages:
   - build-frontend    # React app compilation
   - test-e2e          # E2E integration tests (full stack)
   - build             # Python package + Docker image
+  - infra             # Terraform plan/apply (creates Azure resources the deploy jobs need)
   - deploy            # Release to PyPI + Azure
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -427,7 +428,7 @@ terraform:validate:
 
 # Terraform plan against Azure: shows what would change, creates nothing
 terraform:plan:
-  stage: deploy
+  stage: infra
   image:
     name: hashicorp/terraform:1.9
     entrypoint: [""]
@@ -454,7 +455,7 @@ terraform:plan:
 
 # Apply the exact plan produced by terraform:plan (manual, after reviewing that plan's output)
 terraform:apply:
-  stage: deploy
+  stage: infra
   image:
     name: hashicorp/terraform:1.9
     entrypoint: [""]
@@ -473,7 +474,7 @@ terraform:apply:
   rules:
     - if: $CI_COMMIT_BRANCH == "web-cloud-ui" || $CI_COMMIT_BRANCH == "main"
       when: manual
-  allow_failure: false
+  allow_failure: true
 
 # Start/stop AKS manually to pay only while it is used (stopped cluster = no node compute cost)
 aks:start:
