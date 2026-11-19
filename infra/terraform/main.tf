@@ -14,6 +14,8 @@ terraform {
     storage_account_name = "stmarjantfstate01"
     container_name       = "tfstate"
     key                  = "cst-aks.tfstate"
+    # Use the service principal's blob RBAC role instead of fetching the account key (needs listKeys permission)
+    use_azuread_auth = true
   }
 }
 
