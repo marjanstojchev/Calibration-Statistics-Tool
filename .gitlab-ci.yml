@@ -314,9 +314,13 @@ build:docker:
   image: docker:27                                  # Docker CLI image
   services:
     - docker:27-dind                                # Docker-in-Docker daemon (required for building)
+  variables:
+    # Non-secret ACR login server, set per job so it does not depend on a GitLab variable scope
+    ACR_LOGIN_SERVER: cstcontainerreg.azurecr.io
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     # ACR login uses the gitlab-deployer service principal (ACR_USERNAME = client ID, ACR_PASSWORD = its secret)
+    - test -n "$ACR_USERNAME" && test -n "$ACR_PASSWORD" || { echo "ACR_USERNAME / ACR_PASSWORD are not set for this job"; exit 1; }
     - echo "$ACR_PASSWORD" | docker login -u "$ACR_USERNAME" --password-stdin $ACR_LOGIN_SERVER
   script:
     # Build image with commit ref tag (e.g., main, feat-new-ui)
