@@ -37,7 +37,7 @@ variable "node_count" {
 
 variable "node_vm_size" {
   type        = string
-  default     = "Standard_B2s_v2"
+  default     = "Standard_D2s_v6"
   description = "Small and cheap; the app runs a single replica"
 }
 

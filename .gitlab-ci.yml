@@ -99,6 +99,8 @@ test:linux:
       junit: report.xml                             # GitLab reads this for test results UI
     expire_in: 30 days                              # Keep reports for 30 days
   rules:
+    - if: $INFRA_ONLY == "true"
+      when: never
     - if: $CI_COMMIT_BRANCH                         # Run on all branch pushes
 
 # Test on Windows (validates cross-platform compatibility)
@@ -118,6 +120,8 @@ test:windows:
       junit: report.xml
     expire_in: 30 days
   rules:
+    - if: $INFRA_ONLY == "true"
+      when: never
     - if: $CI_COMMIT_BRANCH
   allow_failure: true                               # Don't block pipeline if Windows runner not available
 
@@ -142,6 +146,8 @@ test:robot:
       junit: robot-results/xunit.xml
     expire_in: 30 days
   rules:
+    - if: $INFRA_ONLY == "true"
+      when: never
     - if: $CI_COMMIT_BRANCH
   allow_failure: true                               # Start non-blocking; make blocking once stable
 
@@ -166,6 +172,8 @@ build:frontend:
       - cst-frontend/dist/                          # React static files (HTML, CSS, JS bundles)
     expire_in: 1 week                               # Keep for Docker build stage
   rules:
+    - if: $INFRA_ONLY == "true"
+      when: never
     - if: $CI_COMMIT_BRANCH                         # Build on all branches
     - if: $CI_COMMIT_TAG                            # Build on version tags
 
@@ -255,6 +263,8 @@ test:e2e:linux:
       junit: report-e2e.xml
     expire_in: 30 days
   rules:
+    - if: $INFRA_ONLY == "true"
+      when: never
     - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "web-cloud-ui"  # Test on main and web-cloud-ui
     - if: $CI_COMMIT_TAG                            # Test on version tags
   allow_failure: false                              # E2E failures should block pipeline
@@ -284,6 +294,8 @@ test:robot-acceptance:
       junit: robot-results/xunit.xml
     expire_in: 30 days
   rules:
+    - if: $INFRA_ONLY == "true"
+      when: never
     - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "web-cloud-ui"
     - if: $CI_COMMIT_TAG
   allow_failure: true                               # Start non-blocking; make blocking once stable
@@ -302,6 +314,8 @@ build:package:
       - dist/                                       # Python distribution files
     expire_in: 1 week                               # Keep for PyPI deployment
   rules:
+    - if: $INFRA_ONLY == "true"
+      when: never
     - if: $CI_COMMIT_BRANCH                         # Build on all branches
     - if: $CI_COMMIT_TAG                            # Build on version tags
 
@@ -337,6 +351,8 @@ build:docker:
     - docker push $ACR_LOGIN_SERVER/calibration-tool:$DOCKER_TAG
     - docker push $ACR_LOGIN_SERVER/calibration-tool:latest
   rules:
+    - if: $INFRA_ONLY == "true"
+      when: never
     - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "web-cloud-ui"  # Build main and web-cloud-ui
     - if: $CI_COMMIT_TAG                            # Build all version tags
   dependencies:
@@ -400,8 +416,10 @@ deploy:azure:
   dependencies:
     - build:docker                                  # Needs Docker image (implicitly via registry)
   needs:
-    - build:docker                                  # Explicitly declare dependency for optimization
-    - test:e2e:linux                                # Deploy only after E2E tests pass (test gating)
+    - job: build:docker                             # Explicitly declare dependency for optimization
+      optional: true
+    - job: test:e2e:linux                           # Deploy only after E2E tests pass (test gating)
+      optional: true
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # AKS (Kubernetes) + TERRAFORM - runs next to Container Apps, manual and non-blocking
@@ -423,6 +441,8 @@ terraform:validate:
     - terraform init -backend=false
     - terraform validate
   rules:
+    - if: $INFRA_ONLY == "true"
+      when: never
     - changes:
         - infra/terraform/**/*
 
@@ -517,5 +537,5 @@ deploy:aks:
   environment:
     name: aks-production
   needs:
-    - build:docker
-
+    - job: build:docker
+      optional: true
