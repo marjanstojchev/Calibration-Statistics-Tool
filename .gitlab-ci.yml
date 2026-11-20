@@ -407,6 +407,9 @@ deploy:azure:
     # Set DEPLOY_TIMESTAMP env var to force a new revision (Azure caches identical deployments)
     - az containerapp update --name calibration-tool-app --resource-group $AZURE_RESOURCE_GROUP --image $ACR_LOGIN_SERVER/calibration-tool:$DOCKER_TAG --set-env-vars DEPLOY_TIMESTAMP="$(date +%s)"
   rules:
+    # INFRA_ONLY runs: deploy automatically after terraform:apply
+    - if: $INFRA_ONLY == "true"
+      when: on_success
     # Manual until terraform:apply has created the Container App (otherwise the job fails with "does not exist")
     - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "web-cloud-ui"
       when: manual
@@ -471,6 +474,8 @@ terraform:plan:
       - infra/terraform/tfplan
     expire_in: 1 week
   rules:
+    - if: $INFRA_ONLY == "true"
+      when: on_success
     - if: $CI_COMMIT_BRANCH == "web-cloud-ui" || $CI_COMMIT_BRANCH == "main"
       when: manual
   allow_failure: true
@@ -494,6 +499,8 @@ terraform:apply:
     - job: terraform:plan
       optional: true
   rules:
+    - if: $INFRA_ONLY == "true"
+      when: on_success
     - if: $CI_COMMIT_BRANCH == "web-cloud-ui" || $CI_COMMIT_BRANCH == "main"
       when: manual
   allow_failure: true
@@ -533,6 +540,8 @@ deploy:aks:
     - kubectl rollout status deployment/calibration-tool --timeout=180s
     - kubectl get service calibration-tool
   rules:
+    - if: $INFRA_ONLY == "true"
+      when: on_success
     - if: $CI_COMMIT_BRANCH == "web-cloud-ui" || $CI_COMMIT_BRANCH == "main"
       when: manual
   allow_failure: true
