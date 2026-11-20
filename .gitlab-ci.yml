@@ -532,7 +532,8 @@ deploy:aks:
   stage: deploy
   extends: .azure-cli
   script:
-    - az aks start --resource-group $AKS_RESOURCE_GROUP --name $AKS_CLUSTER_NAME || true
+    - STATE=$(az aks show --resource-group $AKS_RESOURCE_GROUP --name $AKS_CLUSTER_NAME --query powerState.code -o tsv)
+    - if [ "$STATE" != "Running" ]; then az aks start --resource-group $AKS_RESOURCE_GROUP --name $AKS_CLUSTER_NAME; fi
     - az aks install-cli
     - az aks get-credentials --resource-group $AKS_RESOURCE_GROUP --name $AKS_CLUSTER_NAME --overwrite-existing
     - kubectl apply -f deploy/k8s/
