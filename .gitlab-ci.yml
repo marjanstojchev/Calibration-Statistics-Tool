@@ -503,7 +503,8 @@ aks:start:
   stage: deploy
   extends: .azure-cli
   script:
-    - az aks start --resource-group $AKS_RESOURCE_GROUP --name $AKS_CLUSTER_NAME
+    - STATE=$(az aks show --resource-group $AKS_RESOURCE_GROUP --name $AKS_CLUSTER_NAME --query powerState.code -o tsv)
+    - if [ "$STATE" = "Running" ]; then echo "AKS already running"; else az aks start --resource-group $AKS_RESOURCE_GROUP --name $AKS_CLUSTER_NAME; fi
   rules:
     - if: $CI_COMMIT_BRANCH == "web-cloud-ui" || $CI_COMMIT_BRANCH == "main"
       when: manual
