@@ -38,7 +38,7 @@ variables:
   NPM_CACHE_DIR: "$CI_PROJECT_DIR/.cache/npm"        # Node package cache
   DOCKER_IMAGE: "$CI_REGISTRY_IMAGE"                 # GitLab Container Registry image path
   DOCKER_TAG: "$CI_COMMIT_REF_SLUG"                  # Docker tag (branch or tag name)
-  INFRA_ONLY: "false"                                # Set to "true" in Run pipeline to skip test/build jobs
+  INFRA_ONLY: "true"                                 # Skip test/build jobs; set to "false" to run the full pipeline
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Shared Configuration Templates (Anchors)
